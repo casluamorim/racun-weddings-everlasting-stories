@@ -14,16 +14,408 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blog_posts: {
+        Row: {
+          content: string | null
+          cover_image_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          is_published: boolean
+          published_at: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          is_published?: boolean
+          published_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      portfolio_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          photo_url: string
+          sort_order: number
+          wedding_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          photo_url: string
+          sort_order?: number
+          wedding_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          photo_url?: string
+          sort_order?: number
+          wedding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_photos_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_videos: {
+        Row: {
+          created_at: string
+          id: string
+          is_featured: boolean
+          sort_order: number
+          title: string | null
+          wedding_id: string | null
+          youtube_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          sort_order?: number
+          title?: string | null
+          wedding_id?: string | null
+          youtube_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_featured?: boolean
+          sort_order?: number
+          title?: string | null
+          wedding_id?: string | null
+          youtube_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_videos_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing_plans: {
+        Row: {
+          badge: string | null
+          category: string
+          created_at: string
+          display_name: string
+          features: string[]
+          id: string
+          is_active: boolean
+          is_highlighted: boolean
+          name: string
+          price: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          badge?: string | null
+          category: string
+          created_at?: string
+          display_name: string
+          features?: string[]
+          id?: string
+          is_active?: boolean
+          is_highlighted?: boolean
+          name: string
+          price: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          badge?: string | null
+          category?: string
+          created_at?: string
+          display_name?: string
+          features?: string[]
+          id?: string
+          is_active?: boolean
+          is_highlighted?: boolean
+          name?: string
+          price?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quotes: {
+        Row: {
+          city: string | null
+          created_at: string
+          id: string
+          message: string | null
+          name: string
+          notes: string | null
+          phone: string
+          plan_interest: string | null
+          status: string
+          updated_at: string
+          wedding_date: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          name: string
+          notes?: string | null
+          phone: string
+          plan_interest?: string | null
+          status?: string
+          updated_at?: string
+          wedding_date?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string
+          plan_interest?: string | null
+          status?: string
+          updated_at?: string
+          wedding_date?: string | null
+        }
+        Relationships: []
+      }
+      reserved_dates: {
+        Row: {
+          couple_names: string | null
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          wedding_id: string | null
+        }
+        Insert: {
+          couple_names?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          wedding_id?: string | null
+        }
+        Update: {
+          couple_names?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          wedding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reserved_dates_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stories: {
+        Row: {
+          city: string | null
+          content: string | null
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          is_published: boolean
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          title: string
+          updated_at: string
+          venue: string | null
+          wedding_date: string | null
+          wedding_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          content?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+          venue?: string | null
+          wedding_date?: string | null
+          wedding_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          content?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_published?: boolean
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+          venue?: string | null
+          wedding_date?: string | null
+          wedding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stories_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weddings: {
+        Row: {
+          city: string | null
+          couple_names: string
+          cover_photo_url: string | null
+          created_at: string
+          date: string | null
+          description: string | null
+          id: string
+          is_published: boolean
+          style: string | null
+          updated_at: string
+          venue: string | null
+        }
+        Insert: {
+          city?: string | null
+          couple_names: string
+          cover_photo_url?: string | null
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          style?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Update: {
+          city?: string | null
+          couple_names?: string
+          cover_photo_url?: string | null
+          created_at?: string
+          date?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          style?: string | null
+          updated_at?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +542,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
