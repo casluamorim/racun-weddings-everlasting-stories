@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getFormWhatsAppUrl } from "@/lib/whatsapp";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import AnimatedSection from "./AnimatedSection";
 
 const ContactForm = () => {
@@ -17,7 +18,7 @@ const ContactForm = () => {
   });
   const [sending, setSending] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.phone.trim() || !form.date.trim() || !form.city.trim()) {
       toast.error("Por favor, preencha todos os campos obrigatórios.");
@@ -26,19 +27,28 @@ const ContactForm = () => {
 
     setSending(true);
 
-    // Build mailto link for email notification
-    const subject = encodeURIComponent(`Novo orçamento - ${form.name}`);
-    const body = encodeURIComponent(
-      `Nome: ${form.name}\nWhatsApp: ${form.phone}\nData: ${form.date}\nCidade: ${form.city}\nMensagem: ${form.message}`
-    );
-    window.open(`mailto:racunagencia@gmail.com?subject=${subject}&body=${body}`, "_blank");
+    // Save to database
+    const { error } = await supabase.from("quotes").insert({
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      wedding_date: form.date.trim() || null,
+      city: form.city.trim(),
+      message: form.message.trim() || null,
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar. Tente novamente.");
+      setSending(false);
+      return;
+    }
+
+    toast.success("Orçamento enviado com sucesso!");
 
     // Redirect to WhatsApp
-    setTimeout(() => {
-      window.open(getFormWhatsAppUrl(form), "_blank");
-      toast.success("Redirecionando para o WhatsApp...");
-      setSending(false);
-    }, 500);
+    window.open(getFormWhatsAppUrl(form), "_blank");
+
+    setForm({ name: "", phone: "", date: "", city: "", message: "" });
+    setSending(false);
   };
 
   return (
