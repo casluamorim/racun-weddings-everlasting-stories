@@ -13,8 +13,11 @@ const Navbar = () => {
   }, []);
 
   const links = [
+    { label: "Serviços", href: "#servicos" },
     { label: "Portfólio", href: "#portfolio" },
-    { label: "Investimento", href: "#investimento" },
+    { label: "Valores", href: "#investimento" },
+    { label: "Sobre", href: "#sobre" },
+    { label: "FAQ", href: "#faq" },
     { label: "Contato", href: "#contato" },
   ];
 
@@ -23,39 +26,37 @@ const Navbar = () => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
           ? "bg-hero/95 backdrop-blur-md py-3 shadow-lg"
-          : "bg-transparent py-6"
+          : "bg-transparent py-5"
       }`}
     >
       <div className="container mx-auto flex items-center justify-between px-6">
-        <a href="/" className="font-heading text-2xl md:text-3xl font-light tracking-wider text-hero-foreground">
-          Racun <span className="font-semibold">Weddings</span>
+        <a href="/" className="font-heading text-xl md:text-2xl font-light tracking-wider text-hero-foreground">
+          Racun Weddings
         </a>
 
         {/* Desktop */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-6">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
-              className="font-body text-xs uppercase tracking-[0.2em] text-hero-foreground/70 hover:text-primary transition-colors"
+              className="font-body text-[11px] uppercase tracking-[0.18em] text-hero-foreground/80 hover:text-hero-foreground transition-colors"
             >
               {l.label}
             </a>
           ))}
           <a
-            href={getGeneralWhatsAppUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-body text-xs uppercase tracking-[0.2em] border border-primary/60 text-primary px-5 py-2 hover:bg-primary hover:text-primary-foreground transition-all"
+            href="#investimento"
+            className="font-body text-[11px] uppercase tracking-[0.18em] border border-hero-foreground/50 text-hero-foreground px-5 py-2.5 hover:bg-hero-foreground hover:text-hero transition-all ml-2"
           >
-            Fale conosco
+            Investimento
           </a>
         </div>
 
         {/* Mobile toggle */}
         <button
           onClick={() => setOpen(!open)}
-          className="md:hidden text-hero-foreground"
+          className="lg:hidden text-hero-foreground"
           aria-label="Menu"
         >
           {open ? <X size={24} /> : <Menu size={24} />}
@@ -64,24 +65,23 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-hero/98 backdrop-blur-md border-t border-hero-foreground/10 px-6 py-6 space-y-4">
+        <div className="lg:hidden bg-hero/98 backdrop-blur-md border-t border-hero-foreground/10 px-6 py-6 space-y-4">
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="block font-body text-sm uppercase tracking-[0.15em] text-hero-foreground/80 hover:text-primary transition-colors"
+              className="block font-body text-sm uppercase tracking-[0.15em] text-hero-foreground/80 hover:text-hero-foreground transition-colors"
             >
               {l.label}
             </a>
           ))}
           <a
-            href={getGeneralWhatsAppUrl()}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block font-body text-sm uppercase tracking-[0.15em] text-primary"
+            href="#investimento"
+            onClick={() => setOpen(false)}
+            className="block font-body text-sm uppercase tracking-[0.15em] text-hero-foreground border border-hero-foreground/50 px-4 py-2 w-fit"
           >
-            Fale conosco
+            Investimento
           </a>
         </div>
       )}
