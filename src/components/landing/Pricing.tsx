@@ -152,12 +152,12 @@ const PlanCard = ({ plan }: { plan: Plan }) => (
   </div>
 );
 
-const SectionHeader = ({ label, title, subtitle }: { label: string; title: string; subtitle?: string }) => (
+const SectionHeader = ({ label, title, subtitle, dark }: { label: string; title: string; subtitle?: string; dark?: boolean }) => (
   <div className="text-center mb-10 md:mb-12">
     <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-3">{label}</p>
-    <h3 className="font-heading text-2xl md:text-4xl font-light text-foreground">{title}</h3>
+    <h3 className={`font-heading text-2xl md:text-4xl font-light ${dark ? "text-section-dark-foreground" : "text-foreground"}`}>{title}</h3>
     {subtitle && (
-      <p className="font-body text-sm text-muted-foreground max-w-lg mx-auto mt-3">{subtitle}</p>
+      <p className={`font-body text-sm max-w-lg mx-auto mt-3 ${dark ? "text-section-dark-foreground/60" : "text-muted-foreground"}`}>{subtitle}</p>
     )}
     <div className="w-12 h-[2px] bg-primary mx-auto mt-5" />
   </div>
@@ -199,6 +199,7 @@ const Pricing = () => (
       {/* Combos */}
       <AnimatedSection className="bg-section-dark rounded-xl p-6 md:p-12">
         <SectionHeader
+          dark
           label="Experiência Completa"
           title="Combos Foto + Vídeo"
           subtitle="A combinação perfeita para eternizar cada momento com imagens e narrativa cinematográfica."
