@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, ImagePlus, Loader2, Sparkles } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const AdminBlog = () => {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: "", slug: "", excerpt: "", content: "", seo_title: "", seo_description: "" });
+  const [generatingIds, setGeneratingIds] = useState<Set<string>>(new Set());
+  const [generatingAll, setGeneratingAll] = useState(false);
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ["admin-blog"],
@@ -66,47 +68,101 @@ const AdminBlog = () => {
     },
   });
 
+  const generateCover = async (postId: string, title: string) => {
+    setGeneratingIds((prev) => new Set(prev).add(postId));
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-blog-cover", {
+        body: { postId, title },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Capa gerada com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["admin-blog"] });
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar capa");
+    } finally {
+      setGeneratingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(postId);
+        return next;
+      });
+    }
+  };
+
+  const generateAllCovers = async () => {
+    const postsWithoutCover = posts?.filter((p) => !p.cover_image_url) ?? [];
+    if (postsWithoutCover.length === 0) {
+      toast.info("Todos os posts já têm capa!");
+      return;
+    }
+    setGeneratingAll(true);
+    let success = 0;
+    let fail = 0;
+    for (const post of postsWithoutCover) {
+      try {
+        await generateCover(post.id, post.title);
+        success++;
+        // Small delay to avoid rate limits
+        await new Promise((r) => setTimeout(r, 2000));
+      } catch {
+        fail++;
+      }
+    }
+    setGeneratingAll(false);
+    toast.success(`Concluído: ${success} capas geradas${fail > 0 ? `, ${fail} erros` : ""}`);
+  };
+
+  const postsWithoutCover = posts?.filter((p) => !p.cover_image_url).length ?? 0;
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl text-foreground">Blog</h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus size={16} className="mr-1" /> Novo Post</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="font-heading">Novo Post</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(); }} className="space-y-4">
-              <div>
-                <Label className="font-body text-sm">Título *</Label>
-                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-              </div>
-              <div>
-                <Label className="font-body text-sm">Slug (auto-gerado se vazio)</Label>
-                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-              </div>
-              <div>
-                <Label className="font-body text-sm">Resumo</Label>
-                <Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} rows={2} />
-              </div>
-              <div>
-                <Label className="font-body text-sm">Conteúdo</Label>
-                <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={6} />
-              </div>
-              <div>
-                <Label className="font-body text-sm">SEO Título</Label>
-                <Input value={form.seo_title} onChange={(e) => setForm({ ...form, seo_title: e.target.value })} />
-              </div>
-              <div>
-                <Label className="font-body text-sm">SEO Descrição</Label>
-                <Input value={form.seo_description} onChange={(e) => setForm({ ...form, seo_description: e.target.value })} />
-              </div>
-              <Button type="submit" className="w-full" disabled={createMutation.isPending}>Criar Post</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          {postsWithoutCover > 0 && (
+            <Button variant="outline" onClick={generateAllCovers} disabled={generatingAll}>
+              {generatingAll ? <Loader2 size={16} className="mr-1 animate-spin" /> : <Sparkles size={16} className="mr-1" />}
+              Gerar {postsWithoutCover} capas com IA
+            </Button>
+          )}
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus size={16} className="mr-1" /> Novo Post</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="font-heading">Novo Post</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={(e) => { e.preventDefault(); createMutation.mutate(); }} className="space-y-4">
+                <div>
+                  <Label className="font-body text-sm">Título *</Label>
+                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+                </div>
+                <div>
+                  <Label className="font-body text-sm">Slug (auto-gerado se vazio)</Label>
+                  <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="font-body text-sm">Resumo</Label>
+                  <Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} rows={2} />
+                </div>
+                <div>
+                  <Label className="font-body text-sm">Conteúdo</Label>
+                  <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={6} />
+                </div>
+                <div>
+                  <Label className="font-body text-sm">SEO Título</Label>
+                  <Input value={form.seo_title} onChange={(e) => setForm({ ...form, seo_title: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="font-body text-sm">SEO Descrição</Label>
+                  <Input value={form.seo_description} onChange={(e) => setForm({ ...form, seo_description: e.target.value })} />
+                </div>
+                <Button type="submit" className="w-full" disabled={createMutation.isPending}>Criar Post</Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {isLoading ? (
@@ -116,12 +172,35 @@ const AdminBlog = () => {
       ) : (
         <div className="space-y-3">
           {posts?.map((p) => (
-            <div key={p.id} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
-              <div>
-                <p className="font-body text-sm font-medium text-foreground">{p.title}</p>
+            <div key={p.id} className="bg-card border border-border rounded-lg p-4 flex items-center gap-4">
+              {/* Thumbnail */}
+              <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center">
+                {p.cover_image_url ? (
+                  <img src={p.cover_image_url} alt={p.title} className="w-full h-full object-cover" />
+                ) : (
+                  <ImagePlus size={20} className="text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-body text-sm font-medium text-foreground truncate">{p.title}</p>
                 <p className="font-body text-xs text-muted-foreground">/{p.slug}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 flex-shrink-0">
+                {!p.cover_image_url && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => generateCover(p.id, p.title)}
+                    disabled={generatingIds.has(p.id)}
+                    title="Gerar capa com IA"
+                  >
+                    {generatingIds.has(p.id) ? (
+                      <Loader2 size={16} className="animate-spin text-primary" />
+                    ) : (
+                      <Sparkles size={16} className="text-primary" />
+                    )}
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" onClick={() => togglePublish.mutate({ id: p.id, is_published: p.is_published })}>
                   {p.is_published ? <Eye size={16} className="text-green-600" /> : <EyeOff size={16} />}
                 </Button>
