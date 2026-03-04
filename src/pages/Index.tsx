@@ -31,7 +31,7 @@ const localBusinessJsonLd = {
     latitude: -26.3044,
     longitude: -48.8487,
   },
-  image: "https://everbloom-storyteller.lovable.app/placeholder.svg",
+  image: "https://everbloom-storyteller.lovable.app/og-image.jpg",
   priceRange: "$$",
   openingHoursSpecification: {
     "@type": "OpeningHoursSpecification",
