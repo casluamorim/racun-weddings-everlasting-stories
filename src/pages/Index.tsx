@@ -18,7 +18,7 @@ const localBusinessJsonLd = {
   description:
     "Filmes e fotografias de casamento cinematográficos para casais que querem reviver cada sentimento. Atendimento limitado e exclusivo.",
   url: "https://everbloom-storyteller.lovable.app",
-  telephone: "+5547999999999",
+  telephone: "+554732096098",
   email: "racunagencia@gmail.com",
   address: {
     "@type": "PostalAddress",
