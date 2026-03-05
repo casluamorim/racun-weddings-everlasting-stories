@@ -64,8 +64,42 @@ const Portfolio = () => {
     ? videos
     : null;
 
+  const videoJsonLd = displayVideos
+    ? {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        itemListElement: displayVideos.map((v, i) => {
+          const ytId = extractYoutubeId(v.youtube_url);
+          return {
+            "@type": "ListItem",
+            position: i + 1,
+            item: {
+              "@type": "VideoObject",
+              name: v.title || "Filme de casamento – Racun Weddings",
+              description: `Filme cinematográfico de casamento produzido por Racun Weddings.${v.title ? ` ${v.title}.` : ""}`,
+              thumbnailUrl: `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`,
+              uploadDate: new Date().toISOString().split("T")[0],
+              contentUrl: v.youtube_url,
+              embedUrl: `https://www.youtube.com/embed/${ytId}`,
+              publisher: {
+                "@type": "Organization",
+                name: "Racun Weddings",
+                url: "https://everbloom-storyteller.lovable.app",
+              },
+            },
+          };
+        }),
+      }
+    : null;
+
   return (
     <section id="portfolio" className="py-24 md:py-32 bg-section-dark">
+      {videoJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(videoJsonLd) }}
+        />
+      )}
       <div className="container mx-auto px-6 max-w-6xl">
         <AnimatedSection className="text-center mb-16">
           <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4">Portfólio</p>
