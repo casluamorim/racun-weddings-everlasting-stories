@@ -25,16 +25,33 @@ const Portfolio = () => {
 
   const { data: photos } = useQuery({
     queryKey: ["public-photos", weddingIds],
-    enabled: weddingIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("portfolio_photos")
-        .select("id, photo_url, caption, wedding_id")
-        .in("wedding_id", weddingIds)
-        .order("sort_order")
-        .limit(12);
-      if (error) throw error;
-      return data;
+      // Get photos from published weddings + standalone photos
+      const queries = [];
+      
+      if (weddingIds.length > 0) {
+        queries.push(
+          supabase
+            .from("portfolio_photos")
+            .select("id, photo_url, caption, wedding_id")
+            .in("wedding_id", weddingIds)
+            .order("sort_order")
+            .limit(12)
+        );
+      }
+      
+      queries.push(
+        supabase
+          .from("portfolio_photos")
+          .select("id, photo_url, caption, wedding_id")
+          .is("wedding_id", null)
+          .order("sort_order")
+          .limit(12)
+      );
+
+      const results = await Promise.all(queries);
+      const allPhotos = results.flatMap(r => r.data ?? []);
+      return allPhotos.slice(0, 12);
     },
   });
 

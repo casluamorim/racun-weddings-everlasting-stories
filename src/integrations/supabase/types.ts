@@ -66,7 +66,7 @@ export type Database = {
           id: string
           photo_url: string
           sort_order: number
-          wedding_id: string
+          wedding_id: string | null
         }
         Insert: {
           caption?: string | null
@@ -74,7 +74,7 @@ export type Database = {
           id?: string
           photo_url: string
           sort_order?: number
-          wedding_id: string
+          wedding_id?: string | null
         }
         Update: {
           caption?: string | null
@@ -82,7 +82,7 @@ export type Database = {
           id?: string
           photo_url?: string
           sort_order?: number
-          wedding_id?: string
+          wedding_id?: string | null
         }
         Relationships: [
           {
