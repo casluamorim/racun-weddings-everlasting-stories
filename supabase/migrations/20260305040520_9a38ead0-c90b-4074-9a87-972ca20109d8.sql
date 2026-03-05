@@ -1,0 +1,1 @@
+ALTER TABLE public.portfolio_photos ALTER COLUMN wedding_id DROP NOT NULL;
