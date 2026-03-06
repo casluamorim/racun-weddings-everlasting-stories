@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Plus, Trash2, Upload, Film, ImageIcon, Pencil, Check, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 
 const AdminVideos = () => {
   const queryClient = useQueryClient();
@@ -17,17 +18,15 @@ const AdminVideos = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editCaption, setEditCaption] = useState("");
 
-  // Videos
   const { data: videos, isLoading: loadingVideos } = useQuery({
     queryKey: ["admin-videos"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("portfolio_videos").select("*").order("sort_order");
+      const { data, error } = await supabase.from("portfolio_videos").select("*").is("wedding_id", null).order("sort_order");
       if (error) throw error;
       return data;
     },
   });
 
-  // Standalone photos (no wedding)
   const { data: photos, isLoading: loadingPhotos } = useQuery({
     queryKey: ["admin-standalone-photos"],
     queryFn: async () => {
@@ -108,6 +107,21 @@ const AdminVideos = () => {
     },
   });
 
+  const reorderPhotos = async (reordered: typeof photos extends (infer T)[] | undefined ? T[] : never[]) => {
+    // Optimistic update
+    queryClient.setQueryData(["admin-standalone-photos"], reordered);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_photos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
+  const reorderVideos = async (reordered: typeof videos extends (infer T)[] | undefined ? T[] : never[]) => {
+    queryClient.setQueryData(["admin-videos"], reordered);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_videos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
   const handleBulkPhotoUpload = async (files: FileList) => {
     setUploading(true);
     const currentCount = photos?.length ?? 0;
@@ -164,7 +178,6 @@ const AdminVideos = () => {
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl text-foreground">Vídeos & Fotos</h1>
         <div className="flex items-center gap-2">
-          {/* Bulk photo upload */}
           <label className="flex items-center gap-2 px-4 py-2 border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 transition-colors">
             <Upload size={16} className="text-primary" />
             <span className="font-body text-sm text-primary">
@@ -185,7 +198,6 @@ const AdminVideos = () => {
             />
           </label>
 
-          {/* Add YouTube video */}
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button><Plus size={16} className="mr-1" /> Vídeo YouTube</Button>
@@ -221,13 +233,17 @@ const AdminVideos = () => {
             <div>
               <h2 className="font-heading text-lg text-foreground mb-4 flex items-center gap-2">
                 <Film size={18} /> Vídeos ({videos.length})
+                <span className="font-body text-xs text-muted-foreground ml-2">Arraste para reordenar</span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {videos.map((v) => {
+              <SortableGrid
+                items={videos}
+                onReorder={reorderVideos}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                renderItem={(v) => {
                   const ytId = getYouTubeId(v.youtube_url);
                   const isEditing = editingId === `video-${v.id}`;
                   return (
-                    <div key={v.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                    <div className="bg-card border border-border rounded-lg overflow-hidden">
                       {ytId && (
                         <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
                       )}
@@ -262,8 +278,8 @@ const AdminVideos = () => {
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                }}
+              />
             </div>
           )}
 
@@ -272,12 +288,16 @@ const AdminVideos = () => {
             <div>
               <h2 className="font-heading text-lg text-foreground mb-4 flex items-center gap-2">
                 <ImageIcon size={18} /> Fotos ({photos.length})
+                <span className="font-body text-xs text-muted-foreground ml-2">Arraste para reordenar</span>
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {photos.map((p) => {
+              <SortableGrid
+                items={photos}
+                onReorder={reorderPhotos}
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"
+                renderItem={(p) => {
                   const isEditing = editingId === `photo-${p.id}`;
                   return (
-                    <div key={p.id} className="relative group bg-card border border-border rounded-lg overflow-hidden">
+                    <div className="bg-card border border-border rounded-lg overflow-hidden">
                       <div className="aspect-square">
                         <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
                       </div>
@@ -314,8 +334,8 @@ const AdminVideos = () => {
                       </div>
                     </div>
                   );
-                })}
-              </div>
+                }}
+              />
             </div>
           )}
 

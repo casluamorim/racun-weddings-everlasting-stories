@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 
 const AdminWeddings = () => {
   const queryClient = useQueryClient();
@@ -141,7 +142,6 @@ const AdminWeddings = () => {
 
   const deletePhoto = useMutation({
     mutationFn: async ({ id, photo_url }: { id: string; photo_url: string }) => {
-      // Extract storage path from URL
       const urlParts = photo_url.split("/portfolio/");
       if (urlParts[1]) {
         await supabase.storage.from("portfolio").remove([urlParts[1]]);
@@ -220,6 +220,20 @@ const AdminWeddings = () => {
   const getYouTubeId = (url: string) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]+)/);
     return match?.[1] ?? "";
+  };
+
+  const reorderPhotos = async (reordered: NonNullable<typeof photos>) => {
+    queryClient.setQueryData(["admin-photos", expandedId], reordered);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_photos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
+  const reorderVideos = async (reordered: NonNullable<typeof weddingVideos>) => {
+    queryClient.setQueryData(["admin-wedding-videos", expandedId], reordered);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_videos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
   };
 
   return (
@@ -336,21 +350,24 @@ const AdminWeddings = () => {
                         />
                       </label>
                       <span className="font-body text-xs text-muted-foreground">
-                        {photos?.length ?? 0} foto(s) • Máx 10MB cada
+                        {photos?.length ?? 0} foto(s) • Máx 10MB cada • Arraste para reordenar
                       </span>
                     </div>
 
-                    {/* Photo grid */}
+                    {/* Photo grid with drag and drop */}
                     <div>
                       <h4 className="font-heading text-sm text-foreground mb-2 flex items-center gap-2">
                         <ImageIcon size={14} /> Fotos
                       </h4>
                       {photos && photos.length > 0 ? (
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                          {photos.map((p) => {
+                        <SortableGrid
+                          items={photos}
+                          onReorder={reorderPhotos}
+                          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
+                          renderItem={(p) => {
                             const isEditingThis = editingId === `photo-${p.id}`;
                             return (
-                              <div key={p.id} className="relative group rounded-lg overflow-hidden bg-muted">
+                              <div className="relative group rounded-lg overflow-hidden bg-muted">
                                 <div className="aspect-square">
                                   <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
                                 </div>
@@ -380,19 +397,18 @@ const AdminWeddings = () => {
                                 )}
                               </div>
                             );
-                          })}
-                        </div>
+                          }}
+                        />
                       ) : (
                         <p className="font-body text-xs text-muted-foreground">Nenhuma foto ainda.</p>
                       )}
                     </div>
 
-                    {/* Videos section */}
+                    {/* Videos section with drag and drop */}
                     <div>
                       <h4 className="font-heading text-sm text-foreground mb-2 flex items-center gap-2">
                         <Film size={14} /> Vídeos
                       </h4>
-                      {/* Add YouTube URL */}
                       <div className="flex items-center gap-2 mb-3">
                         <Input
                           value={youtubeUrl}
@@ -409,12 +425,15 @@ const AdminWeddings = () => {
                         </Button>
                       </div>
                       {weddingVideos && weddingVideos.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {weddingVideos.map((v) => {
+                        <SortableGrid
+                          items={weddingVideos}
+                          onReorder={reorderVideos}
+                          className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+                          renderItem={(v) => {
                             const ytId = getYouTubeId(v.youtube_url);
                             const isEditingThis = editingId === `video-${v.id}`;
                             return (
-                              <div key={v.id} className="bg-muted rounded-lg overflow-hidden">
+                              <div className="bg-muted rounded-lg overflow-hidden">
                                 {ytId && <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />}
                                 <div className="p-2">
                                   {isEditingThis ? (
@@ -435,8 +454,8 @@ const AdminWeddings = () => {
                                 </div>
                               </div>
                             );
-                          })}
-                        </div>
+                          }}
+                        />
                       ) : (
                         <p className="font-body text-xs text-muted-foreground">Nenhum vídeo. Cole uma URL do YouTube acima.</p>
                       )}
