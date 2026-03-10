@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Upload, Film, ImageIcon, Pencil, Check, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { compressImage } from "@/lib/imageCompression";
 
 const AdminVideos = () => {
   const queryClient = useQueryClient();
@@ -135,10 +136,11 @@ const AdminVideos = () => {
         continue;
       }
 
-      const ext = file.name.split(".").pop();
+      const compressed = await compressImage(file);
+      const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
       const path = `standalone/${Date.now()}-${i}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, file);
+      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, compressed);
       if (uploadError) {
         toast.error(`Erro ao enviar ${file.name}`);
         continue;

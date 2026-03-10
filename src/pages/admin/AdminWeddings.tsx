@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { compressImage } from "@/lib/imageCompression";
 
 const AdminWeddings = () => {
   const queryClient = useQueryClient();
@@ -109,10 +110,11 @@ const AdminWeddings = () => {
         continue;
       }
 
-      const ext = file.name.split(".").pop();
+      const compressed = await compressImage(file);
+      const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
       const path = `weddings/${weddingId}/${Date.now()}-${i}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, file);
+      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, compressed);
       if (uploadError) {
         toast.error(`Erro ao enviar ${file.name}`);
         continue;
