@@ -110,10 +110,11 @@ const AdminWeddings = () => {
         continue;
       }
 
-      const ext = file.name.split(".").pop();
+      const compressed = await compressImage(file);
+      const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
       const path = `weddings/${weddingId}/${Date.now()}-${i}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, file);
+      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, compressed);
       if (uploadError) {
         toast.error(`Erro ao enviar ${file.name}`);
         continue;
