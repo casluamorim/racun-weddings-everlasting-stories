@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Upload, Film, ImageIcon, Pencil, Check, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { compressImage } from "@/lib/imageCompression";
 
 const AdminVideos = () => {
   const queryClient = useQueryClient();
