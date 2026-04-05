@@ -18,6 +18,7 @@ import AdminQuotes from "./pages/admin/AdminQuotes";
 import AdminCalendar from "./pages/admin/AdminCalendar";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminStories from "./pages/admin/AdminStories";
+import AdminSiteEditor from "./pages/admin/AdminSiteEditor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="calendar" element={<AdminCalendar />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="stories" element={<AdminStories />} />
+              <Route path="site-editor" element={<AdminSiteEditor />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -8,6 +8,7 @@ import {
   FileText,
   BookOpen,
   LogOut,
+  PenTool,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +35,7 @@ const menuItems = [
   { title: "Agenda", url: "/admin/calendar", icon: CalendarDays },
   { title: "Blog", url: "/admin/blog", icon: FileText },
   { title: "Histórias", url: "/admin/stories", icon: BookOpen },
+  { title: "Editor do Site", url: "/admin/site-editor", icon: PenTool },
 ];
 
 const AdminSidebar = () => {
