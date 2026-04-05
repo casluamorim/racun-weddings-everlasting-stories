@@ -7,8 +7,16 @@ import { getFormWhatsAppUrl } from "@/lib/whatsapp";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import AnimatedSection from "./AnimatedSection";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const ContactForm = () => {
+  const { getValue } = useSiteContent("contact");
+
+  const sectionLabel = getValue("contact", "section_label", "Contato");
+  const title = getValue("contact", "title", "Vamos conversar sobre o seu dia");
+  const subtitleText = getValue("contact", "subtitle", "Preencha o formulário e falaremos pelo WhatsApp.");
+  const successMessage = getValue("contact", "success_message", "Orçamento enviado com sucesso!");
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -41,7 +49,7 @@ const ContactForm = () => {
       return;
     }
 
-    toast.success("Orçamento enviado com sucesso!");
+    toast.success(successMessage);
     window.open(getFormWhatsAppUrl(form), "_blank");
     setForm({ name: "", phone: "", date: "", city: "", message: "" });
     setSending(false);
@@ -51,81 +59,36 @@ const ContactForm = () => {
     <section id="contato" className="py-24 md:py-32 bg-background">
       <div className="container mx-auto px-6 max-w-2xl">
         <AnimatedSection className="text-center mb-12">
-          <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4">Contato</p>
-          <h2 className="font-heading text-3xl md:text-5xl font-light text-foreground mb-4">
-            Vamos conversar sobre o seu dia
-          </h2>
-          <p className="font-body text-sm text-muted-foreground">
-            Preencha o formulário e falaremos pelo WhatsApp.
-          </p>
+          <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4">{sectionLabel}</p>
+          <h2 className="font-heading text-3xl md:text-5xl font-light text-foreground mb-4">{title}</h2>
+          <p className="font-body text-sm text-muted-foreground">{subtitleText}</p>
         </AnimatedSection>
 
         <AnimatedSection>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
-                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
-                  Nome *
-                </label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Seu nome"
-                  maxLength={100}
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary"
-                />
+                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Nome *</label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Seu nome" maxLength={100} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
               </div>
               <div>
-                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
-                  WhatsApp *
-                </label>
-                <Input
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="(00) 00000-0000"
-                  maxLength={20}
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary"
-                />
+                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">WhatsApp *</label>
+                <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(00) 00000-0000" maxLength={20} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
-                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
-                  Data do casamento *
-                </label>
-                <Input
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  placeholder="dd/mm/aaaa"
-                  maxLength={20}
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary"
-                />
+                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Data do casamento *</label>
+                <Input value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} placeholder="dd/mm/aaaa" maxLength={20} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
               </div>
               <div>
-                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
-                  Cidade *
-                </label>
-                <Input
-                  value={form.city}
-                  onChange={(e) => setForm({ ...form, city: e.target.value })}
-                  placeholder="Cidade do casamento"
-                  maxLength={100}
-                  className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary"
-                />
+                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Cidade *</label>
+                <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Cidade do casamento" maxLength={100} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
               </div>
             </div>
             <div>
-              <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
-                Mensagem
-              </label>
-              <Textarea
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
-                placeholder="Conte um pouco sobre o seu casamento..."
-                maxLength={1000}
-                rows={4}
-                className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary resize-none"
-              />
+              <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Mensagem</label>
+              <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Conte um pouco sobre o seu casamento..." maxLength={1000} rows={4} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary resize-none" />
             </div>
             <Button type="submit" variant="cta" size="lg" className="w-full py-6" disabled={sending}>
               <Send size={16} />
