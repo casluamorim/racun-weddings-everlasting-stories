@@ -2,21 +2,31 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { getGeneralWhatsAppUrl } from "@/lib/whatsapp";
 import heroImage from "@/assets/hero-wedding.jpg";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const Hero = () => {
+  const { getValue } = useSiteContent("hero");
+
+  const subtitle = getValue("hero", "subtitle", "Racun Weddings");
+  const titleLine1 = getValue("hero", "title_line1", "Histórias reais.");
+  const titleLine2 = getValue("hero", "title_line2", "Emoções eternas.");
+  const description = getValue("hero", "description", "Filmes e fotografias de casamento com narrativa cinematográfica, criados para casais que valorizam cada detalhe do seu grande dia.");
+  const quote = getValue("hero", "quote", "Para casais que não querem apenas registrar um casamento, mas reviver cada sentimento.");
+  const button1Text = getValue("hero", "button1_text", "Quero conversar sobre meu casamento");
+  const button2Text = getValue("hero", "button2_text", "Vamos contar sua história");
+  const backgroundUrl = getValue("hero", "background_url", "");
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background image - full coverage */}
       <div className="absolute inset-0">
         <img
-          src={heroImage}
+          src={backgroundUrl || heroImage}
           alt="Casamento cinematográfico"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-black/40" />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 container mx-auto px-6 text-center max-w-4xl pt-20">
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -24,7 +34,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="font-body text-xs uppercase tracking-[0.35em] text-hero-foreground/70 mb-6"
         >
-          Racun Weddings
+          {subtitle}
         </motion.p>
 
         <motion.h1
@@ -33,9 +43,9 @@ const Hero = () => {
           transition={{ duration: 0.9, delay: 0.4 }}
           className="font-heading text-4xl md:text-6xl lg:text-7xl font-light text-hero-foreground leading-[1.1] mb-4"
         >
-          Histórias reais.
+          {titleLine1}
           <br />
-          <em className="text-primary font-light italic">Emoções eternas.</em>
+          <em className="text-primary font-light italic">{titleLine2}</em>
         </motion.h1>
 
         <motion.p
@@ -44,9 +54,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.65 }}
           className="font-body text-sm md:text-base text-hero-foreground/70 max-w-2xl mx-auto mb-4 leading-relaxed"
         >
-          Filmes e fotografias de casamento com narrativa cinematográfica,
-          <br className="hidden md:block" />
-          criados para casais que valorizam cada detalhe do seu grande dia.
+          {description}
         </motion.p>
 
         <motion.p
@@ -55,9 +63,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.8 }}
           className="font-heading text-sm md:text-base text-hero-foreground/50 italic max-w-xl mx-auto mb-10"
         >
-          "Para casais que não querem apenas registrar um casamento,
-          <br className="hidden md:block" />
-          mas reviver cada sentimento."
+          "{quote}"
         </motion.p>
 
         <motion.div
@@ -68,18 +74,17 @@ const Hero = () => {
         >
           <Button variant="hero" size="lg" className="px-8 py-6 text-xs uppercase tracking-[0.15em]" asChild>
             <a href={getGeneralWhatsAppUrl()} target="_blank" rel="noopener noreferrer">
-              Quero conversar sobre meu casamento
+              {button1Text}
             </a>
           </Button>
           <Button variant="hero-outline" size="lg" className="px-8 py-6 text-xs uppercase tracking-[0.15em]" asChild>
             <a href="#portfolio">
-              Vamos contar sua história
+              {button2Text}
             </a>
           </Button>
         </motion.div>
       </div>
 
-      {/* Scroll indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
