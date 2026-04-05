@@ -281,6 +281,30 @@ export type Database = {
           },
         ]
       }
+      site_content: {
+        Row: {
+          id: string
+          key: string
+          section: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          section: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          section?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       stories: {
         Row: {
           city: string | null
@@ -339,6 +363,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      testimonials: {
+        Row: {
+          couple_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          location: string | null
+          photo_url: string | null
+          sort_order: number
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          couple_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          photo_url?: string | null
+          sort_order?: number
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          couple_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location?: string | null
+          photo_url?: string | null
+          sort_order?: number
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
