@@ -141,6 +141,7 @@ const Portfolio = () => {
                     <img
                       src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
                       alt={v.title || "Vídeo de casamento"}
+                      loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-hero/40 group-hover:bg-hero/20 transition-colors flex items-center justify-center">
