@@ -43,6 +43,7 @@ const AdminSiteEditor = () => {
 
   /* local draft state per section */
   const [hero, setHero] = useState<Record<string, string>>({});
+  const [services, setServices] = useState<Record<string, any>>({});
   const [differentials, setDifferentials] = useState<Record<string, any>>({});
   const [process, setProcess] = useState<Record<string, any>>({});
   const [contact, setContact] = useState<Record<string, string>>({});
@@ -67,6 +68,17 @@ const AdminSiteEditor = () => {
       button1_text: h.button1_text ?? "Quero conversar sobre meu casamento",
       button2_text: h.button2_text ?? "Vamos contar sua história",
       background_url: h.background_url ?? "",
+    });
+
+    const sv = content["services"] ?? {};
+    setServices({
+      section_label: sv.section_label ?? "Nossos Serviços",
+      title: sv.title ?? "Cada casamento é único",
+      subtitle: sv.subtitle ?? "Projetos personalizados que capturam a essência do seu grande dia",
+      items: sv.items ?? [
+        { title: "Vídeo de Casamento", icon: "film", image_url: "" },
+        { title: "Fotografia de Casamento", icon: "camera", image_url: "" },
+      ],
     });
 
     const d = content["differentials"] ?? {};
@@ -172,6 +184,7 @@ const AdminSiteEditor = () => {
       <Tabs defaultValue="hero">
         <TabsList className="flex flex-wrap gap-1 mb-6 h-auto">
           <TabsTrigger value="hero">Hero</TabsTrigger>
+          <TabsTrigger value="services">Serviços</TabsTrigger>
           <TabsTrigger value="differentials">Diferenciais</TabsTrigger>
           <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="process">Processo</TabsTrigger>
