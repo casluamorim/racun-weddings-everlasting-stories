@@ -567,6 +567,101 @@ const AdminWeddings = () => {
           })}
         </div>
       )}
+
+      {/* ─── Mídia Avulsa ─── */}
+      <div className="mt-10 border-t border-border pt-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-heading text-xl text-foreground">Mídia Avulsa (Portfólio Geral)</h2>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 px-4 py-2 border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 transition-colors">
+              <Upload size={16} className="text-primary" />
+              <span className="font-body text-sm text-primary">
+                {uploadingStandalone ? "Enviando..." : "Subir Fotos"}
+              </span>
+              <input type="file" multiple accept="image/*" className="hidden" disabled={uploadingStandalone}
+                onChange={(e) => { if (e.target.files?.length) { handleStandalonePhotoUpload(e.target.files); e.target.value = ""; } }} />
+            </label>
+          </div>
+        </div>
+
+        {/* Add standalone video */}
+        <div className="flex items-center gap-2 mb-6">
+          <Input value={standaloneVideoTitle} onChange={(e) => setStandaloneVideoTitle(e.target.value)} placeholder="Título (opcional)" className="max-w-[200px]" />
+          <Input value={standaloneYoutubeUrl} onChange={(e) => setStandaloneYoutubeUrl(e.target.value)} placeholder="URL do YouTube..." className="flex-1" />
+          <Button size="sm" disabled={!standaloneYoutubeUrl.trim() || addStandaloneVideo.isPending}
+            onClick={() => addStandaloneVideo.mutate({ url: standaloneYoutubeUrl.trim(), title: standaloneVideoTitle.trim() })}>
+            <Plus size={14} className="mr-1" /> Vídeo
+          </Button>
+        </div>
+
+        {/* Standalone videos */}
+        {standaloneVideos && standaloneVideos.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-heading text-sm text-foreground mb-3 flex items-center gap-2"><Film size={14} /> Vídeos ({standaloneVideos.length})</h3>
+            <SortableGrid items={standaloneVideos} onReorder={reorderStandaloneVideos}
+              className="grid grid-cols-2 md:grid-cols-3 gap-3"
+              renderItem={(v) => {
+                const ytId = getYouTubeId(v.youtube_url);
+                const isEditingThis = editingId === `sv-${v.id}`;
+                return (
+                  <div className="bg-card border border-border rounded-lg overflow-hidden">
+                    {ytId && <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />}
+                    <div className="p-2 flex items-center justify-between gap-1">
+                      {isEditingThis ? (
+                        <div className="flex items-center gap-1 flex-1">
+                          <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-7 text-xs" autoFocus />
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                            supabase.from("portfolio_videos").update({ title: editValue || null }).eq("id", v.id).then(() => {
+                              queryClient.invalidateQueries({ queryKey: ["admin-standalone-videos"] });
+                              setEditingId(null);
+                            });
+                          }}><Check size={12} /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="font-body text-xs text-foreground truncate flex-1">{v.title || "Sem título"}</p>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`sv-${v.id}`); setEditValue(v.title || ""); }}><Pencil size={11} /></Button>
+                        </>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteStandaloneVideo.mutate(v.id)}>
+                        <Trash2 size={11} className="text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              }}
+            />
+          </div>
+        )}
+
+        {/* Standalone photos */}
+        {standalonePhotos && standalonePhotos.length > 0 && (
+          <div>
+            <h3 className="font-heading text-sm text-foreground mb-3 flex items-center gap-2"><ImageIcon size={14} /> Fotos ({standalonePhotos.length})</h3>
+            <SortableGrid items={standalonePhotos} onReorder={reorderStandalonePhotos}
+              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
+              renderItem={(p) => (
+                <div className="relative group rounded-lg overflow-hidden bg-muted">
+                  <div className="aspect-square">
+                    <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                      onClick={() => deleteStandalonePhoto.mutate({ id: p.id, photo_url: p.photo_url })}>
+                      <X size={14} />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+        )}
+
+        {(!standaloneVideos || standaloneVideos.length === 0) && (!standalonePhotos || standalonePhotos.length === 0) && (
+          <p className="text-muted-foreground font-body text-sm text-center py-4">Nenhuma mídia avulsa. Use os botões acima para adicionar.</p>
+        )}
+      </div>
     </div>
   );
 };
