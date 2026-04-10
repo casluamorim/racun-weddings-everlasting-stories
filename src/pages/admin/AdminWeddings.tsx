@@ -241,6 +241,101 @@ const AdminWeddings = () => {
     }
   };
 
+  // ─── Standalone media (avulso) ───
+  const { data: standaloneVideos } = useQuery({
+    queryKey: ["admin-standalone-videos"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("portfolio_videos").select("*").is("wedding_id", null).order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: standalonePhotos } = useQuery({
+    queryKey: ["admin-standalone-photos"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("portfolio_photos").select("*").is("wedding_id", null).order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addStandaloneVideo = useMutation({
+    mutationFn: async ({ url, title }: { url: string; title: string }) => {
+      const { error } = await supabase.from("portfolio_videos").insert({ youtube_url: url, title: title || null });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-standalone-videos"] });
+      setStandaloneYoutubeUrl("");
+      setStandaloneVideoTitle("");
+      toast.success("Vídeo adicionado!");
+    },
+  });
+
+  const deleteStandaloneVideo = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("portfolio_videos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-standalone-videos"] });
+      toast.success("Vídeo removido");
+    },
+  });
+
+  const deleteStandalonePhoto = useMutation({
+    mutationFn: async ({ id, photo_url }: { id: string; photo_url: string }) => {
+      const urlParts = photo_url.split("/portfolio/");
+      if (urlParts[1]) await supabase.storage.from("portfolio").remove([urlParts[1]]);
+      const { error } = await supabase.from("portfolio_photos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-standalone-photos"] });
+      toast.success("Foto removida");
+    },
+  });
+
+  const handleStandalonePhotoUpload = async (files: FileList) => {
+    setUploadingStandalone(true);
+    const currentCount = standalonePhotos?.length ?? 0;
+    let uploaded = 0;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) continue;
+      if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} é muito grande`); continue; }
+      const compressed = await compressImage(file);
+      const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
+      const path = `standalone/${Date.now()}-${i}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, compressed);
+      if (uploadError) { toast.error(`Erro ao enviar ${file.name}`); continue; }
+      const { data: urlData } = supabase.storage.from("portfolio").getPublicUrl(path);
+      const { error: dbError } = await supabase.from("portfolio_photos").insert({ photo_url: urlData.publicUrl, sort_order: currentCount + uploaded, wedding_id: null as any });
+      if (dbError) { toast.error(`Erro ao salvar ${file.name}`); continue; }
+      uploaded++;
+    }
+    if (uploaded > 0) {
+      toast.success(`${uploaded} foto(s) enviada(s)!`);
+      queryClient.invalidateQueries({ queryKey: ["admin-standalone-photos"] });
+    }
+    setUploadingStandalone(false);
+  };
+
+  const reorderStandaloneVideos = async (reordered: NonNullable<typeof standaloneVideos>) => {
+    queryClient.setQueryData(["admin-standalone-videos"], reordered);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_videos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
+  const reorderStandalonePhotos = async (reordered: NonNullable<typeof standalonePhotos>) => {
+    queryClient.setQueryData(["admin-standalone-photos"], reordered);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_photos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
