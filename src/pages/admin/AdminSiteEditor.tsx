@@ -220,7 +220,74 @@ const AdminSiteEditor = () => {
           </Card>
         </TabsContent>
 
-        {/* ─── DIFFERENTIALS ─── */}
+        {/* ─── SERVICES ─── */}
+        <TabsContent value="services">
+          <Card>
+            <CardHeader><CardTitle>Nossos Serviços</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <SectionField label="Label da seção" value={services.section_label ?? ""} onChange={(v) => setServices({ ...services, section_label: v })} />
+              <SectionField label="Título" value={services.title ?? ""} onChange={(v) => setServices({ ...services, title: v })} />
+              <SectionField label="Subtítulo" value={services.subtitle ?? ""} onChange={(v) => setServices({ ...services, subtitle: v })} multiline />
+
+              <div className="space-y-3 mt-4">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cards de Serviço</Label>
+                {(services.items ?? []).map((item: any, i: number) => (
+                  <div key={i} className="flex gap-2 items-start border rounded p-3">
+                    <div className="flex-1 space-y-2">
+                      <Input value={item.title} placeholder="Título do serviço" onChange={(e) => {
+                        const items = [...services.items];
+                        items[i] = { ...items[i], title: e.target.value };
+                        setServices({ ...services, items });
+                      }} />
+                      <div className="flex gap-2 items-center">
+                        <Label className="text-xs text-muted-foreground whitespace-nowrap">Ícone:</Label>
+                        <select
+                          className="border rounded px-2 py-1 text-sm bg-background"
+                          value={item.icon}
+                          onChange={(e) => {
+                            const items = [...services.items];
+                            items[i] = { ...items[i], icon: e.target.value };
+                            setServices({ ...services, items });
+                          }}
+                        >
+                          <option value="film">Vídeo</option>
+                          <option value="camera">Fotografia</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Imagem</Label>
+                        {item.image_url && (
+                          <img src={item.image_url} alt="Preview" className="w-32 h-20 object-cover rounded mb-1" />
+                        )}
+                        <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (url) => {
+                          const items = [...services.items];
+                          items[i] = { ...items[i], image_url: url };
+                          setServices({ ...services, items });
+                        })} />
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                      const items = services.items.filter((_: any, j: number) => j !== i);
+                      setServices({ ...services, items });
+                    }}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => {
+                  setServices({ ...services, items: [...(services.items ?? []), { title: "", icon: "camera", image_url: "" }] });
+                }}>
+                  <Plus className="h-4 w-4 mr-1" /> Adicionar Serviço
+                </Button>
+              </div>
+
+              <Button onClick={() => saveSection("services", services)} className="mt-4">
+                <Save className="mr-2 h-4 w-4" /> Salvar Serviços
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="differentials">
           <Card>
             <CardHeader><CardTitle>Diferenciais</CardTitle></CardHeader>
