@@ -16,7 +16,10 @@ const AdminWeddings = () => {
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingStandalone, setUploadingStandalone] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [standaloneYoutubeUrl, setStandaloneYoutubeUrl] = useState("");
+  const [standaloneVideoTitle, setStandaloneVideoTitle] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [form, setForm] = useState({ couple_names: "", city: "", venue: "", date: "", description: "" });
