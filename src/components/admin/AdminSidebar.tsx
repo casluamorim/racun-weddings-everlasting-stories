@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Camera,
-  Film,
   DollarSign,
   MessageSquare,
   CalendarDays,
@@ -29,7 +28,6 @@ import { Button } from "@/components/ui/button";
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Casamentos", url: "/admin/weddings", icon: Camera },
-  { title: "Vídeos", url: "/admin/videos", icon: Film },
   { title: "Valores", url: "/admin/pricing", icon: DollarSign },
   { title: "Orçamentos", url: "/admin/quotes", icon: MessageSquare },
   { title: "Agenda", url: "/admin/calendar", icon: CalendarDays },
