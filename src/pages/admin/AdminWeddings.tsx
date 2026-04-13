@@ -83,6 +83,27 @@ const AdminWeddings = () => {
     onError: () => toast.error("Erro ao cadastrar"),
   });
 
+  const updateWeddingMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof editForm }) => {
+      if (!data) return;
+      const { error } = await supabase.from("weddings").update({
+        couple_names: data.couple_names,
+        city: data.city || null,
+        venue: data.venue || null,
+        date: data.date || null,
+        description: data.description || null,
+        style: data.style || null,
+      }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-weddings"] });
+      toast.success("Casamento atualizado!");
+      setEditingWeddingId(null);
+      setEditForm(null);
+    },
+    onError: () => toast.error("Erro ao atualizar"),
+
   const togglePublish = useMutation({
     mutationFn: async ({ id, is_published }: { id: string; is_published: boolean }) => {
       const { error } = await supabase.from("weddings").update({ is_published: !is_published }).eq("id", id);
