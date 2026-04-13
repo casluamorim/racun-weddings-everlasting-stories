@@ -68,6 +68,7 @@ const AdminSiteEditor = () => {
       button1_text: h.button1_text ?? "Quero conversar sobre meu casamento",
       button2_text: h.button2_text ?? "Vamos contar sua história",
       background_url: h.background_url ?? "",
+      video_url: h.video_url ?? "",
     });
 
     const sv = content["services"] ?? {};
@@ -207,12 +208,14 @@ const AdminSiteEditor = () => {
               <SectionField label="Botão 1 – texto" value={hero.button1_text ?? ""} onChange={(v) => setHero({ ...hero, button1_text: v })} />
               <SectionField label="Botão 2 – texto" value={hero.button2_text ?? ""} onChange={(v) => setHero({ ...hero, button2_text: v })} />
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Imagem de fundo</Label>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Imagem de fundo (fallback se não tiver vídeo)</Label>
                 {hero.background_url && (
                   <img src={hero.background_url} alt="Preview" className="w-48 h-28 object-cover rounded mb-2" />
                 )}
                 <Input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, (url) => setHero({ ...hero, background_url: url }))} />
               </div>
+              <SectionField label="Vídeo de fundo (link do YouTube)" value={hero.video_url ?? ""} onChange={(v) => setHero({ ...hero, video_url: v })} />
+              <p className="text-xs text-muted-foreground">Cole o link do YouTube. Se preenchido, o vídeo será exibido no fundo do Hero em vez da imagem.</p>
               <Button onClick={() => saveSection("hero", hero)} className="mt-4">
                 <Save className="mr-2 h-4 w-4" /> Salvar Hero
               </Button>
