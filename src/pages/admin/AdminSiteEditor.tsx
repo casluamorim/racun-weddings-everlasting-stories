@@ -258,7 +258,7 @@ const AdminSiteEditor = () => {
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-xs text-muted-foreground">Imagem</Label>
+                        <Label className="text-xs text-muted-foreground">Imagem de fundo</Label>
                         {item.image_url && (
                           <img src={item.image_url} alt="Preview" className="w-32 h-20 object-cover rounded mb-1" />
                         )}
@@ -267,6 +267,14 @@ const AdminSiteEditor = () => {
                           items[i] = { ...items[i], image_url: url };
                           setServices({ ...services, items });
                         })} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Vídeo YouTube (substitui imagem)</Label>
+                        <Input value={item.video_url ?? ""} placeholder="https://youtube.com/watch?v=..." onChange={(e) => {
+                          const items = [...services.items];
+                          items[i] = { ...items[i], video_url: e.target.value };
+                          setServices({ ...services, items });
+                        }} />
                       </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => {
@@ -278,7 +286,7 @@ const AdminSiteEditor = () => {
                   </div>
                 ))}
                 <Button variant="outline" size="sm" onClick={() => {
-                  setServices({ ...services, items: [...(services.items ?? []), { title: "", icon: "camera", image_url: "" }] });
+                  setServices({ ...services, items: [...(services.items ?? []), { title: "", icon: "camera", image_url: "", video_url: "" }] });
                 }}>
                   <Plus className="h-4 w-4 mr-1" /> Adicionar Serviço
                 </Button>
