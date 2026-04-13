@@ -452,7 +452,75 @@ const AdminWeddings = () => {
                 {/* Expanded content */}
                 {isExpanded && (
                   <div className="border-t border-border p-4 space-y-6">
-                    {/* Upload area */}
+                    {/* Edit wedding details */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-heading text-sm text-foreground flex items-center gap-2">
+                          <Pencil size={14} /> Informações
+                        </h4>
+                        {editingWeddingId !== w.id ? (
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setEditingWeddingId(w.id);
+                            setEditForm({
+                              couple_names: w.couple_names,
+                              city: w.city || "",
+                              venue: w.venue || "",
+                              date: w.date || "",
+                              description: w.description || "",
+                              style: w.style || "",
+                            });
+                          }}>
+                            <Pencil size={14} className="mr-1" /> Editar
+                          </Button>
+                        ) : (
+                          <div className="flex gap-2">
+                            <Button size="sm" disabled={updateWeddingMutation.isPending} onClick={() => updateWeddingMutation.mutate({ id: w.id, data: editForm })}>
+                              <Check size={14} className="mr-1" /> {updateWeddingMutation.isPending ? "Salvando..." : "Salvar"}
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => { setEditingWeddingId(null); setEditForm(null); }}>
+                              Cancelar
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      {editingWeddingId === w.id && editForm ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <Label className="font-body text-xs">Nomes do Casal</Label>
+                            <Input value={editForm.couple_names} onChange={(e) => setEditForm({ ...editForm, couple_names: e.target.value })} className="h-9 text-sm" />
+                          </div>
+                          <div>
+                            <Label className="font-body text-xs">Cidade</Label>
+                            <Input value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="h-9 text-sm" />
+                          </div>
+                          <div>
+                            <Label className="font-body text-xs">Local</Label>
+                            <Input value={editForm.venue} onChange={(e) => setEditForm({ ...editForm, venue: e.target.value })} className="h-9 text-sm" />
+                          </div>
+                          <div>
+                            <Label className="font-body text-xs">Data</Label>
+                            <Input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })} className="h-9 text-sm" />
+                          </div>
+                          <div>
+                            <Label className="font-body text-xs">Estilo</Label>
+                            <Input value={editForm.style} onChange={(e) => setEditForm({ ...editForm, style: e.target.value })} placeholder="Ex: Rústico, Clássico..." className="h-9 text-sm" />
+                          </div>
+                          <div className="sm:col-span-2">
+                            <Label className="font-body text-xs">Descrição</Label>
+                            <Textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="text-sm" rows={2} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-body text-muted-foreground">
+                          <span><strong className="text-foreground">Casal:</strong> {w.couple_names}</span>
+                          <span><strong className="text-foreground">Cidade:</strong> {w.city || "—"}</span>
+                          <span><strong className="text-foreground">Local:</strong> {w.venue || "—"}</span>
+                          <span><strong className="text-foreground">Data:</strong> {w.date ? new Date(w.date).toLocaleDateString("pt-BR") : "—"}</span>
+                          <span><strong className="text-foreground">Estilo:</strong> {w.style || "—"}</span>
+                          {w.description && <span className="col-span-2 sm:col-span-3"><strong className="text-foreground">Descrição:</strong> {w.description}</span>}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex flex-wrap items-center gap-3">
                       <label className="flex items-center gap-2 px-4 py-2 border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 transition-colors">
                         <Upload size={16} className="text-primary" />
