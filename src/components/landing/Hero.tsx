@@ -15,15 +15,36 @@ const Hero = () => {
   const button1Text = getValue("hero", "button1_text", "Quero conversar sobre meu casamento");
   const button2Text = getValue("hero", "button2_text", "Vamos contar sua história");
   const backgroundUrl = getValue("hero", "background_url", "");
+  const videoUrl = getValue("hero", "video_url", "");
+
+  const extractYoutubeId = (url: string) => {
+    const match = url.match(/(?:youtu\.be\/|v=|\/embed\/)([\w-]{11})/);
+    return match?.[1] ?? "";
+  };
+
+  const ytId = videoUrl ? extractYoutubeId(videoUrl) : "";
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0">
-        <img
-          src={backgroundUrl || heroImage}
-          alt="Casamento cinematográfico"
-          className="w-full h-full object-cover"
-        />
+        {ytId ? (
+          <>
+            <iframe
+              src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={{ transform: "scale(1.3)", transformOrigin: "center center" }}
+              allow="autoplay; fullscreen"
+              frameBorder="0"
+              title="Background video"
+            />
+          </>
+        ) : (
+          <img
+            src={backgroundUrl || heroImage}
+            alt="Casamento cinematográfico"
+            className="w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-black/40" />
       </div>
 

@@ -68,6 +68,7 @@ const AdminSiteEditor = () => {
       button1_text: h.button1_text ?? "Quero conversar sobre meu casamento",
       button2_text: h.button2_text ?? "Vamos contar sua história",
       background_url: h.background_url ?? "",
+      video_url: h.video_url ?? "",
     });
 
     const sv = content["services"] ?? {};
