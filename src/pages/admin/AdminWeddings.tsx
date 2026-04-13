@@ -103,6 +103,7 @@ const AdminWeddings = () => {
       setEditForm(null);
     },
     onError: () => toast.error("Erro ao atualizar"),
+  });
 
   const togglePublish = useMutation({
     mutationFn: async ({ id, is_published }: { id: string; is_published: boolean }) => {
