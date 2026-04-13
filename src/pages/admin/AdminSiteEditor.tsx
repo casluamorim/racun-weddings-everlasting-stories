@@ -219,7 +219,6 @@ const AdminSiteEditor = () => {
               <Button onClick={() => saveSection("hero", hero)} className="mt-4">
                 <Save className="mr-2 h-4 w-4" /> Salvar Hero
               </Button>
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>
