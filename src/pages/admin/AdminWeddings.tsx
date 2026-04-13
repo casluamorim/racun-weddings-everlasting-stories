@@ -23,6 +23,8 @@ const AdminWeddings = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [form, setForm] = useState({ couple_names: "", city: "", venue: "", date: "", description: "" });
+  const [editForm, setEditForm] = useState<{ couple_names: string; city: string; venue: string; date: string; description: string; style: string } | null>(null);
+  const [editingWeddingId, setEditingWeddingId] = useState<string | null>(null);
 
   const { data: weddings, isLoading } = useQuery({
     queryKey: ["admin-weddings"],
