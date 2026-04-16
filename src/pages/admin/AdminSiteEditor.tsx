@@ -305,52 +305,8 @@ const AdminSiteEditor = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="differentials">
-          <Card>
-            <CardHeader><CardTitle>Diferenciais</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <SectionField label="Label da seção" value={differentials.section_label ?? ""} onChange={(v) => setDifferentials({ ...differentials, section_label: v })} />
-              <SectionField label="Título da seção" value={differentials.section_title ?? ""} onChange={(v) => setDifferentials({ ...differentials, section_title: v })} />
-              <SectionField label="Texto de fechamento" value={differentials.closing_text ?? ""} onChange={(v) => setDifferentials({ ...differentials, closing_text: v })} multiline />
 
-              <div className="space-y-3 mt-4">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Itens</Label>
-                {(differentials.items ?? []).map((item: any, i: number) => (
-                  <div key={i} className="flex gap-2 items-start border rounded p-3">
-                    <GripVertical className="h-4 w-4 mt-2 text-muted-foreground" />
-                    <div className="flex-1 space-y-2">
-                      <Input value={item.title} placeholder="Título" onChange={(e) => {
-                        const items = [...differentials.items];
-                        items[i] = { ...items[i], title: e.target.value };
-                        setDifferentials({ ...differentials, items });
-                      }} />
-                      <Textarea value={item.desc} placeholder="Descrição" rows={2} onChange={(e) => {
-                        const items = [...differentials.items];
-                        items[i] = { ...items[i], desc: e.target.value };
-                        setDifferentials({ ...differentials, items });
-                      }} />
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      const items = differentials.items.filter((_: any, j: number) => j !== i);
-                      setDifferentials({ ...differentials, items });
-                    }}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={() => {
-                  setDifferentials({ ...differentials, items: [...(differentials.items ?? []), { title: "", desc: "" }] });
-                }}>
-                  <Plus className="h-4 w-4 mr-1" /> Adicionar
-                </Button>
-              </div>
 
-              <Button onClick={() => saveSection("differentials", differentials)} className="mt-4">
-                <Save className="mr-2 h-4 w-4" /> Salvar Diferenciais
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* ─── TESTIMONIALS ─── */}
         <TabsContent value="testimonials">
