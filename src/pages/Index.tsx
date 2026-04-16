@@ -62,8 +62,7 @@ const Index = () => (
     />
     <Navbar />
     <Hero />
-    
-    <Differentials />
+    <Services />
     <Portfolio />
     <Testimonials />
     <Process />
