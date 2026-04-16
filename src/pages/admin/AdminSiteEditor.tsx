@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, GripVertical, Save } from "lucide-react";
+import { Plus, Trash2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
 
@@ -44,7 +44,7 @@ const AdminSiteEditor = () => {
   /* local draft state per section */
   const [hero, setHero] = useState<Record<string, string>>({});
   const [services, setServices] = useState<Record<string, any>>({});
-  const [differentials, setDifferentials] = useState<Record<string, any>>({});
+  
   const [process, setProcess] = useState<Record<string, any>>({});
   const [contact, setContact] = useState<Record<string, string>>({});
   const [cta, setCta] = useState<Record<string, string>>({});
@@ -82,19 +82,6 @@ const AdminSiteEditor = () => {
       ],
     });
 
-    const d = content["differentials"] ?? {};
-    setDifferentials({
-      section_label: d.section_label ?? "Por que nos escolher",
-      section_title: d.section_title ?? "Muito além do registro",
-      items: d.items ?? [
-        { title: "Atendimento Personalizado", desc: "Cada casal é único. Entendemos sua história para criar algo verdadeiramente especial." },
-        { title: "Número Limitado", desc: "Trabalhamos com poucos casamentos por ano para garantir atenção total a cada história." },
-        { title: "Equipe Discreta", desc: "Profissionais experientes que capturam sem interferir nos momentos mais preciosos." },
-        { title: "Direção Sensível", desc: "Um olhar cinematográfico que valoriza a emoção real, sem poses forçadas." },
-        { title: "Edição Artesanal", desc: "Cada filme é único. Nada de modelos prontos ou fórmulas repetitivas." },
-      ],
-      closing_text: d.closing_text ?? "A Racun Weddings é para quem valoriza histórias reais, emoção verdadeira e um olhar cinematográfico.",
-    });
 
     const p = content["process"] ?? {};
     setProcess({
@@ -136,7 +123,13 @@ const AdminSiteEditor = () => {
     const fq = content["faq"] ?? {};
     setFaq(
       fq.items ?? [
-        { question: "Quanto tempo antes do casamento devo contratar o fotógrafo?", answer: "Recomendamos fechar o contrato com pelo menos 6 a 12 meses de antecedência." },
+        { question: "Quanto tempo antes do casamento devo contratar o fotógrafo?", answer: "Recomendamos fechar o contrato com pelo menos 6 a 12 meses de antecedência. Datas populares (maio, outubro, dezembro) esgotam rápido, então quanto antes, melhor para garantir sua data." },
+        { question: "Como funciona a entrega das fotos e vídeos?", answer: "As fotos editadas são entregues em galeria online privada em até 30 dias úteis. Os vídeos (teaser e filme completo) são entregues em até 60 dias úteis. Tudo em alta resolução, pronto para impressão e redes sociais." },
+        { question: "Vocês atendem fora da cidade?", answer: "Sim! Atendemos casamentos em todo o Brasil e também destination weddings no exterior. Deslocamentos fora da Grande São Paulo possuem custos adicionais de transporte e hospedagem, que são informados no orçamento." },
+        { question: "Quantas fotos serão entregues?", answer: "A quantidade varia conforme o pacote e a duração do evento, mas em média entregamos entre 400 e 800 fotos editadas. Priorizamos qualidade e momentos genuínos — cada clique tem intenção." },
+        { question: "Posso personalizar meu pacote?", answer: "Com certeza! Nossos pacotes servem como ponto de partida. Podemos adicionar horas extras, ensaio pré-wedding, álbum impresso, cobertura de making-of e muito mais. Monte o pacote ideal para o seu grande dia." },
+        { question: "Qual é a forma de pagamento?", answer: "Oferecemos pagamento via PIX, transferência bancária ou cartão de crédito em até 12x. A reserva da data é confirmada com um sinal de 30%, e o restante pode ser parcelado até a data do evento." },
+        { question: "E se chover no dia do casamento?", answer: "Chuva nunca é problema! Temos experiência em criar fotos incríveis em qualquer condição climática. Inclusive, casamentos com chuva costumam render imagens ainda mais emocionantes e únicas." },
       ]
     );
   }, [content]);
@@ -186,7 +179,7 @@ const AdminSiteEditor = () => {
         <TabsList className="flex flex-wrap gap-1 mb-6 h-auto">
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="services">Serviços</TabsTrigger>
-          <TabsTrigger value="differentials">Diferenciais</TabsTrigger>
+          <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="process">Processo</TabsTrigger>
           <TabsTrigger value="contact">Contato</TabsTrigger>
@@ -299,52 +292,8 @@ const AdminSiteEditor = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="differentials">
-          <Card>
-            <CardHeader><CardTitle>Diferenciais</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <SectionField label="Label da seção" value={differentials.section_label ?? ""} onChange={(v) => setDifferentials({ ...differentials, section_label: v })} />
-              <SectionField label="Título da seção" value={differentials.section_title ?? ""} onChange={(v) => setDifferentials({ ...differentials, section_title: v })} />
-              <SectionField label="Texto de fechamento" value={differentials.closing_text ?? ""} onChange={(v) => setDifferentials({ ...differentials, closing_text: v })} multiline />
 
-              <div className="space-y-3 mt-4">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Itens</Label>
-                {(differentials.items ?? []).map((item: any, i: number) => (
-                  <div key={i} className="flex gap-2 items-start border rounded p-3">
-                    <GripVertical className="h-4 w-4 mt-2 text-muted-foreground" />
-                    <div className="flex-1 space-y-2">
-                      <Input value={item.title} placeholder="Título" onChange={(e) => {
-                        const items = [...differentials.items];
-                        items[i] = { ...items[i], title: e.target.value };
-                        setDifferentials({ ...differentials, items });
-                      }} />
-                      <Textarea value={item.desc} placeholder="Descrição" rows={2} onChange={(e) => {
-                        const items = [...differentials.items];
-                        items[i] = { ...items[i], desc: e.target.value };
-                        setDifferentials({ ...differentials, items });
-                      }} />
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      const items = differentials.items.filter((_: any, j: number) => j !== i);
-                      setDifferentials({ ...differentials, items });
-                    }}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-                <Button variant="outline" size="sm" onClick={() => {
-                  setDifferentials({ ...differentials, items: [...(differentials.items ?? []), { title: "", desc: "" }] });
-                }}>
-                  <Plus className="h-4 w-4 mr-1" /> Adicionar
-                </Button>
-              </div>
 
-              <Button onClick={() => saveSection("differentials", differentials)} className="mt-4">
-                <Save className="mr-2 h-4 w-4" /> Salvar Diferenciais
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* ─── TESTIMONIALS ─── */}
         <TabsContent value="testimonials">
