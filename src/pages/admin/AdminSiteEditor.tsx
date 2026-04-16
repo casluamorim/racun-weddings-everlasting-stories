@@ -192,7 +192,7 @@ const AdminSiteEditor = () => {
         <TabsList className="flex flex-wrap gap-1 mb-6 h-auto">
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="services">Serviços</TabsTrigger>
-          <TabsTrigger value="differentials">Diferenciais</TabsTrigger>
+          <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="process">Processo</TabsTrigger>
           <TabsTrigger value="contact">Contato</TabsTrigger>
