@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, GripVertical, Save } from "lucide-react";
+import { Plus, Trash2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
 
@@ -44,7 +44,7 @@ const AdminSiteEditor = () => {
   /* local draft state per section */
   const [hero, setHero] = useState<Record<string, string>>({});
   const [services, setServices] = useState<Record<string, any>>({});
-  const [differentials, setDifferentials] = useState<Record<string, any>>({});
+  
   const [process, setProcess] = useState<Record<string, any>>({});
   const [contact, setContact] = useState<Record<string, string>>({});
   const [cta, setCta] = useState<Record<string, string>>({});
