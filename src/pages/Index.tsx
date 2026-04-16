@@ -62,7 +62,7 @@ const Index = () => (
     />
     <Navbar />
     <Hero />
-    <Services />
+    
     <Differentials />
     <Portfolio />
     <Testimonials />
