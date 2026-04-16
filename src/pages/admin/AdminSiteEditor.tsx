@@ -136,7 +136,13 @@ const AdminSiteEditor = () => {
     const fq = content["faq"] ?? {};
     setFaq(
       fq.items ?? [
-        { question: "Quanto tempo antes do casamento devo contratar o fotógrafo?", answer: "Recomendamos fechar o contrato com pelo menos 6 a 12 meses de antecedência." },
+        { question: "Quanto tempo antes do casamento devo contratar o fotógrafo?", answer: "Recomendamos fechar o contrato com pelo menos 6 a 12 meses de antecedência. Datas populares (maio, outubro, dezembro) esgotam rápido, então quanto antes, melhor para garantir sua data." },
+        { question: "Como funciona a entrega das fotos e vídeos?", answer: "As fotos editadas são entregues em galeria online privada em até 30 dias úteis. Os vídeos (teaser e filme completo) são entregues em até 60 dias úteis. Tudo em alta resolução, pronto para impressão e redes sociais." },
+        { question: "Vocês atendem fora da cidade?", answer: "Sim! Atendemos casamentos em todo o Brasil e também destination weddings no exterior. Deslocamentos fora da Grande São Paulo possuem custos adicionais de transporte e hospedagem, que são informados no orçamento." },
+        { question: "Quantas fotos serão entregues?", answer: "A quantidade varia conforme o pacote e a duração do evento, mas em média entregamos entre 400 e 800 fotos editadas. Priorizamos qualidade e momentos genuínos — cada clique tem intenção." },
+        { question: "Posso personalizar meu pacote?", answer: "Com certeza! Nossos pacotes servem como ponto de partida. Podemos adicionar horas extras, ensaio pré-wedding, álbum impresso, cobertura de making-of e muito mais. Monte o pacote ideal para o seu grande dia." },
+        { question: "Qual é a forma de pagamento?", answer: "Oferecemos pagamento via PIX, transferência bancária ou cartão de crédito em até 12x. A reserva da data é confirmada com um sinal de 30%, e o restante pode ser parcelado até a data do evento." },
+        { question: "E se chover no dia do casamento?", answer: "Chuva nunca é problema! Temos experiência em criar fotos incríveis em qualquer condição climática. Inclusive, casamentos com chuva costumam render imagens ainda mais emocionantes e únicas." },
       ]
     );
   }, [content]);
