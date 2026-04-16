@@ -82,19 +82,6 @@ const AdminSiteEditor = () => {
       ],
     });
 
-    const d = content["differentials"] ?? {};
-    setDifferentials({
-      section_label: d.section_label ?? "Por que nos escolher",
-      section_title: d.section_title ?? "Muito além do registro",
-      items: d.items ?? [
-        { title: "Atendimento Personalizado", desc: "Cada casal é único. Entendemos sua história para criar algo verdadeiramente especial." },
-        { title: "Número Limitado", desc: "Trabalhamos com poucos casamentos por ano para garantir atenção total a cada história." },
-        { title: "Equipe Discreta", desc: "Profissionais experientes que capturam sem interferir nos momentos mais preciosos." },
-        { title: "Direção Sensível", desc: "Um olhar cinematográfico que valoriza a emoção real, sem poses forçadas." },
-        { title: "Edição Artesanal", desc: "Cada filme é único. Nada de modelos prontos ou fórmulas repetitivas." },
-      ],
-      closing_text: d.closing_text ?? "A Racun Weddings é para quem valoriza histórias reais, emoção verdadeira e um olhar cinematográfico.",
-    });
 
     const p = content["process"] ?? {};
     setProcess({
