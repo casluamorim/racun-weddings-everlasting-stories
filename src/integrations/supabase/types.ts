@@ -65,6 +65,7 @@ export type Database = {
           created_at: string
           id: string
           photo_url: string
+          show_in_portfolio: boolean
           sort_order: number
           wedding_id: string | null
         }
@@ -73,6 +74,7 @@ export type Database = {
           created_at?: string
           id?: string
           photo_url: string
+          show_in_portfolio?: boolean
           sort_order?: number
           wedding_id?: string | null
         }
@@ -81,6 +83,7 @@ export type Database = {
           created_at?: string
           id?: string
           photo_url?: string
+          show_in_portfolio?: boolean
           sort_order?: number
           wedding_id?: string | null
         }
@@ -99,6 +102,7 @@ export type Database = {
           created_at: string
           id: string
           is_featured: boolean
+          show_in_portfolio: boolean
           sort_order: number
           title: string | null
           wedding_id: string | null
@@ -108,6 +112,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean
+          show_in_portfolio?: boolean
           sort_order?: number
           title?: string | null
           wedding_id?: string | null
@@ -117,6 +122,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean
+          show_in_portfolio?: boolean
           sort_order?: number
           title?: string | null
           wedding_id?: string | null

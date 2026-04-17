@@ -1,0 +1,2 @@
+ALTER TABLE public.portfolio_photos ADD COLUMN IF NOT EXISTS show_in_portfolio boolean NOT NULL DEFAULT true;
+ALTER TABLE public.portfolio_videos ADD COLUMN IF NOT EXISTS show_in_portfolio boolean NOT NULL DEFAULT true;
