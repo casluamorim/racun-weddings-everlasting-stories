@@ -38,7 +38,10 @@ const PlanCard = ({ plan, isCombo }: { plan: Plan; isCombo?: boolean }) => (
       <h3 className={`font-heading text-2xl md:text-3xl italic ${plan.is_highlighted ? "text-section-dark-foreground" : "text-foreground"}`}>
         {plan.display_name}
       </h3>
-      <div className="w-10 h-[2px] bg-primary mx-auto mt-4" />
+      <div className="w-10 h-[2px] bg-primary mx-auto mt-4 mb-5" />
+      <p className={`font-heading text-3xl md:text-4xl ${plan.is_highlighted ? "text-primary" : "text-primary"}`}>
+        {plan.price}
+      </p>
     </div>
 
     <ul className="space-y-3.5 flex-1 mb-8">
