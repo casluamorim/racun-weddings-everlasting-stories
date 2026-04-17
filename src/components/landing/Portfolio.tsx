@@ -26,31 +26,32 @@ const Portfolio = () => {
   const { data: photos } = useQuery({
     queryKey: ["public-photos", weddingIds],
     queryFn: async () => {
-      // Get photos from published weddings + standalone photos
       const queries = [];
-      
+
       if (weddingIds.length > 0) {
         queries.push(
           supabase
             .from("portfolio_photos")
-            .select("id, photo_url, caption, wedding_id")
+            .select("id, photo_url, caption, wedding_id, sort_order")
             .in("wedding_id", weddingIds)
+            .eq("show_in_portfolio", true)
             .order("sort_order")
-            .limit(12)
         );
       }
-      
+
       queries.push(
         supabase
           .from("portfolio_photos")
-          .select("id, photo_url, caption, wedding_id")
+          .select("id, photo_url, caption, wedding_id, sort_order")
           .is("wedding_id", null)
+          .eq("show_in_portfolio", true)
           .order("sort_order")
-          .limit(12)
       );
 
       const results = await Promise.all(queries);
-      const allPhotos = results.flatMap(r => r.data ?? []);
+      const allPhotos = results.flatMap((r) => r.data ?? []);
+      // Global ordering by sort_order across sources
+      allPhotos.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
       return allPhotos.slice(0, 12);
     },
   });
@@ -61,6 +62,7 @@ const Portfolio = () => {
       const { data, error } = await supabase
         .from("portfolio_videos")
         .select("id, title, youtube_url, is_featured")
+        .eq("show_in_portfolio", true)
         .order("sort_order")
         .limit(6);
       if (error) throw error;

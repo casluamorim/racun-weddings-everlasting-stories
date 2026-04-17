@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, Upload, Film, ImageIcon, Pencil, Check, X } from "lucide-react";
+import { Plus, Trash2, Upload, Film, ImageIcon, Pencil, Check, X, Eye, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 import { compressImage } from "@/lib/imageCompression";
@@ -106,6 +106,22 @@ const AdminVideos = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-standalone-photos"] });
       toast.success("Foto removida");
     },
+  });
+
+  const togglePhotoVisibility = useMutation({
+    mutationFn: async ({ id, show_in_portfolio }: { id: string; show_in_portfolio: boolean }) => {
+      const { error } = await supabase.from("portfolio_photos").update({ show_in_portfolio: !show_in_portfolio }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-standalone-photos"] }),
+  });
+
+  const toggleVideoVisibility = useMutation({
+    mutationFn: async ({ id, show_in_portfolio }: { id: string; show_in_portfolio: boolean }) => {
+      const { error } = await supabase.from("portfolio_videos").update({ show_in_portfolio: !show_in_portfolio }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-videos"] }),
   });
 
   const reorderPhotos = async (reordered: typeof photos extends (infer T)[] | undefined ? T[] : never[]) => {
@@ -245,9 +261,14 @@ const AdminVideos = () => {
                   const ytId = getYouTubeId(v.youtube_url);
                   const isEditing = editingId === `video-${v.id}`;
                   return (
-                    <div className="bg-card border border-border rounded-lg overflow-hidden">
+                    <div className={`bg-card border border-border rounded-lg overflow-hidden ${!v.show_in_portfolio ? "opacity-50" : ""}`}>
                       {ytId && (
-                        <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
+                        <div className="relative">
+                          <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
+                          {!v.show_in_portfolio && (
+                            <span className="absolute top-2 left-2 bg-background/80 text-xs font-body px-2 py-0.5 rounded">Oculto</span>
+                          )}
+                        </div>
                       )}
                       <div className="p-3 flex items-center justify-between gap-2">
                         {isEditing ? (
@@ -269,12 +290,21 @@ const AdminVideos = () => {
                         ) : (
                           <>
                             <p className="font-body text-sm text-foreground truncate flex-1">{v.title || "Sem título"}</p>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(`video-${v.id}`); setEditTitle(v.title || ""); }}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditingId(`video-${v.id}`); setEditTitle(v.title || ""); }} title="Editar título">
                               <Pencil size={14} />
                             </Button>
                           </>
                         )}
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteVideoMutation.mutate(v.id)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => toggleVideoVisibility.mutate({ id: v.id, show_in_portfolio: v.show_in_portfolio })}
+                          title={v.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                        >
+                          {v.show_in_portfolio ? <Eye size={14} /> : <EyeOff size={14} className="text-muted-foreground" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteVideoMutation.mutate(v.id)} title="Remover">
                           <Trash2 size={14} className="text-destructive" />
                         </Button>
                       </div>
@@ -299,9 +329,12 @@ const AdminVideos = () => {
                 renderItem={(p) => {
                   const isEditing = editingId === `photo-${p.id}`;
                   return (
-                    <div className="bg-card border border-border rounded-lg overflow-hidden">
-                      <div className="aspect-square">
+                    <div className={`bg-card border border-border rounded-lg overflow-hidden ${!p.show_in_portfolio ? "opacity-50" : ""}`}>
+                      <div className="aspect-square relative">
                         <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
+                        {!p.show_in_portfolio && (
+                          <span className="absolute top-1 left-1 bg-background/80 text-[10px] font-body px-1.5 py-0.5 rounded">Oculto</span>
+                        )}
                       </div>
                       <div className="p-2">
                         {isEditing ? (
@@ -324,10 +357,19 @@ const AdminVideos = () => {
                           <div className="flex items-center justify-between">
                             <p className="font-body text-xs text-muted-foreground truncate">{p.caption || "Sem legenda"}</p>
                             <div className="flex items-center gap-0.5">
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`photo-${p.id}`); setEditCaption(p.caption || ""); }}>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`photo-${p.id}`); setEditCaption(p.caption || ""); }} title="Editar legenda">
                                 <Pencil size={11} />
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deletePhotoMutation.mutate({ id: p.id, photo_url: p.photo_url })}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => togglePhotoVisibility.mutate({ id: p.id, show_in_portfolio: p.show_in_portfolio })}
+                                title={p.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                              >
+                                {p.show_in_portfolio ? <Eye size={11} /> : <EyeOff size={11} className="text-muted-foreground" />}
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deletePhotoMutation.mutate({ id: p.id, photo_url: p.photo_url })} title="Remover">
                                 <Trash2 size={11} className="text-destructive" />
                               </Button>
                             </div>
