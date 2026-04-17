@@ -583,7 +583,7 @@ const AdminWeddings = () => {
                           renderItem={(p) => {
                             const isEditingThis = editingId === `photo-${p.id}`;
                             return (
-                              <div className="relative group rounded-lg overflow-hidden bg-muted">
+                              <div className={`relative group rounded-lg overflow-hidden bg-muted ${!p.show_in_portfolio ? "opacity-50" : ""}`}>
                                 <div className="aspect-square">
                                   <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
                                 </div>
@@ -596,6 +596,11 @@ const AdminWeddings = () => {
                                     onClick={() => { setEditingId(`photo-${p.id}`); setEditValue(p.caption || ""); }}>
                                     <Pencil size={14} />
                                   </Button>
+                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                                    title={p.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                                    onClick={() => togglePhotoPortfolio.mutate({ id: p.id, current: p.show_in_portfolio, scope: "wedding" })}>
+                                    {p.show_in_portfolio ? <Eye size={14} /> : <EyeOff size={14} />}
+                                  </Button>
                                   <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Remover"
                                     onClick={() => deletePhoto.mutate({ id: p.id, photo_url: p.photo_url })}>
                                     <X size={14} />
@@ -603,6 +608,9 @@ const AdminWeddings = () => {
                                 </div>
                                 {w.cover_photo_url === p.photo_url && (
                                   <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Capa</span>
+                                )}
+                                {!p.show_in_portfolio && (
+                                  <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
                                 )}
                                 {isEditingThis && (
                                   <div className="absolute bottom-0 left-0 right-0 bg-card/95 p-1.5 flex gap-1">
@@ -649,8 +657,15 @@ const AdminWeddings = () => {
                             const ytId = getYouTubeId(v.youtube_url);
                             const isEditingThis = editingId === `video-${v.id}`;
                             return (
-                              <div className="bg-muted rounded-lg overflow-hidden">
-                                {ytId && <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />}
+                              <div className={`bg-muted rounded-lg overflow-hidden ${!v.show_in_portfolio ? "opacity-50" : ""}`}>
+                                {ytId && (
+                                  <div className="relative">
+                                    <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
+                                    {!v.show_in_portfolio && (
+                                      <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
+                                    )}
+                                  </div>
+                                )}
                                 <div className="p-2">
                                   {isEditingThis ? (
                                     <div className="flex items-center gap-1">
@@ -662,8 +677,13 @@ const AdminWeddings = () => {
                                     <div className="flex items-center justify-between">
                                       <p className="font-body text-xs text-foreground truncate">{v.title || "Sem título"}</p>
                                       <div className="flex gap-0.5">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`video-${v.id}`); setEditValue(v.title || ""); }}><Pencil size={11} /></Button>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteVideo.mutate(v.id)}><Trash2 size={11} className="text-destructive" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`video-${v.id}`); setEditValue(v.title || ""); }} title="Editar título"><Pencil size={11} /></Button>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6"
+                                          title={v.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                                          onClick={() => toggleVideoPortfolio.mutate({ id: v.id, current: v.show_in_portfolio, scope: "wedding" })}>
+                                          {v.show_in_portfolio ? <Eye size={11} /> : <EyeOff size={11} className="text-muted-foreground" />}
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteVideo.mutate(v.id)} title="Remover"><Trash2 size={11} className="text-destructive" /></Button>
                                       </div>
                                     </div>
                                   )}
@@ -720,8 +740,15 @@ const AdminWeddings = () => {
                 const ytId = getYouTubeId(v.youtube_url);
                 const isEditingThis = editingId === `sv-${v.id}`;
                 return (
-                  <div className="bg-card border border-border rounded-lg overflow-hidden">
-                    {ytId && <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />}
+                  <div className={`bg-card border border-border rounded-lg overflow-hidden ${!v.show_in_portfolio ? "opacity-50" : ""}`}>
+                    {ytId && (
+                      <div className="relative">
+                        <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
+                        {!v.show_in_portfolio && (
+                          <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
+                        )}
+                      </div>
+                    )}
                     <div className="p-2 flex items-center justify-between gap-1">
                       {isEditingThis ? (
                         <div className="flex items-center gap-1 flex-1">
@@ -737,10 +764,15 @@ const AdminWeddings = () => {
                       ) : (
                         <>
                           <p className="font-body text-xs text-foreground truncate flex-1">{v.title || "Sem título"}</p>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`sv-${v.id}`); setEditValue(v.title || ""); }}><Pencil size={11} /></Button>
+                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`sv-${v.id}`); setEditValue(v.title || ""); }} title="Editar título"><Pencil size={11} /></Button>
                         </>
                       )}
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteStandaloneVideo.mutate(v.id)}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6"
+                        title={v.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                        onClick={() => toggleVideoPortfolio.mutate({ id: v.id, current: v.show_in_portfolio, scope: "standalone" })}>
+                        {v.show_in_portfolio ? <Eye size={11} /> : <EyeOff size={11} className="text-muted-foreground" />}
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteStandaloneVideo.mutate(v.id)} title="Remover">
                         <Trash2 size={11} className="text-destructive" />
                       </Button>
                     </div>
@@ -758,12 +790,20 @@ const AdminWeddings = () => {
             <SortableGrid items={standalonePhotos} onReorder={reorderStandalonePhotos}
               className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
               renderItem={(p) => (
-                <div className="relative group rounded-lg overflow-hidden bg-muted">
+                <div className={`relative group rounded-lg overflow-hidden bg-muted ${!p.show_in_portfolio ? "opacity-50" : ""}`}>
                   <div className="aspect-square">
                     <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
                   </div>
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {!p.show_in_portfolio && (
+                    <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
+                  )}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                      title={p.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                      onClick={() => togglePhotoPortfolio.mutate({ id: p.id, current: p.show_in_portfolio, scope: "standalone" })}>
+                      {p.show_in_portfolio ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </Button>
+                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Remover"
                       onClick={() => deleteStandalonePhoto.mutate({ id: p.id, photo_url: p.photo_url })}>
                       <X size={14} />
                     </Button>
