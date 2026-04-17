@@ -265,6 +265,30 @@ const AdminWeddings = () => {
     }
   };
 
+  const togglePhotoPortfolio = useMutation({
+    mutationFn: async ({ id, current, scope }: { id: string; current: boolean; scope: "wedding" | "standalone" }) => {
+      const { error } = await supabase.from("portfolio_photos").update({ show_in_portfolio: !current }).eq("id", id);
+      if (error) throw error;
+      return scope;
+    },
+    onSuccess: (scope) => {
+      if (scope === "wedding") queryClient.invalidateQueries({ queryKey: ["admin-photos", expandedId] });
+      else queryClient.invalidateQueries({ queryKey: ["admin-standalone-photos"] });
+    },
+  });
+
+  const toggleVideoPortfolio = useMutation({
+    mutationFn: async ({ id, current, scope }: { id: string; current: boolean; scope: "wedding" | "standalone" }) => {
+      const { error } = await supabase.from("portfolio_videos").update({ show_in_portfolio: !current }).eq("id", id);
+      if (error) throw error;
+      return scope;
+    },
+    onSuccess: (scope) => {
+      if (scope === "wedding") queryClient.invalidateQueries({ queryKey: ["admin-wedding-videos", expandedId] });
+      else queryClient.invalidateQueries({ queryKey: ["admin-standalone-videos"] });
+    },
+  });
+
   // ─── Standalone media (avulso) ───
   const { data: standaloneVideos } = useQuery({
     queryKey: ["admin-standalone-videos"],
