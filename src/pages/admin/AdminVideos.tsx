@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, Upload, Film, ImageIcon, Pencil, Check, X } from "lucide-react";
+import { Plus, Trash2, Upload, Film, ImageIcon, Pencil, Check, X, Eye, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 import { compressImage } from "@/lib/imageCompression";
@@ -106,6 +106,22 @@ const AdminVideos = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-standalone-photos"] });
       toast.success("Foto removida");
     },
+  });
+
+  const togglePhotoVisibility = useMutation({
+    mutationFn: async ({ id, show_in_portfolio }: { id: string; show_in_portfolio: boolean }) => {
+      const { error } = await supabase.from("portfolio_photos").update({ show_in_portfolio: !show_in_portfolio }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-standalone-photos"] }),
+  });
+
+  const toggleVideoVisibility = useMutation({
+    mutationFn: async ({ id, show_in_portfolio }: { id: string; show_in_portfolio: boolean }) => {
+      const { error } = await supabase.from("portfolio_videos").update({ show_in_portfolio: !show_in_portfolio }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-videos"] }),
   });
 
   const reorderPhotos = async (reordered: typeof photos extends (infer T)[] | undefined ? T[] : never[]) => {
