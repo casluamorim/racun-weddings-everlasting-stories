@@ -16,7 +16,7 @@ const Navbar = () => {
     { label: "Serviços", href: "#servicos" },
     { label: "Portfólio", href: "#portfolio" },
     { label: "Valores", href: "#investimento" },
-    { label: "Sobre", href: "#sobre" },
+    { label: "Sobre", href: "/sobre" },
     { label: "FAQ", href: "#faq" },
     { label: "Contato", href: "#contato" },
   ];
