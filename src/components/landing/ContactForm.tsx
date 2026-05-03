@@ -80,7 +80,7 @@ const ContactForm = () => {
       city: form.ceremonyLocation.trim(),
       ceremony_location: form.ceremonyLocation.trim(),
       reception_location: form.receptionLocation.trim(),
-      guest_count: Number.isFinite(guestNumber) ? guestNumber : null,
+      guest_count: parsed.data.guestCount,
       message: form.message.trim() || null,
     });
 
