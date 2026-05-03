@@ -212,40 +212,49 @@ export type Database = {
       }
       quotes: {
         Row: {
+          ceremony_location: string | null
           city: string | null
           created_at: string
+          guest_count: number | null
           id: string
           message: string | null
           name: string
           notes: string | null
           phone: string
           plan_interest: string | null
+          reception_location: string | null
           status: string
           updated_at: string
           wedding_date: string | null
         }
         Insert: {
+          ceremony_location?: string | null
           city?: string | null
           created_at?: string
+          guest_count?: number | null
           id?: string
           message?: string | null
           name: string
           notes?: string | null
           phone: string
           plan_interest?: string | null
+          reception_location?: string | null
           status?: string
           updated_at?: string
           wedding_date?: string | null
         }
         Update: {
+          ceremony_location?: string | null
           city?: string | null
           created_at?: string
+          guest_count?: number | null
           id?: string
           message?: string | null
           name?: string
           notes?: string | null
           phone?: string
           plan_interest?: string | null
+          reception_location?: string | null
           status?: string
           updated_at?: string
           wedding_date?: string | null
