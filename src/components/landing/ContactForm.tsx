@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { z } from "zod";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,23 +33,45 @@ const ContactForm = () => {
   });
   const [sending, setSending] = useState(false);
 
+  const phoneSchema = z
+    .string()
+    .trim()
+    .min(8, "WhatsApp inválido")
+    .max(20, "WhatsApp muito longo")
+    .regex(/^[\d\s()+\-]{8,20}$/, "Use apenas números, espaços, +, ( ) ou -")
+    .refine((v) => v.replace(/\D/g, "").length >= 10 && v.replace(/\D/g, "").length <= 13, {
+      message: "Informe DDD + número (ex: (47) 99999-9999)",
+    });
+
+  const formSchema = z.object({
+    name: z.string().trim().min(2, "Informe seu nome").max(100),
+    phone: phoneSchema,
+    date: z.string().trim().min(1, "Informe a data").max(20),
+    ceremonyLocation: z.string().trim().min(2, "Informe o local da cerimônia").max(150),
+    receptionLocation: z.string().trim().min(2, "Informe o local da festa").max(150),
+    guestCount: z
+      .number({ invalid_type_error: "Informe um número de convidados" })
+      .int("Use um número inteiro")
+      .min(1, "Mínimo de 1 convidado")
+      .max(2000, "Máximo de 2000 convidados"),
+    message: z.string().trim().max(1000).optional(),
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !form.name.trim() ||
-      !form.phone.trim() ||
-      !form.date.trim() ||
-      !form.ceremonyLocation.trim() ||
-      !form.receptionLocation.trim() ||
-      !form.guestCount.trim()
-    ) {
-      toast.error("Por favor, preencha todos os campos obrigatórios.");
+
+    const guestNumber = parseInt(form.guestCount, 10);
+    const parsed = formSchema.safeParse({
+      ...form,
+      guestCount: Number.isFinite(guestNumber) ? guestNumber : NaN,
+    });
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Verifique os campos do formulário.");
       return;
     }
 
     setSending(true);
-
-    const guestNumber = parseInt(form.guestCount, 10);
 
     const { error } = await supabase.from("quotes").insert({
       name: form.name.trim(),
@@ -57,7 +80,7 @@ const ContactForm = () => {
       city: form.ceremonyLocation.trim(),
       ceremony_location: form.ceremonyLocation.trim(),
       reception_location: form.receptionLocation.trim(),
-      guest_count: Number.isFinite(guestNumber) ? guestNumber : null,
+      guest_count: parsed.data.guestCount,
       message: form.message.trim() || null,
     });
 
