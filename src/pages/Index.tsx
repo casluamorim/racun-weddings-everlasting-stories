@@ -22,14 +22,14 @@ const localBusinessJsonLd = {
   email: "racunagencia@gmail.com",
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Joinville",
+    addressLocality: "Blumenau",
     addressRegion: "SC",
     addressCountry: "BR",
   },
   geo: {
     "@type": "GeoCoordinates",
-    latitude: -26.3044,
-    longitude: -48.8487,
+    latitude: -26.9194,
+    longitude: -49.0661,
   },
   image: "https://everbloom-storyteller.lovable.app/og-image.jpg",
   priceRange: "$$",
@@ -41,9 +41,10 @@ const localBusinessJsonLd = {
   },
   sameAs: ["https://instagram.com/racunweddings"],
   areaServed: [
-    { "@type": "City", name: "Joinville" },
+    { "@type": "City", name: "Blumenau" },
     { "@type": "City", name: "Florianópolis" },
-    { "@type": "City", name: "Curitiba" },
+    { "@type": "City", name: "Joinville" },
+    { "@type": "City", name: "Balneário Camboriú" },
     { "@type": "State", name: "Santa Catarina" },
   ],
   knowsAbout: [
