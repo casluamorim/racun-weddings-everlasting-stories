@@ -14,32 +14,50 @@ const ContactForm = () => {
 
   const sectionLabel = getValue("contact", "section_label", "Contato");
   const title = getValue("contact", "title", "Vamos conversar sobre o seu dia");
-  const subtitleText = getValue("contact", "subtitle", "Preencha o formulário e falaremos pelo WhatsApp.");
+  const subtitleText = getValue(
+    "contact",
+    "subtitle",
+    "Sediados em Blumenau (SC), atendemos casamentos em Florianópolis, Joinville, Balneário Camboriú e toda a região. Preencha o formulário e falaremos pelo WhatsApp."
+  );
   const successMessage = getValue("contact", "success_message", "Orçamento enviado com sucesso!");
 
   const [form, setForm] = useState({
     name: "",
     phone: "",
     date: "",
-    city: "",
+    ceremonyLocation: "",
+    receptionLocation: "",
+    guestCount: "",
     message: "",
   });
   const [sending, setSending] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.phone.trim() || !form.date.trim() || !form.city.trim()) {
+    if (
+      !form.name.trim() ||
+      !form.phone.trim() ||
+      !form.date.trim() ||
+      !form.ceremonyLocation.trim() ||
+      !form.receptionLocation.trim() ||
+      !form.guestCount.trim()
+    ) {
       toast.error("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
 
     setSending(true);
 
+    const guestNumber = parseInt(form.guestCount, 10);
+
     const { error } = await supabase.from("quotes").insert({
       name: form.name.trim(),
       phone: form.phone.trim(),
       wedding_date: form.date.trim() || null,
-      city: form.city.trim(),
+      city: form.ceremonyLocation.trim(),
+      ceremony_location: form.ceremonyLocation.trim(),
+      reception_location: form.receptionLocation.trim(),
+      guest_count: Number.isFinite(guestNumber) ? guestNumber : null,
       message: form.message.trim() || null,
     });
 
@@ -51,7 +69,7 @@ const ContactForm = () => {
 
     toast.success(successMessage);
     window.open(getFormWhatsAppUrl(form), "_blank");
-    setForm({ name: "", phone: "", date: "", city: "", message: "" });
+    setForm({ name: "", phone: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
     setSending(false);
   };
 
@@ -82,8 +100,18 @@ const ContactForm = () => {
                 <Input value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} placeholder="dd/mm/aaaa" maxLength={20} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
               </div>
               <div>
-                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Cidade *</label>
-                <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Cidade do casamento" maxLength={100} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
+                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Quantidade de convidados *</label>
+                <Input type="number" min={1} max={2000} value={form.guestCount} onChange={(e) => setForm({ ...form, guestCount: e.target.value })} placeholder="Ex: 150" className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-5">
+              <div>
+                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Local da cerimônia *</label>
+                <Input value={form.ceremonyLocation} onChange={(e) => setForm({ ...form, ceremonyLocation: e.target.value })} placeholder="Cidade / igreja / local" maxLength={150} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
+              </div>
+              <div>
+                <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Local da festa *</label>
+                <Input value={form.receptionLocation} onChange={(e) => setForm({ ...form, receptionLocation: e.target.value })} placeholder="Cidade / espaço / salão" maxLength={150} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
               </div>
             </div>
             <div>

@@ -9,8 +9,8 @@ export function getPlanWhatsAppUrl(planName: string): string {
   return getWhatsAppUrl(message);
 }
 
-export function getFormWhatsAppUrl(data: { name: string; phone: string; date: string; city: string; message: string }): string {
-  const msg = `Olá, sou ${data.name}. Vim pelo site da Racun Weddings.\n\n📅 Data: ${data.date}\n📍 Cidade: ${data.city}\n📱 WhatsApp: ${data.phone}\n\n💬 ${data.message}`;
+export function getFormWhatsAppUrl(data: { name: string; phone: string; date: string; ceremonyLocation: string; receptionLocation: string; guestCount: string; message: string }): string {
+  const msg = `Olá, sou ${data.name}. Vim pelo site da Racun Weddings.\n\n📅 Data: ${data.date}\n💒 Local da cerimônia: ${data.ceremonyLocation}\n🥂 Local da festa: ${data.receptionLocation}\n👥 Convidados: ${data.guestCount}\n📱 WhatsApp: ${data.phone}\n\n💬 ${data.message}`;
   return getWhatsAppUrl(msg);
 }
 
