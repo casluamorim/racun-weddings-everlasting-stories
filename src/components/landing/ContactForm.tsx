@@ -1,14 +1,21 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { z } from "zod";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getFormWhatsAppUrl } from "@/lib/whatsapp";
+import { normalizePhoneE164 } from "@/lib/phone";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import AnimatedSection from "./AnimatedSection";
 import { useSiteContent } from "@/hooks/useSiteContent";
+
+const RATE_LIMIT_KEY = "racun_contact_last_submit";
+const RATE_LIMIT_MS = 60_000; // 1 min between submits
+const SUBMITS_WINDOW_KEY = "racun_contact_submits";
+const SUBMITS_MAX = 3; // max 3 per hour
+const SUBMITS_WINDOW_MS = 60 * 60 * 1000;
 
 const ContactForm = () => {
   const { getValue } = useSiteContent("contact");
@@ -31,7 +38,9 @@ const ContactForm = () => {
     guestCount: "",
     message: "",
   });
+  const [honeypot, setHoneypot] = useState(""); // anti-bot
   const [sending, setSending] = useState(false);
+  const mountedAt = useRef<number>(Date.now());
 
   const phoneSchema = z
     .string()
@@ -39,9 +48,10 @@ const ContactForm = () => {
     .min(8, "WhatsApp inválido")
     .max(20, "WhatsApp muito longo")
     .regex(/^[\d\s()+\-]{8,20}$/, "Use apenas números, espaços, +, ( ) ou -")
-    .refine((v) => v.replace(/\D/g, "").length >= 10 && v.replace(/\D/g, "").length <= 13, {
-      message: "Informe DDD + número (ex: (47) 99999-9999)",
-    });
+    .refine((v) => {
+      const d = v.replace(/\D/g, "").length;
+      return d >= 10 && d <= 13;
+    }, { message: "Informe DDD + número (ex: (47) 99999-9999)" });
 
   const formSchema = z.object({
     name: z.string().trim().min(2, "Informe seu nome").max(100),
@@ -57,8 +67,60 @@ const ContactForm = () => {
     message: z.string().trim().max(1000).optional(),
   });
 
+  const checkRateLimit = (): { ok: boolean; reason?: string } => {
+    try {
+      const last = parseInt(localStorage.getItem(RATE_LIMIT_KEY) || "0", 10);
+      const now = Date.now();
+      if (last && now - last < RATE_LIMIT_MS) {
+        const wait = Math.ceil((RATE_LIMIT_MS - (now - last)) / 1000);
+        return { ok: false, reason: `Aguarde ${wait}s antes de enviar novamente.` };
+      }
+      const raw = localStorage.getItem(SUBMITS_WINDOW_KEY);
+      const stamps: number[] = raw ? JSON.parse(raw) : [];
+      const recent = stamps.filter((t) => now - t < SUBMITS_WINDOW_MS);
+      if (recent.length >= SUBMITS_MAX) {
+        return { ok: false, reason: "Muitos envios. Tente novamente em 1 hora." };
+      }
+      return { ok: true };
+    } catch {
+      return { ok: true };
+    }
+  };
+
+  const recordSubmit = () => {
+    try {
+      const now = Date.now();
+      localStorage.setItem(RATE_LIMIT_KEY, String(now));
+      const raw = localStorage.getItem(SUBMITS_WINDOW_KEY);
+      const stamps: number[] = raw ? JSON.parse(raw) : [];
+      const recent = stamps.filter((t) => now - t < SUBMITS_WINDOW_MS);
+      recent.push(now);
+      localStorage.setItem(SUBMITS_WINDOW_KEY, JSON.stringify(recent));
+    } catch {
+      /* ignore */
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot: bots fill hidden fields
+    if (honeypot.trim().length > 0) {
+      toast.success(successMessage);
+      return;
+    }
+
+    // Minimum time on form (bots submit instantly)
+    if (Date.now() - mountedAt.current < 2000) {
+      toast.error("Envio muito rápido. Verifique os dados e tente novamente.");
+      return;
+    }
+
+    const limit = checkRateLimit();
+    if (!limit.ok) {
+      toast.error(limit.reason || "Aguarde antes de enviar novamente.");
+      return;
+    }
 
     const guestNumber = parseInt(form.guestCount, 10);
     const parsed = formSchema.safeParse({
@@ -71,11 +133,17 @@ const ContactForm = () => {
       return;
     }
 
+    const phoneE164 = normalizePhoneE164(form.phone);
+    if (!phoneE164) {
+      toast.error("Não foi possível validar o WhatsApp. Verifique o número.");
+      return;
+    }
+
     setSending(true);
 
     const { error } = await supabase.from("quotes").insert({
       name: form.name.trim(),
-      phone: form.phone.trim(),
+      phone: phoneE164,
       wedding_date: form.date.trim() || null,
       city: form.ceremonyLocation.trim(),
       ceremony_location: form.ceremonyLocation.trim(),
@@ -90,8 +158,9 @@ const ContactForm = () => {
       return;
     }
 
+    recordSubmit();
     toast.success(successMessage);
-    window.open(getFormWhatsAppUrl(form), "_blank");
+    window.open(getFormWhatsAppUrl({ ...form, phone: phoneE164 }), "_blank");
     setForm({ name: "", phone: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
     setSending(false);
   };
@@ -107,6 +176,20 @@ const ContactForm = () => {
 
         <AnimatedSection>
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Honeypot - hidden from real users */}
+            <div aria-hidden="true" className="absolute left-[-9999px] w-px h-px overflow-hidden" tabIndex={-1}>
+              <label>
+                Não preencha este campo
+                <input
+                  type="text"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </label>
+            </div>
+
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Nome *</label>
