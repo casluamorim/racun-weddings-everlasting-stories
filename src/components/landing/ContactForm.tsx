@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import AnimatedSection from "./AnimatedSection";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 const RATE_LIMIT_KEY = "racun_contact_last_submit";
 const RATE_LIMIT_MS = 60_000; // 1 min between submits
