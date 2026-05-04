@@ -169,6 +169,10 @@ const ContactForm = () => {
     toast.success(successMessage);
     window.open(getFormWhatsAppUrl({ ...form, phone: phoneE164 }), "_blank");
     setForm({ name: "", phone: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
+    setCaptchaToken(null);
+    if (typeof window !== "undefined" && window.turnstile) {
+      try { window.turnstile.reset(); } catch { /* ignore */ }
+    }
     setSending(false);
   };
 
