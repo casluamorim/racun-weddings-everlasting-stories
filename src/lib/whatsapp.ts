@@ -1,3 +1,5 @@
+import { normalizePhoneE164 } from "@/lib/phone";
+
 const WHATSAPP_NUMBER = "554732096098";
 
 export function getWhatsAppUrl(message: string): string {
@@ -10,7 +12,8 @@ export function getPlanWhatsAppUrl(planName: string): string {
 }
 
 export function getFormWhatsAppUrl(data: { name: string; phone: string; date: string; ceremonyLocation: string; receptionLocation: string; guestCount: string; message: string }): string {
-  const msg = `Olá, sou ${data.name}. Vim pelo site da Racun Weddings.\n\n📅 Data: ${data.date}\n💒 Local da cerimônia: ${data.ceremonyLocation}\n🥂 Local da festa: ${data.receptionLocation}\n👥 Convidados: ${data.guestCount}\n📱 WhatsApp: ${data.phone}\n\n💬 ${data.message}`;
+  const phoneE164 = normalizePhoneE164(data.phone) ?? data.phone;
+  const msg = `Olá, sou ${data.name}. Vim pelo site da Racun Weddings.\n\n📅 Data: ${data.date}\n💒 Local da cerimônia: ${data.ceremonyLocation}\n🥂 Local da festa: ${data.receptionLocation}\n👥 Convidados: ${data.guestCount}\n📱 WhatsApp: ${phoneE164}\n\n💬 ${data.message}`;
   return getWhatsAppUrl(msg);
 }
 
