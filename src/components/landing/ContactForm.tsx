@@ -40,6 +40,7 @@ const ContactForm = () => {
     message: "",
   });
   const [honeypot, setHoneypot] = useState(""); // anti-bot
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const mountedAt = useRef<number>(Date.now());
 
