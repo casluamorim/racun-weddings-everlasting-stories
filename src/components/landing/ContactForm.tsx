@@ -231,7 +231,10 @@ const ContactForm = () => {
               <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Mensagem</label>
               <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Conte um pouco sobre o seu casamento..." maxLength={1000} rows={4} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary resize-none" />
             </div>
-            <Button type="submit" variant="cta" size="lg" className="w-full py-6" disabled={sending}>
+            <div className="pt-2">
+              <TurnstileWidget onVerify={(t) => setCaptchaToken(t)} onExpire={() => setCaptchaToken(null)} />
+            </div>
+            <Button type="submit" variant="cta" size="lg" className="w-full py-6" disabled={sending || !captchaToken}>
               <Send size={16} />
               {sending ? "Redirecionando..." : "Enviar e conversar no WhatsApp"}
             </Button>
