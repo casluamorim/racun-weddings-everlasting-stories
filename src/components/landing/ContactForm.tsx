@@ -124,6 +124,11 @@ const ContactForm = () => {
       return;
     }
 
+    if (!captchaToken) {
+      toast.error("Confirme o desafio anti-bot antes de enviar.");
+      return;
+    }
+
     const guestNumber = parseInt(form.guestCount, 10);
     const parsed = formSchema.safeParse({
       ...form,
