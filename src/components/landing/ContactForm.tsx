@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import AnimatedSection from "./AnimatedSection";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 const RATE_LIMIT_KEY = "racun_contact_last_submit";
 const RATE_LIMIT_MS = 60_000; // 1 min between submits
@@ -39,6 +40,7 @@ const ContactForm = () => {
     message: "",
   });
   const [honeypot, setHoneypot] = useState(""); // anti-bot
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const mountedAt = useRef<number>(Date.now());
 
@@ -122,6 +124,11 @@ const ContactForm = () => {
       return;
     }
 
+    if (!captchaToken) {
+      toast.error("Confirme o desafio anti-bot antes de enviar.");
+      return;
+    }
+
     const guestNumber = parseInt(form.guestCount, 10);
     const parsed = formSchema.safeParse({
       ...form,
@@ -162,6 +169,10 @@ const ContactForm = () => {
     toast.success(successMessage);
     window.open(getFormWhatsAppUrl({ ...form, phone: phoneE164 }), "_blank");
     setForm({ name: "", phone: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
+    setCaptchaToken(null);
+    if (typeof window !== "undefined" && window.turnstile) {
+      try { window.turnstile.reset(); } catch { /* ignore */ }
+    }
     setSending(false);
   };
 
@@ -224,7 +235,10 @@ const ContactForm = () => {
               <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">Mensagem</label>
               <Textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Conte um pouco sobre o seu casamento..." maxLength={1000} rows={4} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary resize-none" />
             </div>
-            <Button type="submit" variant="cta" size="lg" className="w-full py-6" disabled={sending}>
+            <div className="pt-2">
+              <TurnstileWidget onVerify={(t) => setCaptchaToken(t)} onExpire={() => setCaptchaToken(null)} />
+            </div>
+            <Button type="submit" variant="cta" size="lg" className="w-full py-6" disabled={sending || !captchaToken}>
               <Send size={16} />
               {sending ? "Redirecionando..." : "Enviar e conversar no WhatsApp"}
             </Button>
