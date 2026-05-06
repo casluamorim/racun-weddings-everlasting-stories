@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { render, act } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/dom";
 import { toast } from "sonner";
 import ContactForm from "@/components/landing/ContactForm";
 
