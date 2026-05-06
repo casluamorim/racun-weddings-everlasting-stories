@@ -25,3 +25,5 @@ class IO {
 }
 // @ts-expect-error polyfill
 globalThis.IntersectionObserver = IO;
+// @ts-expect-error polyfill
+window.IntersectionObserver = IO;
