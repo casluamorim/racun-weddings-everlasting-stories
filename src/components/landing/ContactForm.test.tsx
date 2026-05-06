@@ -86,11 +86,13 @@ describe("ContactForm — Turnstile gating", () => {
   });
 
   it("envia quando o token está presente e válido", async () => {
-    vi.useFakeTimers();
+    // Mock Date.now to skip the 2s minimum-on-page check without fake timers
+    const realNow = Date.now;
+    let t = 1_000_000;
+    vi.spyOn(Date, "now").mockImplementation(() => t);
     render(<ContactForm />);
-    await act(async () => { vi.advanceTimersByTime(2500); });
+    t += 5000; // simulate 5s on page
     fillForm();
-    // simula verify do Turnstile
     await act(async () => { verifyCb?.("valid-token"); });
 
     const btn = screen.getByRole("button", { name: /Enviar/i });
@@ -102,7 +104,7 @@ describe("ContactForm — Turnstile gating", () => {
     expect(fnName).toBe("submit-quote");
     expect(opts.body.captchaToken).toBe("valid-token");
     expect(opts.body.phone).toBe("+5547999999999");
-    vi.useRealTimers();
+    Date.now = realNow;
   });
 
   it("bloqueia novo envio após token expirar", async () => {
