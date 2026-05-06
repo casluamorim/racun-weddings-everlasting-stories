@@ -148,26 +148,42 @@ const ContactForm = () => {
 
     setSending(true);
 
-    const { error } = await supabase.from("quotes").insert({
-      name: form.name.trim(),
-      phone: phoneE164,
-      wedding_date: form.date.trim() || null,
-      city: form.ceremonyLocation.trim(),
-      ceremony_location: form.ceremonyLocation.trim(),
-      reception_location: form.receptionLocation.trim(),
-      guest_count: parsed.data.guestCount,
-      message: form.message.trim() || null,
+    const { data: fnData, error: fnError } = await supabase.functions.invoke("submit-quote", {
+      body: {
+        name: form.name.trim(),
+        phone: phoneE164,
+        wedding_date: form.date.trim() || null,
+        city: form.ceremonyLocation.trim(),
+        ceremony_location: form.ceremonyLocation.trim(),
+        reception_location: form.receptionLocation.trim(),
+        guest_count: parsed.data.guestCount,
+        message: form.message.trim() || null,
+        captchaToken,
+      },
     });
 
-    if (error) {
-      toast.error("Erro ao enviar. Tente novamente.");
+    if (fnError || (fnData && (fnData as { error?: string }).error)) {
+      const code = (fnData as { error?: string } | null)?.error;
+      if (code === "captcha_failed") {
+        toast.error("Falha na verificação anti-bot. Tente novamente.");
+      } else {
+        toast.error("Erro ao enviar. Tente novamente.");
+      }
+      setCaptchaToken(null);
+      if (typeof window !== "undefined" && window.turnstile) {
+        try { window.turnstile.reset(); } catch { /* ignore */ }
+      }
       setSending(false);
       return;
     }
 
     recordSubmit();
     toast.success(successMessage);
-    window.open(getFormWhatsAppUrl({ ...form, phone: phoneE164 }), "_blank");
+    try {
+      window.open(getFormWhatsAppUrl({ ...form, phone: phoneE164 }), "_blank");
+    } catch {
+      // unreachable: phoneE164 is validated, but keep guard
+    }
     setForm({ name: "", phone: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
     setCaptchaToken(null);
     if (typeof window !== "undefined" && window.turnstile) {
