@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -7,7 +7,7 @@ interface AuthContextType {
   session: Session | null;
   isAdmin: boolean;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; isAdmin: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -18,16 +18,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const authCheckId = useRef(0);
 
-  const checkAdmin = async (userId: string) => {
-    const { data } = await supabase
+  const resolveSession = useCallback(async (nextSession: Session | null) => {
+    const checkId = authCheckId.current + 1;
+    authCheckId.current = checkId;
+
+    setSession(nextSession);
+    setUser(nextSession?.user ?? null);
+
+    if (!nextSession?.user) {
+      setIsAdmin(false);
+      setIsLoading(false);
+      return false;
+    }
+
+    setIsLoading(true);
+    const { data, error } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
+      .eq("user_id", nextSession.user.id)
       .eq("role", "admin")
       .maybeSingle();
-    setIsAdmin(!!data);
-  };
+
+    const admin = !error && data?.role === "admin";
+    if (authCheckId.current === checkId) {
+      setIsAdmin(admin);
+      setIsLoading(false);
+    }
+
+    return admin;
+  }, []);
 
   useEffect(() => {
     // Set up auth state listener first
