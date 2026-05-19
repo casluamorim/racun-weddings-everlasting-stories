@@ -13,7 +13,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
-  const { signIn, isAdmin, isLoading: authLoading, user } = useAuth();
+  const { signIn, signOut, isAdmin, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const AdminLogin = () => {
         toast.error("Credenciais inválidas");
       } else if (!hasAdminAccess) {
         toast.error("Esta conta não possui acesso ao painel administrativo");
-        await supabase.auth.signOut();
+        await signOut();
       } else {
         navigate("/admin", { replace: true });
       }
