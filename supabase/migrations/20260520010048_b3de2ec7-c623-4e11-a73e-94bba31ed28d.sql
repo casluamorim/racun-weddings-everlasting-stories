@@ -1,0 +1,2 @@
+ALTER TABLE public.weddings ADD COLUMN IF NOT EXISTS is_featured_home boolean NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_weddings_featured_home ON public.weddings (is_featured_home) WHERE is_featured_home = true;

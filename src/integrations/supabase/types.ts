@@ -445,6 +445,7 @@ export type Database = {
           date: string | null
           description: string | null
           id: string
+          is_featured_home: boolean
           is_published: boolean
           slug: string
           style: string | null
@@ -459,6 +460,7 @@ export type Database = {
           date?: string | null
           description?: string | null
           id?: string
+          is_featured_home?: boolean
           is_published?: boolean
           slug: string
           style?: string | null
@@ -473,6 +475,7 @@ export type Database = {
           date?: string | null
           description?: string | null
           id?: string
+          is_featured_home?: boolean
           is_published?: boolean
           slug?: string
           style?: string | null
