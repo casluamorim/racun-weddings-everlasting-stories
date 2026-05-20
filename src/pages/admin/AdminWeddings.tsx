@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 import { compressImage } from "@/lib/imageCompression";
 import { slugify } from "@/lib/slug";
+import { TestimonialEditor } from "@/components/admin/TestimonialEditor";
 
 const AdminWeddings = () => {
   const queryClient = useQueryClient();
