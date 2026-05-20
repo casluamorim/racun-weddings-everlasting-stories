@@ -133,6 +133,21 @@ const AdminWeddings = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-weddings"] }),
   });
 
+  const toggleFeaturedHome = useMutation({
+    mutationFn: async ({ id, is_featured_home }: { id: string; is_featured_home: boolean }) => {
+      const { error } = await supabase
+        .from("weddings")
+        .update({ is_featured_home: !is_featured_home })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-weddings"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-home-weddings"] });
+      toast.success("Destaque atualizado!");
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("weddings").delete().eq("id", id);
