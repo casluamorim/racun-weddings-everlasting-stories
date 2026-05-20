@@ -1,58 +1,41 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, X } from "lucide-react";
+import { Play, X, ArrowRight } from "lucide-react";
 import AnimatedSection from "./AnimatedSection";
 
 const Portfolio = () => {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
-  const { data: weddings } = useQuery({
-    queryKey: ["public-weddings"],
+  const { data: featuredWeddings } = useQuery({
+    queryKey: ["featured-home-weddings"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("weddings")
-        .select("id, couple_names, city, cover_photo_url")
+        .select("id, slug, couple_names, city, venue, date, cover_photo_url")
         .eq("is_published", true)
-        .order("date", { ascending: false })
-        .limit(12);
+        .eq("is_featured_home", true)
+        .order("date", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(9);
       if (error) throw error;
       return data;
     },
   });
 
-  const weddingIds = weddings?.map((w) => w.id) ?? [];
-
-  const { data: photos } = useQuery({
-    queryKey: ["public-photos", weddingIds],
+  const { data: standalonePhotos } = useQuery({
+    queryKey: ["public-standalone-photos"],
     queryFn: async () => {
-      const queries = [];
-
-      if (weddingIds.length > 0) {
-        queries.push(
-          supabase
-            .from("portfolio_photos")
-            .select("id, photo_url, caption, wedding_id, sort_order")
-            .in("wedding_id", weddingIds)
-            .eq("show_in_portfolio", true)
-            .order("sort_order")
-        );
-      }
-
-      queries.push(
-        supabase
-          .from("portfolio_photos")
-          .select("id, photo_url, caption, wedding_id, sort_order")
-          .is("wedding_id", null)
-          .eq("show_in_portfolio", true)
-          .order("sort_order")
-      );
-
-      const results = await Promise.all(queries);
-      const allPhotos = results.flatMap((r) => r.data ?? []);
-      // Global ordering by sort_order across sources
-      allPhotos.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-      return allPhotos.slice(0, 12);
+      const { data, error } = await supabase
+        .from("portfolio_photos")
+        .select("id, photo_url, caption, sort_order")
+        .is("wedding_id", null)
+        .eq("show_in_portfolio", true)
+        .order("sort_order")
+        .limit(12);
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -75,13 +58,9 @@ const Portfolio = () => {
     return match?.[1] ?? "";
   };
 
-  const displayPhotos = photos && photos.length > 0
-    ? photos
-    : null;
-
-  const displayVideos = videos && videos.length > 0
-    ? videos
-    : null;
+  const displayWeddings = featuredWeddings && featuredWeddings.length > 0 ? featuredWeddings : null;
+  const displayPhotos = standalonePhotos && standalonePhotos.length > 0 ? standalonePhotos : null;
+  const displayVideos = videos && videos.length > 0 ? videos : null;
 
   const videoJsonLd = displayVideos
     ? {
@@ -103,7 +82,7 @@ const Portfolio = () => {
               publisher: {
                 "@type": "Organization",
                 name: "Racun Weddings",
-                url: "https://everbloom-storyteller.lovable.app",
+                url: "https://weddings.agenciaracun.com",
               },
             },
           };
@@ -126,6 +105,51 @@ const Portfolio = () => {
             Histórias que nos emocionam
           </h2>
         </AnimatedSection>
+
+        {/* Featured weddings */}
+        {displayWeddings && (
+          <AnimatedSection className="mb-20">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayWeddings.map((w) => (
+                <Link
+                  key={w.id}
+                  to={`/portfolio/${w.slug}`}
+                  className="group block overflow-hidden rounded-sm bg-card/5 border border-section-dark-foreground/10 hover:border-primary/40 transition-all"
+                >
+                  <div className="aspect-[4/5] overflow-hidden bg-section-dark-foreground/5">
+                    {w.cover_photo_url ? (
+                      <img
+                        src={w.cover_photo_url}
+                        alt={`Casamento de ${w.couple_names}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-section-dark-foreground/40 font-body text-xs">
+                        Sem capa
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-heading text-xl text-section-dark-foreground mb-1">{w.couple_names}</h3>
+                    <p className="font-body text-xs text-section-dark-foreground/60 uppercase tracking-[0.15em]">
+                      {[w.city, w.venue].filter(Boolean).join(" • ")}
+                      {w.date && ` • ${new Date(w.date).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}`}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <div className="mt-10 text-center">
+              <Link
+                to="/portfolio"
+                className="inline-flex items-center gap-2 font-body text-xs uppercase tracking-[0.3em] text-primary hover:text-primary/80 transition-colors"
+              >
+                Ver portfólio completo <ArrowRight size={14} />
+              </Link>
+            </div>
+          </AnimatedSection>
+        )}
 
         {/* Videos */}
         {displayVideos && (
@@ -180,7 +204,7 @@ const Portfolio = () => {
           </AnimatedSection>
         )}
 
-        {!displayVideos && !displayPhotos && (
+        {!displayWeddings && !displayVideos && !displayPhotos && (
           <p className="font-body text-sm text-section-dark-foreground/50 text-center">
             Em breve, novas histórias aqui.
           </p>
