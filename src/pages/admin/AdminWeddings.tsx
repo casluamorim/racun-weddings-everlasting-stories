@@ -308,6 +308,47 @@ const AdminWeddings = () => {
     },
   });
 
+  const saveTestimonial = useMutation({
+    mutationFn: async (payload: {
+      weddingId: string;
+      coupleName: string;
+      text: string;
+      location: string;
+      photo_url: string;
+      is_active: boolean;
+      existingId?: string;
+    }) => {
+      if (!payload.text.trim()) {
+        if (payload.existingId) {
+          const { error } = await supabase.from("testimonials").delete().eq("id", payload.existingId);
+          if (error) throw error;
+        }
+        return;
+      }
+      const row = {
+        wedding_id: payload.weddingId,
+        couple_name: payload.coupleName,
+        text: payload.text.trim(),
+        location: payload.location || null,
+        photo_url: payload.photo_url || null,
+        is_active: payload.is_active,
+      };
+      if (payload.existingId) {
+        const { error } = await supabase.from("testimonials").update(row).eq("id", payload.existingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("testimonials").insert(row);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-wedding-testimonial", expandedId] });
+      queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+      toast.success("Depoimento salvo!");
+    },
+    onError: (e: any) => toast.error(e?.message || "Erro ao salvar depoimento"),
+  });
+
   // ─── Standalone media (avulso) ───
   const { data: standaloneVideos } = useQuery({
     queryKey: ["admin-standalone-videos"],
