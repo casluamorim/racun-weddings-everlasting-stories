@@ -756,6 +756,14 @@ const AdminWeddings = () => {
                         <p className="font-body text-xs text-muted-foreground">Nenhum vídeo. Cole uma URL do YouTube acima.</p>
                       )}
                     </div>
+
+                    {/* Testimonial editor */}
+                    <TestimonialEditor
+                      wedding={w}
+                      existing={weddingTestimonial}
+                      onSave={(payload) => saveTestimonial.mutate(payload)}
+                      isSaving={saveTestimonial.isPending}
+                    />
                   </div>
                 )}
               </div>
