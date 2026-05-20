@@ -74,6 +74,7 @@ const PortfolioPage = () => {
           )}
         </div>
       </main>
+      <PortfolioCTA />
       <Footer />
     </div>
   );
