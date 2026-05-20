@@ -10,6 +10,7 @@ import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 import { compressImage } from "@/lib/imageCompression";
+import { slugify } from "@/lib/slug";
 
 const AdminWeddings = () => {
   const queryClient = useQueryClient();
@@ -65,22 +66,26 @@ const AdminWeddings = () => {
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      const baseSlug = slugify(form.couple_names) || "casamento";
+      const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
       const { error } = await supabase.from("weddings").insert({
         couple_names: form.couple_names,
         city: form.city || null,
         venue: form.venue || null,
         date: form.date || null,
         description: form.description || null,
+        slug,
+        is_published: true,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-weddings"] });
-      toast.success("Casamento cadastrado!");
+      toast.success("Casamento cadastrado e publicado no portfólio!");
       setOpen(false);
       setForm({ couple_names: "", city: "", venue: "", date: "", description: "" });
     },
-    onError: () => toast.error("Erro ao cadastrar"),
+    onError: (e: any) => toast.error(e?.message || "Erro ao cadastrar"),
   });
 
   const updateWeddingMutation = useMutation({
