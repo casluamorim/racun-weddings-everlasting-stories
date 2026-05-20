@@ -10,6 +10,8 @@ import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 import { compressImage } from "@/lib/imageCompression";
+import { slugify } from "@/lib/slug";
+import { TestimonialEditor } from "@/components/admin/TestimonialEditor";
 
 const AdminWeddings = () => {
   const queryClient = useQueryClient();
@@ -63,24 +65,42 @@ const AdminWeddings = () => {
     },
   });
 
+  const { data: weddingTestimonial } = useQuery({
+    queryKey: ["admin-wedding-testimonial", expandedId],
+    enabled: !!expandedId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("testimonials")
+        .select("*")
+        .eq("wedding_id", expandedId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: async () => {
+      const baseSlug = slugify(form.couple_names) || "casamento";
+      const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
       const { error } = await supabase.from("weddings").insert({
         couple_names: form.couple_names,
         city: form.city || null,
         venue: form.venue || null,
         date: form.date || null,
         description: form.description || null,
+        slug,
+        is_published: true,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-weddings"] });
-      toast.success("Casamento cadastrado!");
+      toast.success("Casamento cadastrado e publicado no portfólio!");
       setOpen(false);
       setForm({ couple_names: "", city: "", venue: "", date: "", description: "" });
     },
-    onError: () => toast.error("Erro ao cadastrar"),
+    onError: (e: any) => toast.error(e?.message || "Erro ao cadastrar"),
   });
 
   const updateWeddingMutation = useMutation({
@@ -287,6 +307,47 @@ const AdminWeddings = () => {
       if (scope === "wedding") queryClient.invalidateQueries({ queryKey: ["admin-wedding-videos", expandedId] });
       else queryClient.invalidateQueries({ queryKey: ["admin-standalone-videos"] });
     },
+  });
+
+  const saveTestimonial = useMutation({
+    mutationFn: async (payload: {
+      weddingId: string;
+      coupleName: string;
+      text: string;
+      location: string;
+      photo_url: string;
+      is_active: boolean;
+      existingId?: string;
+    }) => {
+      if (!payload.text.trim()) {
+        if (payload.existingId) {
+          const { error } = await supabase.from("testimonials").delete().eq("id", payload.existingId);
+          if (error) throw error;
+        }
+        return;
+      }
+      const row = {
+        wedding_id: payload.weddingId,
+        couple_name: payload.coupleName,
+        text: payload.text.trim(),
+        location: payload.location || null,
+        photo_url: payload.photo_url || null,
+        is_active: payload.is_active,
+      };
+      if (payload.existingId) {
+        const { error } = await supabase.from("testimonials").update(row).eq("id", payload.existingId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("testimonials").insert(row);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-wedding-testimonial", expandedId] });
+      queryClient.invalidateQueries({ queryKey: ["testimonials"] });
+      toast.success("Depoimento salvo!");
+    },
+    onError: (e: any) => toast.error(e?.message || "Erro ao salvar depoimento"),
   });
 
   // ─── Standalone media (avulso) ───
@@ -696,6 +757,14 @@ const AdminWeddings = () => {
                         <p className="font-body text-xs text-muted-foreground">Nenhum vídeo. Cole uma URL do YouTube acima.</p>
                       )}
                     </div>
+
+                    {/* Testimonial editor */}
+                    <TestimonialEditor
+                      wedding={w}
+                      existing={weddingTestimonial}
+                      onSave={(payload) => saveTestimonial.mutate(payload)}
+                      isSaving={saveTestimonial.isPending}
+                    />
                   </div>
                 )}
               </div>

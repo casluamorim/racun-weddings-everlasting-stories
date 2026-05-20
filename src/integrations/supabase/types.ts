@@ -390,6 +390,7 @@ export type Database = {
           sort_order: number
           text: string
           updated_at: string
+          wedding_id: string | null
         }
         Insert: {
           couple_name: string
@@ -401,6 +402,7 @@ export type Database = {
           sort_order?: number
           text: string
           updated_at?: string
+          wedding_id?: string | null
         }
         Update: {
           couple_name?: string
@@ -412,6 +414,7 @@ export type Database = {
           sort_order?: number
           text?: string
           updated_at?: string
+          wedding_id?: string | null
         }
         Relationships: []
       }
@@ -443,6 +446,7 @@ export type Database = {
           description: string | null
           id: string
           is_published: boolean
+          slug: string
           style: string | null
           updated_at: string
           venue: string | null
@@ -456,6 +460,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_published?: boolean
+          slug: string
           style?: string | null
           updated_at?: string
           venue?: string | null
@@ -469,6 +474,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_published?: boolean
+          slug?: string
           style?: string | null
           updated_at?: string
           venue?: string | null

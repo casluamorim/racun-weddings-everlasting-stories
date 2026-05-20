@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Stories from "./pages/Stories";
+import PortfolioPage from "./pages/Portfolio";
+import WeddingDetail from "./pages/WeddingDetail";
 import Blog from "./pages/Blog";
 import About from "./pages/About";
 import AdminLogin from "./pages/AdminLogin";
@@ -32,6 +34,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/historias" element={<Stories />} />
+            <Route path="/portfolio" element={<PortfolioPage />} />
+            <Route path="/portfolio/:slug" element={<WeddingDetail />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/sobre" element={<About />} />
             <Route path="/admin/login" element={<AdminLogin />} />

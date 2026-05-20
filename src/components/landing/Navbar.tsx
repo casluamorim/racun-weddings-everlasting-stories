@@ -13,12 +13,12 @@ const Navbar = () => {
   }, []);
 
   const links = [
-    { label: "Serviços", href: "#servicos" },
-    { label: "Portfólio", href: "#portfolio" },
-    { label: "Valores", href: "#investimento" },
+    { label: "Serviços", href: "/#servicos" },
+    { label: "Portfólio", href: "/portfolio" },
+    { label: "Valores", href: "/#investimento" },
     { label: "Sobre", href: "/sobre" },
-    { label: "FAQ", href: "#faq" },
-    { label: "Contato", href: "#contato" },
+    { label: "FAQ", href: "/#faq" },
+    { label: "Contato", href: "/#contato" },
   ];
 
   return (
