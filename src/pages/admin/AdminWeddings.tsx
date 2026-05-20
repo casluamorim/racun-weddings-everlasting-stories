@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check, Star } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 import { compressImage } from "@/lib/imageCompression";
@@ -131,6 +131,21 @@ const AdminWeddings = () => {
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-weddings"] }),
+  });
+
+  const toggleFeaturedHome = useMutation({
+    mutationFn: async ({ id, is_featured_home }: { id: string; is_featured_home: boolean }) => {
+      const { error } = await supabase
+        .from("weddings")
+        .update({ is_featured_home: !is_featured_home })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-weddings"] });
+      queryClient.invalidateQueries({ queryKey: ["featured-home-weddings"] });
+      toast.success("Destaque atualizado!");
+    },
   });
 
   const deleteMutation = useMutation({
@@ -520,6 +535,18 @@ const AdminWeddings = () => {
                     {isExpanded ? <ChevronUp size={16} className="text-muted-foreground" /> : <ChevronDown size={16} className="text-muted-foreground" />}
                   </button>
                   <div className="flex items-center gap-2 ml-3">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => toggleFeaturedHome.mutate({ id: w.id, is_featured_home: (w as any).is_featured_home })}
+                      title={(w as any).is_featured_home ? "Remover destaque da Home" : "Exibir na Home (Portfólio Principal)"}
+                    >
+                      <Star
+                        size={16}
+                        className={(w as any).is_featured_home ? "text-primary" : "text-muted-foreground"}
+                        fill={(w as any).is_featured_home ? "currentColor" : "none"}
+                      />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
