@@ -64,6 +64,20 @@ const AdminWeddings = () => {
     },
   });
 
+  const { data: weddingTestimonial } = useQuery({
+    queryKey: ["admin-wedding-testimonial", expandedId],
+    enabled: !!expandedId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("testimonials")
+        .select("*")
+        .eq("wedding_id", expandedId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const baseSlug = slugify(form.couple_names) || "casamento";
