@@ -538,6 +538,18 @@ const AdminWeddings = () => {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => toggleFeaturedHome.mutate({ id: w.id, is_featured_home: (w as any).is_featured_home })}
+                      title={(w as any).is_featured_home ? "Remover destaque da Home" : "Exibir na Home (Portfólio Principal)"}
+                    >
+                      <Star
+                        size={16}
+                        className={(w as any).is_featured_home ? "text-primary" : "text-muted-foreground"}
+                        fill={(w as any).is_featured_home ? "currentColor" : "none"}
+                      />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => togglePublish.mutate({ id: w.id, is_published: w.is_published })}
                       title={w.is_published ? "Despublicar" : "Publicar"}
                     >
