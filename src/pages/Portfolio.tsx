@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import AnimatedSection from "@/components/landing/AnimatedSection";
+import PortfolioCTA from "@/components/landing/PortfolioCTA";
 
 const PortfolioPage = () => {
   const { data: weddings, isLoading } = useQuery({
