@@ -136,7 +136,15 @@ const WeddingDetail = () => {
       <header className="relative pt-32 pb-16 bg-hero text-hero-foreground">
         {wedding.cover_photo_url && (
           <div className="absolute inset-0 opacity-30">
-            <img src={wedding.cover_photo_url} alt="" className="w-full h-full object-cover" />
+            <img
+              src={wedding.cover_photo_url}
+              alt=""
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              sizes="100vw"
+              className="w-full h-full object-cover"
+            />
           </div>
         )}
         <div className="relative container mx-auto px-6 max-w-5xl text-center">
