@@ -66,7 +66,7 @@ const PortfolioPage = () => {
           <AnimatedSection className="text-center mb-16">
             <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4">Portfólio</p>
             <h1 className="font-heading text-4xl md:text-6xl font-light text-foreground mb-4">
-              Casamentos que filmamos
+              Casamentos que eternizamos
             </h1>
             <p className="font-body text-muted-foreground">
               Cada história tem seu próprio capítulo. Explore os casais que confiaram em nós.
