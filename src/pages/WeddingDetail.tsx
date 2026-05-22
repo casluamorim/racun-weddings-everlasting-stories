@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Play, X, ArrowLeft } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import AnimatedSection from "@/components/landing/AnimatedSection";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const SITE_URL = "https://weddings.agenciaracun.com";
 
 const extractYoutubeId = (url: string) => {
   const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([\w-]{11})/);
@@ -61,8 +65,18 @@ const WeddingDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="font-body text-muted-foreground">Carregando...</p>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="pt-32 container mx-auto px-6 max-w-5xl space-y-6">
+          <Skeleton className="h-12 w-2/3 mx-auto" />
+          <Skeleton className="h-4 w-1/2 mx-auto" />
+          <Skeleton className="aspect-video w-full" />
+          <div className="grid md:grid-cols-3 gap-4">
+            <Skeleton className="aspect-square" />
+            <Skeleton className="aspect-square" />
+            <Skeleton className="aspect-square" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -70,6 +84,31 @@ const WeddingDetail = () => {
   if (isError || !wedding) {
     return <Navigate to="/portfolio" replace />;
   }
+
+  const pageUrl = `${SITE_URL}/portfolio/${wedding.slug}`;
+  const title = `Casamento de ${wedding.couple_names} | Racun Weddings`;
+  const description = wedding.description
+    ? wedding.description.slice(0, 155)
+    : `Filme e fotografias do casamento de ${wedding.couple_names}${wedding.city ? ` em ${wedding.city}` : ""}. Produção Racun Weddings.`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: `Casamento de ${wedding.couple_names}`,
+    startDate: wedding.date || undefined,
+    eventStatus: "https://schema.org/EventScheduled",
+    location: wedding.venue
+      ? { "@type": "Place", name: wedding.venue, address: wedding.city || undefined }
+      : undefined,
+    image: wedding.cover_photo_url || undefined,
+    description,
+    url: pageUrl,
+    organizer: {
+      "@type": "Organization",
+      name: "Racun Weddings",
+      url: SITE_URL,
+    },
+  };
 
   return (
     <div className="min-h-screen bg-background">
