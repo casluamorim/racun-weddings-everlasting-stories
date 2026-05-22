@@ -19,7 +19,7 @@ const About = () => (
           </h1>
           <div className="font-body text-muted-foreground space-y-4 leading-relaxed text-center">
             <p>
-              Nascemos da paixão por contar histórias reais com a linguagem do cinema. Cada casamento que filmamos e fotografamos é uma oportunidade de criar algo eterno.
+              Nascemos da paixão por contar histórias reais com a linguagem do cinema. Cada casamento que cobrimos — em filme, fotografia e storymaker — é uma oportunidade de criar algo eterno.
             </p>
             <p>
               Acreditamos que as melhores memórias surgem quando a equipe é invisível e o casal está livre para viver intensamente. Por isso, limitamos o número de datas por ano — para dar a cada projeto o cuidado artesanal que ele merece.

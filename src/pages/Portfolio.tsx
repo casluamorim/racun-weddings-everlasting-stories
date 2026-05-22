@@ -43,7 +43,7 @@ const PortfolioPage = () => {
         <title>Portfólio de Casamentos | Racun Weddings</title>
         <meta
           name="description"
-          content="Conheça os casamentos que filmamos e fotografamos. Filmes cinematográficos em Florianópolis, Blumenau, Balneário Camboriú e Joinville."
+          content="Conheça os casamentos que cobrimos com filme, fotografia e storymaker. Cobertura completa em Florianópolis, Blumenau, Balneário Camboriú e Joinville."
         />
         <link rel="canonical" href={`${SITE_URL}/portfolio`} />
         <meta property="og:type" content="website" />
@@ -66,7 +66,7 @@ const PortfolioPage = () => {
           <AnimatedSection className="text-center mb-16">
             <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4">Portfólio</p>
             <h1 className="font-heading text-4xl md:text-6xl font-light text-foreground mb-4">
-              Casamentos que filmamos
+              Casamentos que eternizamos
             </h1>
             <p className="font-body text-muted-foreground">
               Cada história tem seu próprio capítulo. Explore os casais que confiaram em nós.
