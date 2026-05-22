@@ -112,6 +112,25 @@ const WeddingDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={pageUrl} />
+        {wedding.cover_photo_url && (
+          <meta property="og:image" content={wedding.cover_photo_url} />
+        )}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        {wedding.cover_photo_url && (
+          <meta name="twitter:image" content={wedding.cover_photo_url} />
+        )}
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
       <Navbar />
       {/* Hero */}
       <header className="relative pt-32 pb-16 bg-hero text-hero-foreground">
