@@ -15,12 +15,15 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminWeddings from "./pages/admin/AdminWeddings";
+import AdminGalleries from "./pages/admin/AdminGalleries";
+import AdminGalleryEdit from "./pages/admin/AdminGalleryEdit";
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminQuotes from "./pages/admin/AdminQuotes";
 import AdminCalendar from "./pages/admin/AdminCalendar";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminStories from "./pages/admin/AdminStories";
 import AdminSiteEditor from "./pages/admin/AdminSiteEditor";
+import GalleryView from "./pages/GalleryView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,12 +41,15 @@ const App = () => (
             <Route path="/historias" element={<Stories />} />
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/portfolio/:slug" element={<WeddingDetail />} />
+            <Route path="/galeria/:slug" element={<GalleryView />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/sobre" element={<About />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="weddings" element={<AdminWeddings />} />
+              <Route path="galleries" element={<AdminGalleries />} />
+              <Route path="galleries/:id" element={<AdminGalleryEdit />} />
               <Route path="pricing" element={<AdminPricing />} />
               <Route path="quotes" element={<AdminQuotes />} />
               <Route path="calendar" element={<AdminCalendar />} />
