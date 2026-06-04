@@ -730,6 +730,10 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
+      remove_gallery_favorite: {
+        Args: { _file_id: string; _session_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
