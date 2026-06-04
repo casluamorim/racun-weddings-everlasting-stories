@@ -59,6 +59,107 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_favorites: {
+        Row: {
+          created_at: string
+          file_id: string
+          gallery_id: string
+          id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          gallery_id: string
+          id?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          gallery_id?: string
+          id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_favorites_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_files"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gallery_favorites_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_galleries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          gallery_id: string
+          height: number | null
+          id: string
+          is_cover: boolean
+          is_hero: boolean
+          kind: string
+          mime_type: string | null
+          original_path: string | null
+          size_bytes: number | null
+          sort_order: number
+          thumb_path: string | null
+          web_path: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          gallery_id: string
+          height?: number | null
+          id?: string
+          is_cover?: boolean
+          is_hero?: boolean
+          kind: string
+          mime_type?: string | null
+          original_path?: string | null
+          size_bytes?: number | null
+          sort_order?: number
+          thumb_path?: string | null
+          web_path: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          gallery_id?: string
+          height?: number | null
+          id?: string
+          is_cover?: boolean
+          is_hero?: boolean
+          kind?: string
+          mime_type?: string | null
+          original_path?: string | null
+          size_bytes?: number | null
+          sort_order?: number
+          thumb_path?: string | null
+          web_path?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_files_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_galleries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_photos: {
         Row: {
           caption: string | null
@@ -436,6 +537,98 @@ export type Database = {
         }
         Relationships: []
       }
+      wedding_galleries: {
+        Row: {
+          access_token: string
+          city: string | null
+          couple_names: string
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          download_count: number
+          event_date: string | null
+          featured_home: boolean
+          hero_video_url: string | null
+          id: string
+          is_password_protected: boolean
+          is_published: boolean
+          keep_originals_forever: boolean
+          originals_expire_at: string | null
+          originals_removed_at: string | null
+          password_hash: string | null
+          retention_months: number
+          show_in_portfolio: boolean
+          slug: string
+          story: string | null
+          updated_at: string
+          venue: string | null
+          view_count: number
+          wedding_id: string | null
+        }
+        Insert: {
+          access_token?: string
+          city?: string | null
+          couple_names: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          event_date?: string | null
+          featured_home?: boolean
+          hero_video_url?: string | null
+          id?: string
+          is_password_protected?: boolean
+          is_published?: boolean
+          keep_originals_forever?: boolean
+          originals_expire_at?: string | null
+          originals_removed_at?: string | null
+          password_hash?: string | null
+          retention_months?: number
+          show_in_portfolio?: boolean
+          slug: string
+          story?: string | null
+          updated_at?: string
+          venue?: string | null
+          view_count?: number
+          wedding_id?: string | null
+        }
+        Update: {
+          access_token?: string
+          city?: string | null
+          couple_names?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          download_count?: number
+          event_date?: string | null
+          featured_home?: boolean
+          hero_video_url?: string | null
+          id?: string
+          is_password_protected?: boolean
+          is_published?: boolean
+          keep_originals_forever?: boolean
+          originals_expire_at?: string | null
+          originals_removed_at?: string | null
+          password_hash?: string | null
+          retention_months?: number
+          show_in_portfolio?: boolean
+          slug?: string
+          story?: string | null
+          updated_at?: string
+          venue?: string | null
+          view_count?: number
+          wedding_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wedding_galleries_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weddings: {
         Row: {
           city: string | null
@@ -489,6 +682,42 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_gallery_by_token: {
+        Args: { _slug: string; _token: string }
+        Returns: {
+          access_token: string
+          city: string | null
+          couple_names: string
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          download_count: number
+          event_date: string | null
+          featured_home: boolean
+          hero_video_url: string | null
+          id: string
+          is_password_protected: boolean
+          is_published: boolean
+          keep_originals_forever: boolean
+          originals_expire_at: string | null
+          originals_removed_at: string | null
+          password_hash: string | null
+          retention_months: number
+          show_in_portfolio: boolean
+          slug: string
+          story: string | null
+          updated_at: string
+          venue: string | null
+          view_count: number
+          wedding_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "wedding_galleries"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -496,7 +725,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_gallery_view: {
+        Args: { _gallery_id: string }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
+      remove_gallery_favorite: {
+        Args: { _file_id: string; _session_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
