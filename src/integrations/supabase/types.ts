@@ -107,6 +107,7 @@ export type Database = {
           id: string
           is_cover: boolean
           is_hero: boolean
+          is_pinned: boolean
           kind: string
           mime_type: string | null
           original_path: string | null
@@ -124,6 +125,7 @@ export type Database = {
           id?: string
           is_cover?: boolean
           is_hero?: boolean
+          is_pinned?: boolean
           kind: string
           mime_type?: string | null
           original_path?: string | null
@@ -141,6 +143,7 @@ export type Database = {
           id?: string
           is_cover?: boolean
           is_hero?: boolean
+          is_pinned?: boolean
           kind?: string
           mime_type?: string | null
           original_path?: string | null
@@ -545,6 +548,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           description: string | null
+          design_settings: Json
           download_count: number
           event_date: string | null
           featured_home: boolean
@@ -572,6 +576,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          design_settings?: Json
           download_count?: number
           event_date?: string | null
           featured_home?: boolean
@@ -599,6 +604,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           description?: string | null
+          design_settings?: Json
           download_count?: number
           event_date?: string | null
           featured_home?: boolean
@@ -691,6 +697,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           description: string | null
+          design_settings: Json
           download_count: number
           event_date: string | null
           featured_home: boolean
