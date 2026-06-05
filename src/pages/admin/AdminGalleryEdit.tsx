@@ -9,9 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2, Star, Image as ImageIcon, Film, Copy, RefreshCw } from "lucide-react";
+import { ArrowLeft, Upload, Trash2, Star, Image as ImageIcon, Film, Copy, RefreshCw, Pin, PinOff } from "lucide-react";
 import { compressForWeb, compressForThumb, uploadWithRetry, paths, randomFilename, signedUrls, GALLERY_BUCKET } from "@/lib/galleryStorage";
+import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import GalleryDesignEditor from "@/components/admin/GalleryDesignEditor";
 
 const AdminGalleryEdit = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +37,8 @@ const AdminGalleryEdit = () => {
     queryKey: ["admin-gallery-files", id],
     enabled: !!id,
     queryFn: async () => {
-      const { data, error } = await supabase.from("gallery_files").select("*").eq("gallery_id", id!).order("sort_order");
+      const { data, error } = await supabase.from("gallery_files").select("*").eq("gallery_id", id!)
+        .order("is_pinned", { ascending: false }).order("sort_order");
       if (error) throw error;
       return data;
     },
@@ -71,7 +75,6 @@ const AdminGalleryEdit = () => {
     const currentCount = files?.length ?? 0;
     let done = 0;
 
-    // limit concurrency
     const concurrency = 3;
     let cursor = 0;
     const worker = async () => {
@@ -83,28 +86,18 @@ const AdminGalleryEdit = () => {
             const originalName = randomFilename(file.name, file.name.split(".").pop());
             const webName = randomFilename(file.name, "webp");
             const thumbName = webName;
-
             const [webFile, thumbFile] = await Promise.all([compressForWeb(file), compressForThumb(file)]);
-
             const originalPath = paths.original(id, originalName);
             const webPath = paths.web(id, webName);
             const thumbPath = paths.thumb(id, thumbName);
-
             await Promise.all([
               uploadWithRetry(originalPath, file),
               uploadWithRetry(webPath, webFile),
               uploadWithRetry(thumbPath, thumbFile),
             ]);
-
             await supabase.from("gallery_files").insert({
-              gallery_id: id,
-              kind: "photo",
-              file_name: file.name,
-              mime_type: file.type,
-              size_bytes: file.size,
-              original_path: originalPath,
-              web_path: webPath,
-              thumb_path: thumbPath,
+              gallery_id: id, kind: "photo", file_name: file.name, mime_type: file.type,
+              size_bytes: file.size, original_path: originalPath, web_path: webPath, thumb_path: thumbPath,
               sort_order: currentCount + my,
             });
           } else if (file.type.startsWith("video/")) {
@@ -112,27 +105,16 @@ const AdminGalleryEdit = () => {
             const name = randomFilename(file.name, ext);
             const originalPath = paths.videoOriginal(id, name);
             const webPath = paths.videoWeb(id, name);
-            // Upload original then server-side copy to web (keeps web after retention purge)
             await uploadWithRetry(originalPath, file);
             await supabase.storage.from(GALLERY_BUCKET).copy(originalPath, webPath);
-
             await supabase.from("gallery_files").insert({
-              gallery_id: id,
-              kind: "video",
-              file_name: file.name,
-              mime_type: file.type,
-              size_bytes: file.size,
-              original_path: originalPath,
-              web_path: webPath,
+              gallery_id: id, kind: "video", file_name: file.name, mime_type: file.type,
+              size_bytes: file.size, original_path: originalPath, web_path: webPath,
               sort_order: currentCount + my,
             });
           }
-          done++;
-          setProgress({ done, total: items.length });
-        } catch (err) {
-          console.error(err);
-          toast.error(`Falha em ${file.name}`);
-        }
+          done++; setProgress({ done, total: items.length });
+        } catch (err) { console.error(err); toast.error(`Falha em ${file.name}`); }
       }
     };
     await Promise.all(Array.from({ length: concurrency }, worker));
@@ -166,6 +148,29 @@ const AdminGalleryEdit = () => {
     },
   });
 
+  const togglePin = useMutation({
+    mutationFn: async (f: any) => {
+      const { error } = await supabase.from("gallery_files").update({ is_pinned: !f.is_pinned }).eq("id", f.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-gallery-files", id] }),
+  });
+
+  const reorder = useMutation({
+    mutationFn: async (reordered: any[]) => {
+      // Optimistic + batch update sort_order
+      const updates = reordered.map((f, i) =>
+        supabase.from("gallery_files").update({ sort_order: i }).eq("id", f.id)
+      );
+      await Promise.all(updates);
+    },
+    onMutate: async (reordered: any[]) => {
+      await qc.cancelQueries({ queryKey: ["admin-gallery-files", id] });
+      qc.setQueryData(["admin-gallery-files", id], reordered);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["admin-gallery-files", id] }),
+  });
+
   const copyLink = () => {
     if (!gallery) return;
     const url = `${window.location.origin}/galeria/${gallery.slug}?token=${gallery.access_token}`;
@@ -175,22 +180,18 @@ const AdminGalleryEdit = () => {
 
   const regenerateToken = useMutation({
     mutationFn: async () => {
-      const arr = new Uint8Array(24);
-      crypto.getRandomValues(arr);
+      const arr = new Uint8Array(24); crypto.getRandomValues(arr);
       const token = Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
       const { error } = await supabase.from("wedding_galleries").update({ access_token: token }).eq("id", id!);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["admin-gallery", id] });
-      toast.success("Novo link gerado! O anterior deixou de funcionar.");
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-gallery", id] }); toast.success("Novo link gerado!"); },
   });
 
   if (isLoading || !gallery || !form) return <p className="text-muted-foreground">Carregando...</p>;
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6">
       <div>
         <Link to="/admin/galleries" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="h-4 w-4 mr-1" /> Voltar
@@ -198,104 +199,125 @@ const AdminGalleryEdit = () => {
         <h1 className="text-3xl font-heading mt-2">{gallery.couple_names}</h1>
       </div>
 
-      {/* Link card */}
-      <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Link privado para o casal</p>
-            <p className="text-sm font-mono truncate">{window.location.origin}/galeria/{gallery.slug}?token={gallery.access_token.slice(0, 12)}…</p>
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={copyLink}><Copy className="h-4 w-4 mr-1" />Copiar</Button>
-            <Button size="sm" variant="outline" onClick={() => regenerateToken.mutate()}><RefreshCw className="h-4 w-4 mr-1" />Novo</Button>
-          </div>
-        </div>
-      </div>
+      <Tabs defaultValue="conteudo">
+        <TabsList>
+          <TabsTrigger value="conteudo">Conteúdo & Mídias</TabsTrigger>
+          <TabsTrigger value="design">Design da Galeria</TabsTrigger>
+        </TabsList>
 
-      {/* Info */}
-      <div className="border rounded-lg p-4 space-y-3">
-        <h2 className="font-heading text-lg">Informações</h2>
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div><Label>Casal</Label><Input value={form.couple_names} onChange={(e) => setForm({ ...form, couple_names: e.target.value })} /></div>
-          <div><Label>Slug (URL)</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>
-          <div><Label>Data</Label><Input type="date" value={form.event_date ?? ""} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></div>
-          <div><Label>Cidade</Label><Input value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-          <div className="sm:col-span-2"><Label>Local</Label><Input value={form.venue ?? ""} onChange={(e) => setForm({ ...form, venue: e.target.value })} /></div>
-          <div className="sm:col-span-2"><Label>Descrição curta</Label><Input value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-          <div className="sm:col-span-2"><Label>História do casal</Label><Textarea rows={4} value={form.story ?? ""} onChange={(e) => setForm({ ...form, story: e.target.value })} /></div>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-3 pt-2">
-          <label className="flex items-center justify-between border rounded p-3"><span className="text-sm">Publicada</span><Switch checked={form.is_published} onCheckedChange={(v) => setForm({ ...form, is_published: v })} /></label>
-          <label className="flex items-center justify-between border rounded p-3"><span className="text-sm">Exibir no Portfólio</span><Switch checked={form.show_in_portfolio} onCheckedChange={(v) => setForm({ ...form, show_in_portfolio: v })} /></label>
-          <label className="flex items-center justify-between border rounded p-3"><span className="text-sm">Destaque na Home</span><Switch checked={form.featured_home} onCheckedChange={(v) => setForm({ ...form, featured_home: v })} /></label>
-        </div>
-        <Button onClick={() => saveMutation.mutate({
-          couple_names: form.couple_names, slug: form.slug, event_date: form.event_date || null,
-          city: form.city || null, venue: form.venue || null, description: form.description || null,
-          story: form.story || null, is_published: form.is_published, show_in_portfolio: form.show_in_portfolio,
-          featured_home: form.featured_home,
-        })}>Salvar informações</Button>
-      </div>
-
-      {/* Retention */}
-      <div className="border rounded-lg p-4 space-y-3">
-        <h2 className="font-heading text-lg">Retenção dos arquivos originais</h2>
-        <p className="text-sm text-muted-foreground">Após o prazo, apenas os originais são removidos. As versões web do portfólio permanecem para sempre.</p>
-        <div className="grid sm:grid-cols-3 gap-3">
-          <div>
-            <Label>Prazo (meses)</Label>
-            <select className="w-full border rounded h-10 px-2 bg-background" value={form.retention_months} onChange={(e) => setForm({ ...form, retention_months: Number(e.target.value) })}>
-              <option value={6}>6 meses</option>
-              <option value={12}>12 meses</option>
-              <option value={24}>24 meses</option>
-            </select>
-          </div>
-          <label className="flex items-center justify-between border rounded p-3 sm:col-span-2"><span className="text-sm">Manter permanentemente (VIP)</span><Switch checked={form.keep_originals_forever} onCheckedChange={(v) => setForm({ ...form, keep_originals_forever: v })} /></label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {gallery.originals_removed_at ? <Badge variant="destructive">Originais já removidos em {new Date(gallery.originals_removed_at).toLocaleDateString("pt-BR")}</Badge> :
-          gallery.keep_originals_forever ? <Badge>Mantidos permanentemente</Badge> :
-          gallery.originals_expire_at ? <Badge variant="outline">Expira em {new Date(gallery.originals_expire_at).toLocaleDateString("pt-BR")}</Badge> : null}
-        </p>
-        <Button variant="outline" onClick={() => saveMutation.mutate({ retention_months: form.retention_months, keep_originals_forever: form.keep_originals_forever })}>Salvar retenção</Button>
-      </div>
-
-      {/* Upload */}
-      <div className="border rounded-lg p-4 space-y-3">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <h2 className="font-heading text-lg">Fotos e Vídeos ({files?.length ?? 0})</h2>
-          <Button onClick={() => fileRef.current?.click()} disabled={uploading}>
-            <Upload className="h-4 w-4 mr-2" />{uploading ? `Enviando ${progress.done}/${progress.total}` : "Enviar arquivos"}
-          </Button>
-          <input ref={fileRef} type="file" multiple accept="image/*,video/*" className="hidden" onChange={(e) => e.target.files && handleUpload(e.target.files)} />
-        </div>
-        {uploading && <Progress value={(progress.done / Math.max(progress.total, 1)) * 100} />}
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
-          {files?.map((f) => (
-            <div key={f.id} className="relative group aspect-square bg-muted rounded overflow-hidden">
-              {f.kind === "photo" ? (
-                thumbs[f.thumb_path || f.web_path] ? (
-                  <img src={thumbs[f.thumb_path || f.web_path]} alt="" className="w-full h-full object-cover" loading="lazy" />
-                ) : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="h-6 w-6 text-muted-foreground" /></div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-black/80"><Film className="h-8 w-8 text-white/70" /></div>
-              )}
-              {f.is_cover && <Badge className="absolute top-1 left-1 text-[10px]">Capa</Badge>}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1">
-                {f.kind === "photo" && (
-                  <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setAsCover.mutate(f)} title="Definir como capa">
-                    <Star className="h-3 w-3" />
-                  </Button>
-                )}
-                <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => { if (confirm("Remover?")) deleteFile.mutate(f); }}>
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+        <TabsContent value="conteudo" className="space-y-6 max-w-5xl">
+          {/* Link card */}
+          <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Link privado para o casal</p>
+                <p className="text-sm font-mono truncate">{window.location.origin}/galeria/{gallery.slug}?token={gallery.access_token.slice(0, 12)}…</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={copyLink}><Copy className="h-4 w-4 mr-1" />Copiar</Button>
+                <Button size="sm" variant="outline" onClick={() => regenerateToken.mutate()}><RefreshCw className="h-4 w-4 mr-1" />Novo</Button>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+
+          {/* Info */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <h2 className="font-heading text-lg">Informações</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div><Label>Casal</Label><Input value={form.couple_names} onChange={(e) => setForm({ ...form, couple_names: e.target.value })} /></div>
+              <div><Label>Slug (URL)</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>
+              <div><Label>Data</Label><Input type="date" value={form.event_date ?? ""} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></div>
+              <div><Label>Cidade</Label><Input value={form.city ?? ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div className="sm:col-span-2"><Label>Local</Label><Input value={form.venue ?? ""} onChange={(e) => setForm({ ...form, venue: e.target.value })} /></div>
+              <div className="sm:col-span-2"><Label>Descrição curta</Label><Input value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="sm:col-span-2"><Label>História do casal</Label><Textarea rows={4} value={form.story ?? ""} onChange={(e) => setForm({ ...form, story: e.target.value })} /></div>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3 pt-2">
+              <label className="flex items-center justify-between border rounded p-3"><span className="text-sm">Publicada</span><Switch checked={form.is_published} onCheckedChange={(v) => setForm({ ...form, is_published: v })} /></label>
+              <label className="flex items-center justify-between border rounded p-3"><span className="text-sm">Exibir no Portfólio</span><Switch checked={form.show_in_portfolio} onCheckedChange={(v) => setForm({ ...form, show_in_portfolio: v })} /></label>
+              <label className="flex items-center justify-between border rounded p-3"><span className="text-sm">Destaque na Home</span><Switch checked={form.featured_home} onCheckedChange={(v) => setForm({ ...form, featured_home: v })} /></label>
+            </div>
+            <Button onClick={() => saveMutation.mutate({
+              couple_names: form.couple_names, slug: form.slug, event_date: form.event_date || null,
+              city: form.city || null, venue: form.venue || null, description: form.description || null,
+              story: form.story || null, is_published: form.is_published, show_in_portfolio: form.show_in_portfolio,
+              featured_home: form.featured_home,
+            })}>Salvar informações</Button>
+          </div>
+
+          {/* Retention */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <h2 className="font-heading text-lg">Retenção dos arquivos originais</h2>
+            <p className="text-sm text-muted-foreground">Após o prazo, apenas os originais são removidos. As versões web do portfólio permanecem para sempre.</p>
+            <div className="grid sm:grid-cols-3 gap-3">
+              <div>
+                <Label>Prazo (meses)</Label>
+                <select className="w-full border rounded h-10 px-2 bg-background" value={form.retention_months} onChange={(e) => setForm({ ...form, retention_months: Number(e.target.value) })}>
+                  <option value={6}>6 meses</option><option value={12}>12 meses</option><option value={24}>24 meses</option>
+                </select>
+              </div>
+              <label className="flex items-center justify-between border rounded p-3 sm:col-span-2"><span className="text-sm">Manter permanentemente (VIP)</span><Switch checked={form.keep_originals_forever} onCheckedChange={(v) => setForm({ ...form, keep_originals_forever: v })} /></label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {gallery.originals_removed_at ? <Badge variant="destructive">Originais removidos em {new Date(gallery.originals_removed_at).toLocaleDateString("pt-BR")}</Badge> :
+              gallery.keep_originals_forever ? <Badge>Mantidos permanentemente</Badge> :
+              gallery.originals_expire_at ? <Badge variant="outline">Expira em {new Date(gallery.originals_expire_at).toLocaleDateString("pt-BR")}</Badge> : null}
+            </p>
+            <Button variant="outline" onClick={() => saveMutation.mutate({ retention_months: form.retention_months, keep_originals_forever: form.keep_originals_forever })}>Salvar retenção</Button>
+          </div>
+
+          {/* Upload + drag-drop grid */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h2 className="font-heading text-lg">Fotos e Vídeos ({files?.length ?? 0})</h2>
+              <Button onClick={() => fileRef.current?.click()} disabled={uploading}>
+                <Upload className="h-4 w-4 mr-2" />{uploading ? `Enviando ${progress.done}/${progress.total}` : "Enviar arquivos"}
+              </Button>
+              <input ref={fileRef} type="file" multiple accept="image/*,video/*" className="hidden" onChange={(e) => e.target.files && handleUpload(e.target.files)} />
+            </div>
+            {uploading && <Progress value={(progress.done / Math.max(progress.total, 1)) * 100} />}
+            <p className="text-xs text-muted-foreground">Arraste pelo ícone no canto para reordenar. Fotos fixadas aparecem primeiro.</p>
+
+            {files && files.length > 0 && (
+              <SortableGrid
+                items={files as any}
+                onReorder={(r) => reorder.mutate(r as any)}
+                className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"
+                renderItem={(f: any) => (
+                  <div className="relative group aspect-square bg-muted rounded overflow-hidden">
+                    {f.kind === "photo" ? (
+                      thumbs[f.thumb_path || f.web_path] ? (
+                        <img src={thumbs[f.thumb_path || f.web_path]} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      ) : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="h-6 w-6 text-muted-foreground" /></div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-black/80"><Film className="h-8 w-8 text-white/70" /></div>
+                    )}
+                    {f.is_cover && <Badge className="absolute top-1 left-1 text-[10px]">Capa</Badge>}
+                    {f.is_pinned && <Badge variant="secondary" className="absolute bottom-1 left-1 text-[10px]"><Pin className="h-2.5 w-2.5 mr-0.5" />Fixada</Badge>}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1">
+                      <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => togglePin.mutate(f)} title={f.is_pinned ? "Desfixar" : "Fixar no topo"}>
+                        {f.is_pinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                      </Button>
+                      {f.kind === "photo" && (
+                        <Button size="icon" variant="secondary" className="h-8 w-8" onClick={() => setAsCover.mutate(f)} title="Definir como capa">
+                          <Star className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button size="icon" variant="destructive" className="h-8 w-8" onClick={() => { if (confirm("Remover?")) deleteFile.mutate(f); }}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              />
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="design">
+          {id && <GalleryDesignEditor galleryId={id} />}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
