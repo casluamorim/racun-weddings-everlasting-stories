@@ -196,6 +196,7 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-gallery", galleryId] });
+      setInitialDesign(design);
       setDirty(false);
       toast.success("Design salvo!");
     },
@@ -204,14 +205,12 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
 
   const update = <K extends keyof DesignSettings>(section: K, patch: Partial<DesignSettings[K]>) => {
     setDesign((d) => ({ ...d, [section]: { ...d[section], ...patch } }));
-    setDirty(true);
   };
 
   const applyTemplate = (name: string) => {
     const t = HERO_TEMPLATES[name];
     if (!t) return;
     setDesign((d) => mergeDesign({ ...d, ...t }));
-    setDirty(true);
     toast.success(`Template "${name}" aplicado — ajuste e salve.`);
   };
 
@@ -233,11 +232,25 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
     <div className="grid lg:grid-cols-[380px_1fr] gap-4">
       {/* CONTROLS */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between sticky top-0 z-10 bg-background py-2 border-b">
-          <h2 className="font-heading text-xl">Design da Galeria</h2>
-          <Button size="sm" onClick={() => saveMutation.mutate()} disabled={!dirty || saveMutation.isPending}>
-            <Save className="h-4 w-4 mr-1" />{saveMutation.isPending ? "Salvando..." : "Salvar"}
-          </Button>
+        <div className="flex flex-col gap-2 sticky top-0 z-10 bg-background py-2 border-b">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-xl">Design da Galeria</h2>
+            <Button size="sm" onClick={() => saveMutation.mutate()} disabled={!dirty || saveMutation.isPending}>
+              <Save className="h-4 w-4 mr-1" />{saveMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-8 px-2" onClick={undo} disabled={!canUndo} title="Desfazer (Ctrl+Z)">
+              <Undo2 className="h-3.5 w-3.5 mr-1" />Desfazer
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 px-2" onClick={redo} disabled={!canRedo} title="Refazer (Ctrl+Shift+Z)">
+              <Redo2 className="h-3.5 w-3.5 mr-1" />Refazer
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 px-2 ml-auto" onClick={resetToSaved} disabled={!dirty} title="Reverter para última versão salva">
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />Reverter
+            </Button>
+            <span className="text-[10px] text-muted-foreground tabular-nums">{historyIndex + 1}/{history.length}</span>
+          </div>
         </div>
 
         <Tabs defaultValue="capa">
