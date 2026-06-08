@@ -224,6 +224,56 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
     },
   });
 
+  // Saved presets
+  const { data: presets } = useQuery({
+    queryKey: ["gallery-design-presets"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("gallery_design_presets").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Array<{ id: string; name: string; description: string | null; design_settings: any }>;
+    },
+  });
+
+  const savePresetMutation = useMutation({
+    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+      const { error } = await (supabase as any).from("gallery_design_presets").insert({ name, description: description || null, design_settings: design as any });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["gallery-design-presets"] });
+      toast.success("Preset salvo!");
+    },
+    onError: (e: any) => toast.error(e?.message || "Erro ao salvar preset"),
+  });
+
+  const deletePresetMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from("gallery_design_presets").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["gallery-design-presets"] });
+      toast.success("Preset excluído");
+    },
+  });
+
+  const handleSavePreset = () => {
+    const name = window.prompt("Nome do preset:");
+    if (!name?.trim()) return;
+    const description = window.prompt("Descrição (opcional):") || undefined;
+    savePresetMutation.mutate({ name: name.trim(), description });
+  };
+
+  const applyPreset = (p: { name: string; design_settings: any }) => {
+    setDesign(mergeDesign(p.design_settings));
+    toast.success(`Preset "${p.name}" aplicado`);
+  };
+
+  // Compare mode (before/after)
+  const [compareMode, setCompareMode] = useState<"off" | "split" | "toggle">("off");
+  const [showingBefore, setShowingBefore] = useState(false);
+
+
   const previewWidth = useMemo(() => (device === "mobile" ? 390 : device === "tablet" ? 820 : "100%"), [device]);
 
   if (!gallery) return <p className="text-muted-foreground">Carregando...</p>;
