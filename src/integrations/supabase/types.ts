@@ -59,6 +59,36 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_design_presets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          design_settings: Json
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          design_settings?: Json
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          design_settings?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gallery_favorites: {
         Row: {
           created_at: string
