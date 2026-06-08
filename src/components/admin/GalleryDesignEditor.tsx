@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Monitor, Tablet, Smartphone, Save, Copy, Undo2, Redo2, RotateCcw } from "lucide-react";
+import { Monitor, Tablet, Smartphone, Save, Copy, Undo2, Redo2, RotateCcw, Bookmark, Trash2, SplitSquareHorizontal, Eye } from "lucide-react";
 import { signedUrls } from "@/lib/galleryStorage";
 import { GalleryRender } from "@/components/gallery/GalleryRender";
 import { DesignSettings, DEFAULT_DESIGN, mergeDesign, FONT_OPTIONS, ensureFontsLoaded } from "@/lib/galleryDesign";
