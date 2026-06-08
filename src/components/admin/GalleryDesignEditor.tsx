@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Monitor, Tablet, Smartphone, Save, Copy } from "lucide-react";
+import { Monitor, Tablet, Smartphone, Save, Copy, Undo2, Redo2, RotateCcw } from "lucide-react";
 import { signedUrls } from "@/lib/galleryStorage";
 import { GalleryRender } from "@/components/gallery/GalleryRender";
 import { DesignSettings, DEFAULT_DESIGN, mergeDesign, FONT_OPTIONS, ensureFontsLoaded } from "@/lib/galleryDesign";
@@ -99,14 +99,88 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
     },
   });
 
-  const [design, setDesign] = useState<DesignSettings>(DEFAULT_DESIGN);
+  // History stack for undo/redo
+  const [design, setDesignState] = useState<DesignSettings>(DEFAULT_DESIGN);
+  const [history, setHistory] = useState<DesignSettings[]>([DEFAULT_DESIGN]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const [initialDesign, setInitialDesign] = useState<DesignSettings>(DEFAULT_DESIGN);
+
   useEffect(() => {
-    if (gallery) setDesign(mergeDesign(gallery.design_settings));
+    if (gallery) {
+      const merged = mergeDesign(gallery.design_settings);
+      setDesignState(merged);
+      setHistory([merged]);
+      setHistoryIndex(0);
+      setInitialDesign(merged);
+      setDirty(false);
+    }
   }, [gallery]);
+
+  const pushHistory = (next: DesignSettings) => {
+    setHistory((h) => {
+      const trimmed = h.slice(0, historyIndex + 1);
+      // dedupe consecutive identical states
+      if (JSON.stringify(trimmed[trimmed.length - 1]) === JSON.stringify(next)) return trimmed;
+      const newHist = [...trimmed, next].slice(-50); // cap at 50 entries
+      setHistoryIndex(newHist.length - 1);
+      return newHist;
+    });
+  };
+
+  const setDesign = (updater: DesignSettings | ((d: DesignSettings) => DesignSettings)) => {
+    setDesignState((prev) => {
+      const next = typeof updater === "function" ? (updater as any)(prev) : updater;
+      pushHistory(next);
+      return next;
+    });
+    setDirty(true);
+  };
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const undo = () => {
+    if (!canUndo) return;
+    const i = historyIndex - 1;
+    setHistoryIndex(i);
+    setDesignState(history[i]);
+    setDirty(JSON.stringify(history[i]) !== JSON.stringify(initialDesign));
+  };
+
+  const redo = () => {
+    if (!canRedo) return;
+    const i = historyIndex + 1;
+    setHistoryIndex(i);
+    setDesignState(history[i]);
+    setDirty(JSON.stringify(history[i]) !== JSON.stringify(initialDesign));
+  };
+
+  const resetToSaved = () => {
+    setDesignState(initialDesign);
+    setHistory([initialDesign]);
+    setHistoryIndex(0);
+    setDirty(false);
+    toast.success("Revertido para a última versão salva");
+  };
+
+  // Keyboard shortcuts: Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z / Ctrl+Y
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key.toLowerCase() === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if ((e.key.toLowerCase() === "z" && e.shiftKey) || e.key.toLowerCase() === "y") { e.preventDefault(); redo(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [historyIndex, history]);
 
   useEffect(() => {
     ensureFontsLoaded([design.typography.heading, design.typography.body]);
   }, [design.typography.heading, design.typography.body]);
+
 
   const [urls, setUrls] = useState<Record<string, string>>({});
   useEffect(() => {
@@ -122,6 +196,7 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-gallery", galleryId] });
+      setInitialDesign(design);
       setDirty(false);
       toast.success("Design salvo!");
     },
@@ -130,14 +205,12 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
 
   const update = <K extends keyof DesignSettings>(section: K, patch: Partial<DesignSettings[K]>) => {
     setDesign((d) => ({ ...d, [section]: { ...d[section], ...patch } }));
-    setDirty(true);
   };
 
   const applyTemplate = (name: string) => {
     const t = HERO_TEMPLATES[name];
     if (!t) return;
     setDesign((d) => mergeDesign({ ...d, ...t }));
-    setDirty(true);
     toast.success(`Template "${name}" aplicado — ajuste e salve.`);
   };
 
@@ -159,11 +232,25 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
     <div className="grid lg:grid-cols-[380px_1fr] gap-4">
       {/* CONTROLS */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between sticky top-0 z-10 bg-background py-2 border-b">
-          <h2 className="font-heading text-xl">Design da Galeria</h2>
-          <Button size="sm" onClick={() => saveMutation.mutate()} disabled={!dirty || saveMutation.isPending}>
-            <Save className="h-4 w-4 mr-1" />{saveMutation.isPending ? "Salvando..." : "Salvar"}
-          </Button>
+        <div className="flex flex-col gap-2 sticky top-0 z-10 bg-background py-2 border-b">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-xl">Design da Galeria</h2>
+            <Button size="sm" onClick={() => saveMutation.mutate()} disabled={!dirty || saveMutation.isPending}>
+              <Save className="h-4 w-4 mr-1" />{saveMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="h-8 px-2" onClick={undo} disabled={!canUndo} title="Desfazer (Ctrl+Z)">
+              <Undo2 className="h-3.5 w-3.5 mr-1" />Desfazer
+            </Button>
+            <Button size="sm" variant="outline" className="h-8 px-2" onClick={redo} disabled={!canRedo} title="Refazer (Ctrl+Shift+Z)">
+              <Redo2 className="h-3.5 w-3.5 mr-1" />Refazer
+            </Button>
+            <Button size="sm" variant="ghost" className="h-8 px-2 ml-auto" onClick={resetToSaved} disabled={!dirty} title="Reverter para última versão salva">
+              <RotateCcw className="h-3.5 w-3.5 mr-1" />Reverter
+            </Button>
+            <span className="text-[10px] text-muted-foreground tabular-nums">{historyIndex + 1}/{history.length}</span>
+          </div>
         </div>
 
         <Tabs defaultValue="capa">
