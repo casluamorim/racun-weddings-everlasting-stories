@@ -99,14 +99,88 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
     },
   });
 
-  const [design, setDesign] = useState<DesignSettings>(DEFAULT_DESIGN);
+  // History stack for undo/redo
+  const [design, setDesignState] = useState<DesignSettings>(DEFAULT_DESIGN);
+  const [history, setHistory] = useState<DesignSettings[]>([DEFAULT_DESIGN]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const [initialDesign, setInitialDesign] = useState<DesignSettings>(DEFAULT_DESIGN);
+
   useEffect(() => {
-    if (gallery) setDesign(mergeDesign(gallery.design_settings));
+    if (gallery) {
+      const merged = mergeDesign(gallery.design_settings);
+      setDesignState(merged);
+      setHistory([merged]);
+      setHistoryIndex(0);
+      setInitialDesign(merged);
+      setDirty(false);
+    }
   }, [gallery]);
+
+  const pushHistory = (next: DesignSettings) => {
+    setHistory((h) => {
+      const trimmed = h.slice(0, historyIndex + 1);
+      // dedupe consecutive identical states
+      if (JSON.stringify(trimmed[trimmed.length - 1]) === JSON.stringify(next)) return trimmed;
+      const newHist = [...trimmed, next].slice(-50); // cap at 50 entries
+      setHistoryIndex(newHist.length - 1);
+      return newHist;
+    });
+  };
+
+  const setDesign = (updater: DesignSettings | ((d: DesignSettings) => DesignSettings)) => {
+    setDesignState((prev) => {
+      const next = typeof updater === "function" ? (updater as any)(prev) : updater;
+      pushHistory(next);
+      return next;
+    });
+    setDirty(true);
+  };
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const undo = () => {
+    if (!canUndo) return;
+    const i = historyIndex - 1;
+    setHistoryIndex(i);
+    setDesignState(history[i]);
+    setDirty(JSON.stringify(history[i]) !== JSON.stringify(initialDesign));
+  };
+
+  const redo = () => {
+    if (!canRedo) return;
+    const i = historyIndex + 1;
+    setHistoryIndex(i);
+    setDesignState(history[i]);
+    setDirty(JSON.stringify(history[i]) !== JSON.stringify(initialDesign));
+  };
+
+  const resetToSaved = () => {
+    setDesignState(initialDesign);
+    setHistory([initialDesign]);
+    setHistoryIndex(0);
+    setDirty(false);
+    toast.success("Revertido para a última versão salva");
+  };
+
+  // Keyboard shortcuts: Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z / Ctrl+Y
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key.toLowerCase() === "z" && !e.shiftKey) { e.preventDefault(); undo(); }
+      else if ((e.key.toLowerCase() === "z" && e.shiftKey) || e.key.toLowerCase() === "y") { e.preventDefault(); redo(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [historyIndex, history]);
 
   useEffect(() => {
     ensureFontsLoaded([design.typography.heading, design.typography.body]);
   }, [design.typography.heading, design.typography.body]);
+
 
   const [urls, setUrls] = useState<Record<string, string>>({});
   useEffect(() => {
