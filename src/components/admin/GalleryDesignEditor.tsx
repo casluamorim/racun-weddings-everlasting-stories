@@ -421,13 +421,40 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
           </TabsContent>
         </Tabs>
 
+        {/* Presets salvos */}
+        <div className="border rounded p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs flex items-center gap-1"><Bookmark className="h-3 w-3" />Meus presets</Label>
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleSavePreset} disabled={savePresetMutation.isPending}>
+              Salvar atual
+            </Button>
+          </div>
+          {presets && presets.length > 0 ? (
+            <div className="max-h-40 overflow-auto space-y-1">
+              {presets.map((p) => (
+                <div key={p.id} className="flex items-center gap-1 border rounded px-2 py-1.5 hover:bg-muted/40">
+                  <button onClick={() => applyPreset(p)} className="flex-1 text-left">
+                    <p className="text-xs font-medium truncate">{p.name}</p>
+                    {p.description && <p className="text-[10px] text-muted-foreground truncate">{p.description}</p>}
+                  </button>
+                  <button onClick={() => { if (confirm(`Excluir preset "${p.name}"?`)) deletePresetMutation.mutate(p.id); }} className="opacity-50 hover:opacity-100 hover:text-destructive">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground italic">Nenhum preset salvo ainda. Configure um design e clique em "Salvar atual".</p>
+          )}
+        </div>
+
         {/* Duplicate */}
         {(otherGalleries?.length ?? 0) > 0 && (
           <div className="border rounded p-3 space-y-2">
             <Label className="text-xs flex items-center gap-1"><Copy className="h-3 w-3" />Duplicar design de outra galeria</Label>
             <Select onValueChange={(id) => {
               const g = otherGalleries?.find((o) => o.id === id);
-              if (g?.design_settings) { setDesign(mergeDesign(g.design_settings)); setDirty(true); toast.success("Design copiado — ajuste e salve."); }
+              if (g?.design_settings) { setDesign(mergeDesign(g.design_settings)); toast.success("Design copiado — ajuste e salve."); }
             }}>
               <SelectTrigger><SelectValue placeholder="Escolher galeria..." /></SelectTrigger>
               <SelectContent>
@@ -440,25 +467,64 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
 
       {/* PREVIEW */}
       <div className="border rounded-lg bg-muted/30 overflow-hidden">
-        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-background">
-          <p className="text-xs text-muted-foreground">Preview ao vivo · {device}</p>
-          <div className="flex gap-1">
-            <Button size="icon" variant={device === "desktop" ? "default" : "ghost"} className="h-7 w-7" onClick={() => setDevice("desktop")}><Monitor className="h-3.5 w-3.5" /></Button>
-            <Button size="icon" variant={device === "tablet" ? "default" : "ghost"} className="h-7 w-7" onClick={() => setDevice("tablet")}><Tablet className="h-3.5 w-3.5" /></Button>
-            <Button size="icon" variant={device === "mobile" ? "default" : "ghost"} className="h-7 w-7" onClick={() => setDevice("mobile")}><Smartphone className="h-3.5 w-3.5" /></Button>
+        <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-background flex-wrap">
+          <p className="text-xs text-muted-foreground">
+            Preview · {device}
+            {compareMode === "split" && <span className="ml-2 text-primary font-medium">comparando</span>}
+            {showingBefore && <span className="ml-2 text-primary font-medium">ANTES</span>}
+          </p>
+          <div className="flex items-center gap-2">
+            {dirty && (
+              <div className="flex gap-1 border-r pr-2">
+                <Button size="sm" variant={compareMode === "split" ? "default" : "outline"} className="h-7 px-2 text-xs" onClick={() => { setCompareMode(compareMode === "split" ? "off" : "split"); setShowingBefore(false); }} title="Comparar lado a lado">
+                  <SplitSquareHorizontal className="h-3.5 w-3.5 mr-1" />Split
+                </Button>
+                <Button
+                  size="sm"
+                  variant={showingBefore ? "default" : "outline"}
+                  className="h-7 px-2 text-xs select-none"
+                  onMouseDown={() => setShowingBefore(true)}
+                  onMouseUp={() => setShowingBefore(false)}
+                  onMouseLeave={() => setShowingBefore(false)}
+                  onTouchStart={() => setShowingBefore(true)}
+                  onTouchEnd={() => setShowingBefore(false)}
+                  title="Segure para ver o antes"
+                >
+                  <Eye className="h-3.5 w-3.5 mr-1" />Antes
+                </Button>
+              </div>
+            )}
+            <div className="flex gap-1">
+              <Button size="icon" variant={device === "desktop" ? "default" : "ghost"} className="h-7 w-7" onClick={() => setDevice("desktop")}><Monitor className="h-3.5 w-3.5" /></Button>
+              <Button size="icon" variant={device === "tablet" ? "default" : "ghost"} className="h-7 w-7" onClick={() => setDevice("tablet")}><Tablet className="h-3.5 w-3.5" /></Button>
+              <Button size="icon" variant={device === "mobile" ? "default" : "ghost"} className="h-7 w-7" onClick={() => setDevice("mobile")}><Smartphone className="h-3.5 w-3.5" /></Button>
+            </div>
           </div>
         </div>
         <div className="overflow-auto" style={{ height: "calc(100vh - 220px)" }}>
-          <div className="mx-auto bg-background shadow-2xl my-4 transition-all" style={{ width: previewWidth, maxWidth: "100%" }}>
-            <GalleryRender
-              gallery={gallery as any}
-              files={(files ?? []) as any}
-              urls={urls}
-              design={design}
-              embedded
-              forceMobile={device === "mobile"}
-            />
-          </div>
+          {compareMode === "split" ? (
+            <div className="grid grid-cols-2 gap-2 p-2">
+              <div className="bg-background shadow-xl overflow-hidden">
+                <div className="text-[10px] uppercase tracking-wider text-center py-1 bg-muted text-muted-foreground border-b">Antes (salvo)</div>
+                <GalleryRender gallery={gallery as any} files={(files ?? []) as any} urls={urls} design={initialDesign} embedded forceMobile />
+              </div>
+              <div className="bg-background shadow-xl overflow-hidden ring-2 ring-primary/40">
+                <div className="text-[10px] uppercase tracking-wider text-center py-1 bg-primary/10 text-primary border-b">Depois (atual)</div>
+                <GalleryRender gallery={gallery as any} files={(files ?? []) as any} urls={urls} design={design} embedded forceMobile />
+              </div>
+            </div>
+          ) : (
+            <div className="mx-auto bg-background shadow-2xl my-4 transition-all" style={{ width: previewWidth, maxWidth: "100%" }}>
+              <GalleryRender
+                gallery={gallery as any}
+                files={(files ?? []) as any}
+                urls={urls}
+                design={showingBefore ? initialDesign : design}
+                embedded
+                forceMobile={device === "mobile"}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
