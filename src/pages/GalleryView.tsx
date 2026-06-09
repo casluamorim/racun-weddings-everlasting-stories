@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,15 +19,13 @@ function getSessionId(): string {
 
 const GalleryView = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [params] = useSearchParams();
-  const token = params.get("token") ?? "";
   const sessionId = useMemo(getSessionId, []);
 
   const { data: gallery, isLoading, error } = useQuery({
-    queryKey: ["gallery", slug, token],
+    queryKey: ["gallery", slug],
     enabled: !!slug,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_gallery_by_token", { _slug: slug!, _token: token });
+      const { data, error } = await supabase.rpc("get_gallery_by_token", { _slug: slug!, _token: "" });
       if (error) throw error;
       if (!data || data.length === 0) throw new Error("not_found");
       return data[0];
