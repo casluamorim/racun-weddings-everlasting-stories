@@ -206,7 +206,6 @@ const AdminGalleryEdit = () => {
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={copyLink}><Copy className="h-4 w-4 mr-1" />Copiar</Button>
-                <Button size="sm" variant="outline" onClick={() => regenerateToken.mutate()}><RefreshCw className="h-4 w-4 mr-1" />Novo</Button>
               </div>
             </div>
           </div>
