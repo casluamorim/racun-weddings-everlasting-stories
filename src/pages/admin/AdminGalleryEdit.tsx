@@ -173,7 +173,7 @@ const AdminGalleryEdit = () => {
 
   const copyLink = () => {
     if (!gallery) return;
-    const url = `${window.location.origin}/galeria/${gallery.slug}?token=${gallery.access_token}`;
+    const url = `${window.location.origin}/galeria/${gallery.slug}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copiado!");
   };
