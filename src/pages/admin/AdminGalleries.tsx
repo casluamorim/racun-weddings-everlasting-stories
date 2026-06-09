@@ -93,10 +93,10 @@ const AdminGalleries = () => {
     onError: (e: any) => toast.error(e?.message || "Erro ao remover"),
   });
 
-  const copyLink = (slug: string, token: string) => {
-    const url = `${window.location.origin}/galeria/${slug}?token=${token}`;
+  const copyLink = (slug: string) => {
+    const url = `${window.location.origin}/galeria/${slug}`;
     navigator.clipboard.writeText(url);
-    toast.success("Link privado copiado!");
+    toast.success("Link copiado!");
   };
 
   const filtered = (galleries ?? []).filter((g) => {
