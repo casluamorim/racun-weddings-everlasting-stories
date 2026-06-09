@@ -80,14 +80,11 @@ Deno.serve(async (req) => {
 
     const { data: gallery, error: gErr } = await supabase
       .from("wedding_galleries")
-      .select("id, slug, is_published, originals_removed_at, downloads_enabled")
+      .select("id, slug, is_published, originals_removed_at")
       .eq("slug", slug)
       .eq("is_published", true)
       .maybeSingle();
     if (gErr || !gallery) return new Response("not_found", { status: 404, headers: corsHeaders });
-    if (gallery.downloads_enabled === false) {
-      return new Response("downloads_disabled", { status: 403, headers: corsHeaders });
-    }
 
     const { data: files } = await supabase
       .from("gallery_files")
