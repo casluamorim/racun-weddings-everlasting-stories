@@ -25,7 +25,7 @@ const GalleryView = () => {
 
   const { data: gallery, isLoading, error } = useQuery({
     queryKey: ["gallery", slug, token],
-    enabled: !!slug && !!token,
+    enabled: !!slug,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_gallery_by_token", { _slug: slug!, _token: token });
       if (error) throw error;
