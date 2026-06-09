@@ -69,22 +69,25 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const slug = url.searchParams.get("slug");
-    const token = url.searchParams.get("token");
-    if (!slug) return new Response("missing params", { status: 400, headers: corsHeaders });
+    if (!slug || !/^[a-z0-9-]{1,120}$/i.test(slug)) {
+      return new Response("invalid slug", { status: 400, headers: corsHeaders });
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    let q = supabase
+    const { data: gallery, error: gErr } = await supabase
       .from("wedding_galleries")
-      .select("id, slug, access_token, is_published, originals_removed_at")
+      .select("id, slug, is_published, originals_removed_at, downloads_enabled")
       .eq("slug", slug)
-      .eq("is_published", true);
-    if (token) q = q.eq("access_token", token);
-    const { data: gallery, error: gErr } = await q.maybeSingle();
+      .eq("is_published", true)
+      .maybeSingle();
     if (gErr || !gallery) return new Response("not_found", { status: 404, headers: corsHeaders });
+    if (gallery.downloads_enabled === false) {
+      return new Response("downloads_disabled", { status: 403, headers: corsHeaders });
+    }
 
     const { data: files } = await supabase
       .from("gallery_files")
