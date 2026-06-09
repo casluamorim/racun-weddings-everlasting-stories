@@ -93,10 +93,10 @@ const AdminGalleries = () => {
     onError: (e: any) => toast.error(e?.message || "Erro ao remover"),
   });
 
-  const copyLink = (slug: string, token: string) => {
-    const url = `${window.location.origin}/galeria/${slug}?token=${token}`;
+  const copyLink = (slug: string) => {
+    const url = `${window.location.origin}/galeria/${slug}`;
     navigator.clipboard.writeText(url);
-    toast.success("Link privado copiado!");
+    toast.success("Link copiado!");
   };
 
   const filtered = (galleries ?? []).filter((g) => {
@@ -171,10 +171,10 @@ const AdminGalleries = () => {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={() => copyLink(g.slug, g.access_token)} title="Copiar link privado">
+                  <Button size="sm" variant="outline" onClick={() => copyLink(g.slug)} title="Copiar link">
                     <Copy className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => window.open(`/galeria/${g.slug}?token=${g.access_token}`, "_blank")} title="Abrir">
+                  <Button size="sm" variant="outline" onClick={() => window.open(`/galeria/${g.slug}`, "_blank")} title="Abrir">
                     <LinkIcon className="h-4 w-4" />
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => togglePublish.mutate({ id: g.id, is_published: g.is_published })}>
