@@ -70,20 +70,20 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const slug = url.searchParams.get("slug");
     const token = url.searchParams.get("token");
-    if (!slug || !token) return new Response("missing params", { status: 400, headers: corsHeaders });
+    if (!slug) return new Response("missing params", { status: 400, headers: corsHeaders });
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: gallery, error: gErr } = await supabase
+    let q = supabase
       .from("wedding_galleries")
       .select("id, slug, access_token, is_published, originals_removed_at")
       .eq("slug", slug)
-      .eq("access_token", token)
-      .eq("is_published", true)
-      .maybeSingle();
+      .eq("is_published", true);
+    if (token) q = q.eq("access_token", token);
+    const { data: gallery, error: gErr } = await q.maybeSingle();
     if (gErr || !gallery) return new Response("not_found", { status: 404, headers: corsHeaders });
 
     const { data: files } = await supabase
