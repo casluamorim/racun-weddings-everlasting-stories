@@ -98,7 +98,7 @@ const GalleryView = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gallery-download-zip?slug=${gallery.slug}&token=${token}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gallery-download-zip?slug=${gallery.slug}`,
         { headers: session ? { Authorization: `Bearer ${session.access_token}` } : {} }
       );
       if (!res.ok) throw new Error("Falha");
