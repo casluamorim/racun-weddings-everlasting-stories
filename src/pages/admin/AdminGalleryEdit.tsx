@@ -178,15 +178,6 @@ const AdminGalleryEdit = () => {
     toast.success("Link copiado!");
   };
 
-  const regenerateToken = useMutation({
-    mutationFn: async () => {
-      const arr = new Uint8Array(24); crypto.getRandomValues(arr);
-      const token = Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
-      const { error } = await supabase.from("wedding_galleries").update({ access_token: token }).eq("id", id!);
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-gallery", id] }); toast.success("Novo link gerado!"); },
-  });
 
   if (isLoading || !gallery || !form) return <p className="text-muted-foreground">Carregando...</p>;
 
@@ -215,7 +206,6 @@ const AdminGalleryEdit = () => {
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={copyLink}><Copy className="h-4 w-4 mr-1" />Copiar</Button>
-                <Button size="sm" variant="outline" onClick={() => regenerateToken.mutate()}><RefreshCw className="h-4 w-4 mr-1" />Novo</Button>
               </div>
             </div>
           </div>
