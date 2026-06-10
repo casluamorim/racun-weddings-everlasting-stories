@@ -11,9 +11,10 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2, Star, Image as ImageIcon, Film, Copy, RefreshCw, Pin, PinOff } from "lucide-react";
+import { ArrowLeft, Upload, Trash2, Star, Image as ImageIcon, Film, Copy, RefreshCw, Pin, PinOff, Camera } from "lucide-react";
 import { compressForWeb, compressForThumb, uploadWithRetry, paths, randomFilename, signedUrls, GALLERY_BUCKET } from "@/lib/galleryStorage";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import GalleryDesignEditor from "@/components/admin/GalleryDesignEditor";
 
 const AdminGalleryEdit = () => {
