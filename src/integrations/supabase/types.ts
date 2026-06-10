@@ -719,41 +719,33 @@ export type Database = {
     }
     Functions: {
       get_gallery_by_token: {
-        Args: { _slug: string; _token: string }
+        Args: { _slug: string; _token?: string }
         Returns: {
-          access_token: string
-          city: string | null
+          city: string
           couple_names: string
-          cover_url: string | null
+          cover_url: string
           created_at: string
-          description: string | null
+          description: string
           design_settings: Json
           download_count: number
-          event_date: string | null
+          event_date: string
           featured_home: boolean
-          hero_video_url: string | null
+          hero_video_url: string
           id: string
           is_password_protected: boolean
           is_published: boolean
           keep_originals_forever: boolean
-          originals_expire_at: string | null
-          originals_removed_at: string | null
-          password_hash: string | null
+          originals_expire_at: string
+          originals_removed_at: string
           retention_months: number
           show_in_portfolio: boolean
           slug: string
-          story: string | null
+          story: string
           updated_at: string
-          venue: string | null
+          venue: string
           view_count: number
-          wedding_id: string | null
+          wedding_id: string
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "wedding_galleries"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       has_role: {
         Args: {
