@@ -1,8 +1,26 @@
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import AnimatedSection from "@/components/landing/AnimatedSection";
+
+const SITE_URL = "https://weddings.agenciaracun.com";
 
 const About = () => (
   <div className="min-h-screen bg-background">
+    <Helmet>
+      <title>Sobre a Racun Weddings — Filme e Fotografia de Casamento</title>
+      <meta
+        name="description"
+        content="Conheça a Racun Weddings: equipe cinematográfica especializada em filmes e fotografias de casamento em Santa Catarina, com agenda limitada para entregar cuidado artesanal."
+      />
+      <link rel="canonical" href={`${SITE_URL}/sobre`} />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content="Sobre a Racun Weddings" />
+      <meta property="og:description" content="Equipe cinematográfica especializada em filme e fotografia de casamento em SC." />
+      <meta property="og:url" content={`${SITE_URL}/sobre`} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Sobre a Racun Weddings" />
+      <meta name="twitter:description" content="Equipe cinematográfica especializada em filme e fotografia de casamento em SC." />
+    </Helmet>
     <header className="py-8 bg-hero">
       <div className="container mx-auto px-6">
         <Link to="/" className="font-heading text-2xl font-light tracking-wider text-hero-foreground">

@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
 import Services from "@/components/landing/Services";
@@ -10,14 +11,16 @@ import FAQ from "@/components/landing/FAQ";
 import Footer from "@/components/landing/Footer";
 import FloatingWhatsApp from "@/components/landing/FloatingWhatsApp";
 
+const SITE_URL = "https://weddings.agenciaracun.com";
+
 const localBusinessJsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  "@id": "https://everbloom-storyteller.lovable.app",
+  "@id": SITE_URL,
   name: "Racun Weddings",
   description:
     "Filmes e fotografias de casamento cinematográficos para casais que querem reviver cada sentimento. Atendimento limitado e exclusivo.",
-  url: "https://everbloom-storyteller.lovable.app",
+  url: SITE_URL,
   telephone: "+554732096098",
   email: "racunagencia@gmail.com",
   address: {
@@ -26,12 +29,8 @@ const localBusinessJsonLd = {
     addressRegion: "SC",
     addressCountry: "BR",
   },
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: -26.9194,
-    longitude: -49.0661,
-  },
-  image: "https://everbloom-storyteller.lovable.app/og-image.jpg",
+  geo: { "@type": "GeoCoordinates", latitude: -26.9194, longitude: -49.0661 },
+  image: `${SITE_URL}/og-image.jpg`,
   priceRange: "$$",
   openingHoursSpecification: {
     "@type": "OpeningHoursSpecification",
@@ -57,10 +56,13 @@ const localBusinessJsonLd = {
 
 const Index = () => (
   <>
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
-    />
+    <Helmet>
+      <title>Racun Weddings — Fotografia e Filme de Casamento Cinematográfico em SC</title>
+      <meta name="description" content="Filmes e fotografias de casamento cinematográficos em Blumenau, Florianópolis, Joinville e Balneário Camboriú. Atendimento limitado e exclusivo." />
+      <link rel="canonical" href={`${SITE_URL}/`} />
+      <meta property="og:url" content={`${SITE_URL}/`} />
+      <script type="application/ld+json">{JSON.stringify(localBusinessJsonLd)}</script>
+    </Helmet>
     <Navbar />
     <Hero />
     <Services />

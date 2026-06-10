@@ -11,9 +11,10 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, Trash2, Star, Image as ImageIcon, Film, Copy, RefreshCw, Pin, PinOff } from "lucide-react";
+import { ArrowLeft, Upload, Trash2, Star, Image as ImageIcon, Film, Copy, RefreshCw, Pin, PinOff, Camera } from "lucide-react";
 import { compressForWeb, compressForThumb, uploadWithRetry, paths, randomFilename, signedUrls, GALLERY_BUCKET } from "@/lib/galleryStorage";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import GalleryDesignEditor from "@/components/admin/GalleryDesignEditor";
 
 const AdminGalleryEdit = () => {
@@ -209,6 +210,53 @@ const AdminGalleryEdit = () => {
               </div>
             </div>
           </div>
+
+          {/* Cover photo card */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h2 className="font-heading text-lg flex items-center gap-2"><Camera className="h-4 w-4" /> Foto de capa</h2>
+                <p className="text-xs text-muted-foreground">A capa aparece no portfólio, na home e no compartilhamento da galeria.</p>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" disabled={!files || files.filter((f: any) => f.kind === "photo").length === 0}>
+                    <ImageIcon className="h-4 w-4 mr-2" /> {gallery.cover_url ? "Trocar capa" : "Escolher capa"}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle>Escolher foto de capa</DialogTitle></DialogHeader>
+                  <p className="text-sm text-muted-foreground mb-3">Clique em uma foto para defini-la como capa.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {files?.filter((f: any) => f.kind === "photo").map((f: any) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setAsCover.mutate(f)}
+                        className={`relative aspect-square rounded overflow-hidden border-2 transition ${f.is_cover ? "border-primary ring-2 ring-primary/40" : "border-transparent hover:border-primary/50"}`}
+                      >
+                        {thumbs[f.thumb_path || f.web_path] ? (
+                          <img src={thumbs[f.thumb_path || f.web_path]} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        ) : <div className="w-full h-full bg-muted" />}
+                        {f.is_cover && <span className="absolute top-1 left-1 text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded">Capa atual</span>}
+                      </button>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <div className="aspect-[16/9] w-full bg-muted rounded overflow-hidden border max-w-md">
+              {gallery.cover_url ? (
+                <img src={gallery.cover_url} alt="Capa atual" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
+                  <ImageIcon className="h-8 w-8 opacity-50" />
+                  <span>Nenhuma capa definida</span>
+                </div>
+              )}
+            </div>
+          </div>
+
 
           {/* Info */}
           <div className="border rounded-lg p-4 space-y-3">
