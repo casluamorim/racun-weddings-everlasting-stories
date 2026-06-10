@@ -94,7 +94,7 @@ const AdminGalleries = () => {
   });
 
   const copyLink = (slug: string) => {
-    const url = `${window.location.origin}/galeria/${slug}`;
+    const url = `https://weddings.agenciaracun.com/galeria/${slug}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copiado!");
   };

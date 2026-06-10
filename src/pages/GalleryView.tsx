@@ -108,7 +108,7 @@ const GalleryView = () => {
   };
 
   const share = async () => {
-    const url = window.location.href;
+    const url = `https://weddings.agenciaracun.com/galeria/${slug}`;
     if (navigator.share) { try { await navigator.share({ title: gallery?.couple_names, url }); } catch {} }
     else { navigator.clipboard.writeText(url); toast.success("Link copiado!"); }
   };

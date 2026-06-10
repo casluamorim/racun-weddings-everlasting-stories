@@ -173,7 +173,7 @@ const AdminGalleryEdit = () => {
 
   const copyLink = () => {
     if (!gallery) return;
-    const url = `${window.location.origin}/galeria/${gallery.slug}`;
+    const url = `https://weddings.agenciaracun.com/galeria/${gallery.slug}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copiado!");
   };
@@ -202,7 +202,7 @@ const AdminGalleryEdit = () => {
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="min-w-0">
                 <p className="text-xs uppercase tracking-wider text-muted-foreground">Link privado para o casal</p>
-                <p className="text-sm font-mono truncate">{window.location.origin}/galeria/{gallery.slug}</p>
+                <p className="text-sm font-mono truncate">https://weddings.agenciaracun.com/galeria/{gallery.slug}</p>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={copyLink}><Copy className="h-4 w-4 mr-1" />Copiar</Button>
