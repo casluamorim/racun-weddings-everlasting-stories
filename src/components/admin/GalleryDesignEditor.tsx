@@ -274,6 +274,9 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
   const [compareMode, setCompareMode] = useState<"off" | "split" | "toggle">("off");
   const [showingBefore, setShowingBefore] = useState(false);
 
+  // Cover crop dialog
+  const [coverOpen, setCoverOpen] = useState(false);
+
 
   const previewWidth = useMemo(() => (device === "mobile" ? 390 : device === "tablet" ? 820 : "100%"), [device]);
 
@@ -315,6 +318,36 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
 
           {/* CAPA */}
           <TabsContent value="capa" className="space-y-4 pt-4">
+            {/* Cover photo picker + crop */}
+            <div className="border rounded-lg p-3 space-y-2 bg-muted/30">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Label className="text-xs">Foto de capa</Label>
+                  <p className="text-[11px] text-muted-foreground">Recortes separados para desktop e mobile.</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => setCoverOpen(true)}>
+                  <Crop className="h-3.5 w-3.5 mr-1" />
+                  {design.cover.desktopUrl || gallery.cover_url ? "Trocar / recortar" : "Escolher capa"}
+                </Button>
+              </div>
+              {(design.cover.desktopUrl || gallery.cover_url) && (
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Desktop 16:9</p>
+                    <div className="aspect-video bg-black rounded overflow-hidden border">
+                      <img src={design.cover.desktopUrl || gallery.cover_url!} alt="capa desktop" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Mobile 9:16</p>
+                    <div className="aspect-[9/16] bg-black rounded overflow-hidden border max-h-40 mx-auto">
+                      <img src={design.cover.mobileUrl || design.cover.desktopUrl || gallery.cover_url!} alt="capa mobile" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div>
               <Label className="text-xs">Templates</Label>
               <div className="grid grid-cols-2 gap-1.5 mt-2">
@@ -323,6 +356,7 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
                 ))}
               </div>
             </div>
+
 
             <div>
               <Label className="text-xs">Tipo do hero</Label>
