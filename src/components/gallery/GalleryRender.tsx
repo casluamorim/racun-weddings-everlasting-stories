@@ -72,7 +72,7 @@ export function GalleryRender({
   const videos = useMemo(() => files.filter((f) => f.kind === "video"), [files]);
   const desktopCover = design.cover.desktopUrl ?? gallery.cover_url ?? (files[0] ? urls[files[0].web_path] : undefined);
   const mobileCover = design.cover.mobileUrl ?? desktopCover;
-  const heroUrl = forceMobile ? mobileCover : desktopCover;
+  void forceMobile; void heroUrlUnused; // keep tree-shake friendly
 
   const t = design.toggles;
   const c = design.colors;
