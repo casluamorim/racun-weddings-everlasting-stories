@@ -70,7 +70,9 @@ export function GalleryRender({
 
   const photos = useMemo(() => files.filter((f) => f.kind === "photo"), [files]);
   const videos = useMemo(() => files.filter((f) => f.kind === "video"), [files]);
-  const heroUrl = gallery.cover_url ?? (files[0] ? urls[files[0].web_path] : undefined);
+  const desktopCover = design.cover.desktopUrl ?? gallery.cover_url ?? (files[0] ? urls[files[0].web_path] : undefined);
+  const mobileCover = design.cover.mobileUrl ?? desktopCover;
+  
 
   const t = design.toggles;
   const c = design.colors;
@@ -111,12 +113,16 @@ export function GalleryRender({
             className="absolute inset-0 w-full h-full object-cover"
             style={{ transform: `scale(${cov.zoom})`, objectPosition: cov.position, filter: cov.blur ? `blur(${cov.blur}px)` : undefined }}
           />
-        ) : heroUrl ? (
-          <img
-            src={heroUrl} alt=""
-            className={`absolute inset-0 w-full h-full object-cover ${cov.parallax ? "[transform:translateZ(0)]" : ""}`}
-            style={{ transform: `scale(${cov.zoom})`, objectPosition: cov.position, filter: cov.blur ? `blur(${cov.blur}px)` : undefined }}
-          />
+        ) : (desktopCover || mobileCover) ? (
+          <picture className="absolute inset-0 w-full h-full">
+            {mobileCover && <source media="(max-width: 767px)" srcSet={mobileCover} />}
+            <img
+              src={desktopCover || mobileCover}
+              alt=""
+              className={`absolute inset-0 w-full h-full object-cover ${cov.parallax ? "[transform:translateZ(0)]" : ""}`}
+              style={{ transform: `scale(${cov.zoom})`, objectPosition: cov.position, filter: cov.blur ? `blur(${cov.blur}px)` : undefined }}
+            />
+          </picture>
         ) : (
           <div className="absolute inset-0 bg-muted" />
         )}

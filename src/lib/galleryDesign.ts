@@ -18,6 +18,8 @@ export type DesignSettings = {
     zoom: number; // 1..1.5
     parallax: boolean;
     heroVideoUrl?: string;
+    desktopUrl?: string;
+    mobileUrl?: string;
   };
   typography: {
     heading: string;
