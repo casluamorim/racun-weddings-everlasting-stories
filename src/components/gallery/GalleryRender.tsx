@@ -70,7 +70,9 @@ export function GalleryRender({
 
   const photos = useMemo(() => files.filter((f) => f.kind === "photo"), [files]);
   const videos = useMemo(() => files.filter((f) => f.kind === "video"), [files]);
-  const heroUrl = gallery.cover_url ?? (files[0] ? urls[files[0].web_path] : undefined);
+  const desktopCover = design.cover.desktopUrl ?? gallery.cover_url ?? (files[0] ? urls[files[0].web_path] : undefined);
+  const mobileCover = design.cover.mobileUrl ?? desktopCover;
+  const heroUrl = forceMobile ? mobileCover : desktopCover;
 
   const t = design.toggles;
   const c = design.colors;
