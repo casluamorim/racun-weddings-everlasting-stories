@@ -44,7 +44,10 @@ const Footer = () => {
               ) : brand}
             </p>
             <p className="font-body text-xs text-hero-foreground/40 mt-1">{tagline}</p>
+            <p className="font-body text-[11px] text-hero-foreground/50 mt-2">Blumenau · Santa Catarina · Brasil</p>
+            <p className="font-body text-[10px] text-hero-foreground/35 mt-0.5">Atendemos Florianópolis, Joinville, Balneário Camboriú e região.</p>
           </div>
+
 
           <div className="flex items-center gap-6">
             <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="text-hero-foreground/50 hover:text-primary transition-colors" aria-label="Instagram">
