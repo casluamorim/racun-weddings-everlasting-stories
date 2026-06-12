@@ -562,6 +562,25 @@ export default function GalleryDesignEditor({ galleryId }: Props) {
           )}
         </div>
       </div>
+
+      <CoverCropDialog
+        open={coverOpen}
+        onClose={() => setCoverOpen(false)}
+        galleryId={galleryId}
+        photoOptions={(files ?? []).filter((f: any) => f.kind === "photo").map((f: any) => ({ id: f.id, web_path: f.web_path, thumb_path: f.thumb_path }))}
+        initialUrl={design.cover.desktopUrl ?? gallery.cover_url}
+        onSaved={async ({ desktopUrl, mobileUrl }) => {
+          // update local design state
+          setDesign((d) => ({ ...d, cover: { ...d.cover, desktopUrl, mobileUrl } }));
+          // persist cover_url + design_settings immediately so list/portfolio reflect
+          const newDesign = { ...design, cover: { ...design.cover, desktopUrl, mobileUrl } };
+          await supabase.from("wedding_galleries").update({ cover_url: desktopUrl, design_settings: newDesign as any }).eq("id", galleryId);
+          qc.invalidateQueries({ queryKey: ["admin-gallery", galleryId] });
+          qc.invalidateQueries({ queryKey: ["admin-galleries"] });
+          setInitialDesign(newDesign);
+          setDirty(false);
+        }}
+      />
     </div>
   );
 }
