@@ -113,12 +113,16 @@ export function GalleryRender({
             className="absolute inset-0 w-full h-full object-cover"
             style={{ transform: `scale(${cov.zoom})`, objectPosition: cov.position, filter: cov.blur ? `blur(${cov.blur}px)` : undefined }}
           />
-        ) : heroUrl ? (
-          <img
-            src={heroUrl} alt=""
-            className={`absolute inset-0 w-full h-full object-cover ${cov.parallax ? "[transform:translateZ(0)]" : ""}`}
-            style={{ transform: `scale(${cov.zoom})`, objectPosition: cov.position, filter: cov.blur ? `blur(${cov.blur}px)` : undefined }}
-          />
+        ) : (desktopCover || mobileCover) ? (
+          <picture className="absolute inset-0 w-full h-full">
+            {mobileCover && <source media="(max-width: 767px)" srcSet={mobileCover} />}
+            <img
+              src={desktopCover || mobileCover}
+              alt=""
+              className={`absolute inset-0 w-full h-full object-cover ${cov.parallax ? "[transform:translateZ(0)]" : ""}`}
+              style={{ transform: `scale(${cov.zoom})`, objectPosition: cov.position, filter: cov.blur ? `blur(${cov.blur}px)` : undefined }}
+            />
+          </picture>
         ) : (
           <div className="absolute inset-0 bg-muted" />
         )}
