@@ -28,6 +28,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const WeddingRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={`/casamentos/${slug}`} replace />;
+};
+
+
 const App = () => (
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
