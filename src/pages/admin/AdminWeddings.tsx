@@ -547,6 +547,16 @@ const AdminWeddings = () => {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://weddings.agenciaracun.com/casamentos/${w.slug}`);
+                        toast.success("Link do casamento copiado!");
+                      }}
+                      title={`Copiar link: /casamentos/${w.slug}`}
+                    >
+                      <LinkIcon size={16} className="text-muted-foreground" />
+                    </Button>
+                    <Button
+
                       onClick={() => toggleFeaturedHome.mutate({ id: w.id, is_featured_home: (w as any).is_featured_home })}
                       title={(w as any).is_featured_home ? "Remover destaque da Home" : "Exibir na Home (Portfólio Principal)"}
                     >
