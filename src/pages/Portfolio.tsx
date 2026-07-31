@@ -31,7 +31,7 @@ const PortfolioPage = () => {
         itemListElement: weddings.map((w, i) => ({
           "@type": "ListItem",
           position: i + 1,
-          url: `${SITE_URL}/portfolio/${w.slug}`,
+          url: `${SITE_URL}/casamentos/${w.slug}`,
           name: w.couple_names,
         })),
       }
@@ -92,7 +92,7 @@ const PortfolioPage = () => {
               {weddings.map((w, idx) => (
                 <Link
                   key={w.id}
-                  to={`/portfolio/${w.slug}`}
+                  to={`/casamentos/${w.slug}`}
                   className="group block overflow-hidden rounded-sm bg-card border border-border hover:border-primary/40 transition-all"
                 >
                   <div className="aspect-[4/5] overflow-hidden bg-muted">

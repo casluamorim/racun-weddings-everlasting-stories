@@ -85,7 +85,7 @@ const WeddingDetail = () => {
     return <Navigate to="/portfolio" replace />;
   }
 
-  const pageUrl = `${SITE_URL}/portfolio/${wedding.slug}`;
+  const pageUrl = `${SITE_URL}/casamentos/${wedding.slug}`;
   const title = `Casamento de ${wedding.couple_names} | Racun Weddings`;
   const description = wedding.description
     ? wedding.description.slice(0, 155)
