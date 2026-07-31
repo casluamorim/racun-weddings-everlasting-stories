@@ -113,7 +113,7 @@ const Portfolio = () => {
               {displayWeddings.map((w) => (
                 <Link
                   key={w.id}
-                  to={`/portfolio/${w.slug}`}
+                  to={`/casamentos/${w.slug}`}
                   className="group block overflow-hidden rounded-sm bg-card/5 border border-section-dark-foreground/10 hover:border-primary/40 transition-all"
                 >
                   <div className="aspect-[4/5] overflow-hidden bg-section-dark-foreground/5">

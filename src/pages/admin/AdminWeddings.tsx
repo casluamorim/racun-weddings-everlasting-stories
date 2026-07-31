@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check, Star } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check, Star, Link as LinkIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
 import { compressImage } from "@/lib/imageCompression";
@@ -82,7 +82,16 @@ const AdminWeddings = () => {
   const createMutation = useMutation({
     mutationFn: async () => {
       const baseSlug = slugify(form.couple_names) || "casamento";
-      const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
+      // slug limpo (ex: /casamentos/joao-e-maria); só adiciona sufixo se já existir
+      const { data: existing } = await supabase
+        .from("weddings")
+        .select("slug")
+        .like("slug", `${baseSlug}%`);
+      const taken = new Set((existing || []).map((r: any) => r.slug));
+      let slug = baseSlug;
+      let i = 2;
+      while (taken.has(slug)) slug = `${baseSlug}-${i++}`;
+
       const { error } = await supabase.from("weddings").insert({
         couple_names: form.couple_names,
         city: form.city || null,
@@ -538,6 +547,16 @@ const AdminWeddings = () => {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://weddings.agenciaracun.com/casamentos/${w.slug}`);
+                        toast.success("Link do casamento copiado!");
+                      }}
+                      title={`Copiar link: /casamentos/${w.slug}`}
+                    >
+                      <LinkIcon size={16} className="text-muted-foreground" />
+                    </Button>
+                    <Button
+
                       onClick={() => toggleFeaturedHome.mutate({ id: w.id, is_featured_home: (w as any).is_featured_home })}
                       title={(w as any).is_featured_home ? "Remover destaque da Home" : "Exibir na Home (Portfólio Principal)"}
                     >

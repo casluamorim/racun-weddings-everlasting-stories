@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
@@ -28,6 +28,12 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const WeddingRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={`/casamentos/${slug}`} replace />;
+};
+
+
 const App = () => (
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
@@ -40,7 +46,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/historias" element={<Stories />} />
             <Route path="/portfolio" element={<PortfolioPage />} />
-            <Route path="/portfolio/:slug" element={<WeddingDetail />} />
+            <Route path="/casamentos/:slug" element={<WeddingDetail />} />
+            <Route path="/portfolio/:slug" element={<WeddingRedirect />} />
+
             <Route path="/galeria/:slug" element={<GalleryView />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/sobre" element={<About />} />
