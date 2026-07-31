@@ -82,7 +82,16 @@ const AdminWeddings = () => {
   const createMutation = useMutation({
     mutationFn: async () => {
       const baseSlug = slugify(form.couple_names) || "casamento";
-      const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 7)}`;
+      // slug limpo (ex: /casamentos/joao-e-maria); só adiciona sufixo se já existir
+      const { data: existing } = await supabase
+        .from("weddings")
+        .select("slug")
+        .like("slug", `${baseSlug}%`);
+      const taken = new Set((existing || []).map((r: any) => r.slug));
+      let slug = baseSlug;
+      let i = 2;
+      while (taken.has(slug)) slug = `${baseSlug}-${i++}`;
+
       const { error } = await supabase.from("weddings").insert({
         couple_names: form.couple_names,
         city: form.city || null,
