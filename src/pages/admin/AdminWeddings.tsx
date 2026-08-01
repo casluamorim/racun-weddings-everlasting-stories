@@ -830,74 +830,110 @@ const AdminWeddings = () => {
                     })}
 
 
-                    {/* Videos section with drag and drop */}
+                    {/* Vídeos separados por seção */}
                     <div>
                       <h4 className="font-heading text-sm text-foreground mb-2 flex items-center gap-2">
                         <Film size={14} /> Vídeos
                       </h4>
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <select
+                          value={videoCategory}
+                          onChange={(e) => setVideoCategory(e.target.value as "wedding" | "pre_wedding")}
+                          className="h-9 rounded-md border border-input bg-background px-2 font-body text-sm"
+                        >
+                          <option value="wedding">Casamento</option>
+                          <option value="pre_wedding">Pré-Wedding</option>
+                        </select>
                         <Input
                           value={youtubeUrl}
                           onChange={(e) => setYoutubeUrl(e.target.value)}
                           placeholder="Cole a URL do YouTube aqui..."
-                          className="text-sm h-9"
+                          className="text-sm h-9 flex-1 min-w-[180px]"
                         />
                         <Button
                           size="sm"
                           disabled={!youtubeUrl.trim() || addYoutubeVideo.isPending}
-                          onClick={() => addYoutubeVideo.mutate({ weddingId: w.id, url: youtubeUrl.trim() })}
+                          onClick={() => addYoutubeVideo.mutate({ weddingId: w.id, url: youtubeUrl.trim(), category: videoCategory })}
                         >
                           <Plus size={14} className="mr-1" /> Adicionar
                         </Button>
                       </div>
-                      {weddingVideos && weddingVideos.length > 0 ? (
-                        <SortableGrid
-                          items={weddingVideos}
-                          onReorder={reorderVideos}
-                          className="grid grid-cols-2 sm:grid-cols-3 gap-3"
-                          renderItem={(v) => {
-                            const ytId = getYouTubeId(v.youtube_url);
-                            const isEditingThis = editingId === `video-${v.id}`;
-                            return (
-                              <div className={`bg-muted rounded-lg overflow-hidden ${!v.show_in_portfolio ? "opacity-50" : ""}`}>
-                                {ytId && (
-                                  <div className="relative">
-                                    <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
-                                    {!v.show_in_portfolio && (
-                                      <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
-                                    )}
-                                  </div>
-                                )}
-                                <div className="p-2">
-                                  {isEditingThis ? (
-                                    <div className="flex items-center gap-1">
-                                      <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-7 text-xs" placeholder="Título" autoFocus />
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateVideoTitle.mutate({ id: v.id, title: editValue })}><Check size={12} /></Button>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center justify-between">
-                                      <p className="font-body text-xs text-foreground truncate">{v.title || "Sem título"}</p>
-                                      <div className="flex gap-0.5">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`video-${v.id}`); setEditValue(v.title || ""); }} title="Editar título"><Pencil size={11} /></Button>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6"
-                                          title={v.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
-                                          onClick={() => toggleVideoPortfolio.mutate({ id: v.id, current: v.show_in_portfolio, scope: "wedding" })}>
-                                          {v.show_in_portfolio ? <Eye size={11} /> : <EyeOff size={11} className="text-muted-foreground" />}
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteVideo.mutate(v.id)} title="Remover"><Trash2 size={11} className="text-destructive" /></Button>
+
+                      {([
+                        { key: "wedding" as const, label: "Casamento" },
+                        { key: "pre_wedding" as const, label: "Pré-Wedding" },
+                      ]).map((sec) => {
+                        const secVideos = (weddingVideos || []).filter(
+                          (v: any) => (v.category ?? "wedding") === sec.key
+                        );
+                        if (secVideos.length === 0) return null;
+                        return (
+                          <div key={sec.key} className="mb-4">
+                            <p className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2">{sec.label}</p>
+                            <SortableGrid
+                              items={secVideos}
+                              onReorder={reorderVideos}
+                              className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+                              renderItem={(v) => {
+                                const ytId = getYouTubeId(v.youtube_url);
+                                const isEditingThis = editingId === `video-${v.id}`;
+                                return (
+                                  <div className={`bg-muted rounded-lg overflow-hidden ${!v.show_in_portfolio ? "opacity-50" : ""}`}>
+                                    {ytId && (
+                                      <div className="relative">
+                                        <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
+                                        {!v.show_in_portfolio && (
+                                          <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
+                                        )}
+                                        {(v as any).show_in_home && (
+                                          <span className="absolute top-1 left-1 bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Home</span>
+                                        )}
                                       </div>
+                                    )}
+                                    <div className="p-2">
+                                      {isEditingThis ? (
+                                        <div className="flex items-center gap-1">
+                                          <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-7 text-xs" placeholder="Título" autoFocus />
+                                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateVideoTitle.mutate({ id: v.id, title: editValue })}><Check size={12} /></Button>
+                                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center justify-between">
+                                          <p className="font-body text-xs text-foreground truncate">{v.title || "Sem título"}</p>
+                                          <div className="flex gap-0.5">
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`video-${v.id}`); setEditValue(v.title || ""); }} title="Editar título"><Pencil size={11} /></Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6"
+                                              title={v.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                                              onClick={() => toggleVideoPortfolio.mutate({ id: v.id, current: v.show_in_portfolio, scope: "wedding" })}>
+                                              {v.show_in_portfolio ? <Eye size={11} /> : <EyeOff size={11} className="text-muted-foreground" />}
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6"
+                                              title={(v as any).show_in_home ? "Remover da página inicial" : "Exibir na página inicial"}
+                                              onClick={() => toggleVideoHome.mutate({ id: v.id, current: !!(v as any).show_in_home })}>
+                                              <Star size={11} fill={(v as any).show_in_home ? "currentColor" : "none"} />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6"
+                                              title={sec.key === "wedding" ? "Mover para Pré-Wedding" : "Mover para Casamento"}
+                                              onClick={() => moveVideoCategory.mutate({ id: v.id, category: sec.key === "wedding" ? "pre_wedding" : "wedding" })}>
+                                              <ArrowLeftRight size={11} />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteVideo.mutate(v.id)} title="Remover"><Trash2 size={11} className="text-destructive" /></Button>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          }}
-                        />
-                      ) : (
+                                  </div>
+                                );
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                      {(!weddingVideos || weddingVideos.length === 0) && (
                         <p className="font-body text-xs text-muted-foreground">Nenhum vídeo. Cole uma URL do YouTube acima.</p>
                       )}
                     </div>
+
 
                     {/* Testimonial editor */}
                     <TestimonialEditor
