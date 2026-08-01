@@ -168,50 +168,52 @@ const AdminWeddings = () => {
     },
   });
 
-  const handleUploadPhotos = async (weddingId: string, files: FileList) => {
+  const handleUploadPhotos = async (weddingId: string, files: FileList, category: "wedding" | "pre_wedding") => {
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const tooBig = list.filter((f) => f.size > MAX_UPLOAD_BYTES);
+    tooBig.forEach((f) => toast.error(`${f.name} é muito grande (máx 60MB)`));
+    const valid = list.filter((f) => f.size <= MAX_UPLOAD_BYTES);
+    if (valid.length === 0) return;
+
     setUploading(true);
-    const currentCount = photos?.length ?? 0;
+    setUploadProgress({ done: 0, total: valid.length });
+    const baseOrder = photos?.filter((p: any) => (p.category ?? "wedding") === category).length ?? 0;
     let uploaded = 0;
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith("image/")) continue;
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} é muito grande (máx 10MB)`);
-        continue;
-      }
+    await runWithConcurrency(valid, 4, async (file, i) => {
+      try {
+        const compressed = await compressImage(file);
+        const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
+        const path = `weddings/${weddingId}/${category}/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-      const compressed = await compressImage(file);
-      const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
-      const path = `weddings/${weddingId}/${Date.now()}-${i}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, compressed);
+        if (uploadError) throw uploadError;
 
-      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, compressed);
-      if (uploadError) {
+        const { data: urlData } = supabase.storage.from("portfolio").getPublicUrl(path);
+
+        const { error: dbError } = await supabase.from("portfolio_photos").insert({
+          wedding_id: weddingId,
+          photo_url: urlData.publicUrl,
+          sort_order: baseOrder + i,
+          category,
+        } as any);
+        if (dbError) throw dbError;
+        uploaded++;
+      } catch {
         toast.error(`Erro ao enviar ${file.name}`);
-        continue;
+      } finally {
+        setUploadProgress((p) => ({ ...p, done: p.done + 1 }));
       }
-
-      const { data: urlData } = supabase.storage.from("portfolio").getPublicUrl(path);
-
-      const { error: dbError } = await supabase.from("portfolio_photos").insert({
-        wedding_id: weddingId,
-        photo_url: urlData.publicUrl,
-        sort_order: currentCount + uploaded,
-      });
-
-      if (dbError) {
-        toast.error(`Erro ao salvar ${file.name}`);
-        continue;
-      }
-      uploaded++;
-    }
+    });
 
     if (uploaded > 0) {
-      toast.success(`${uploaded} foto(s) enviada(s)!`);
+      toast.success(`${uploaded} foto(s) enviada(s) em WebP!`);
       queryClient.invalidateQueries({ queryKey: ["admin-photos", weddingId] });
     }
     setUploading(false);
+    setUploadProgress({ done: 0, total: 0 });
   };
+
 
   const deletePhoto = useMutation({
     mutationFn: async ({ id, photo_url }: { id: string; photo_url: string }) => {
