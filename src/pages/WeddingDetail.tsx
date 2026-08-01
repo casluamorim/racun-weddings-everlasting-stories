@@ -173,57 +173,72 @@ const WeddingDetail = () => {
             </AnimatedSection>
           )}
 
-          {videos && videos.length > 0 && (
-            <AnimatedSection className="mb-16">
-              <h2 className="font-heading text-xl text-foreground/80 mb-6 text-center">Filme</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {videos.map((v) => {
-                  const id = extractYoutubeId(v.youtube_url);
-                  return (
-                    <div
-                      key={v.id}
-                      className="group cursor-pointer relative aspect-video overflow-hidden rounded-sm"
-                      onClick={() => setActiveVideo(id)}
-                    >
-                      <img
-                        src={`https://img.youtube.com/vi/${id}/maxresdefault.jpg`}
-                        alt={v.title || ""}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-hero/40 group-hover:bg-hero/20 transition-colors flex items-center justify-center">
-                        <div className="w-14 h-14 rounded-full border-2 border-primary-foreground/80 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <Play size={20} className="text-primary-foreground ml-1" fill="currentColor" />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </AnimatedSection>
-          )}
+          {([
+            { key: "wedding" as const, label: "Casamento" },
+            { key: "pre_wedding" as const, label: "Pré-Wedding" },
+          ]).map((sec) => {
+            const secVideos = (videos || []).filter((v: any) => (v.category ?? "wedding") === sec.key);
+            const secPhotos = (photos || []).filter((p: any) => (p.category ?? "wedding") === sec.key);
+            if (secVideos.length === 0 && secPhotos.length === 0) return null;
+            return (
+              <AnimatedSection key={sec.key} className="mb-16 md:mb-24">
+                <h2 className="font-heading text-2xl md:text-3xl font-light text-foreground mb-2 text-center">
+                  {sec.label}
+                </h2>
+                <div className="w-10 h-px bg-primary/60 mx-auto mb-8" />
 
-          {photos && photos.length > 0 && (
-            <AnimatedSection>
-              <h2 className="font-heading text-xl text-foreground/80 mb-6 text-center">Galeria</h2>
-              <div className="columns-2 md:columns-3 gap-4 space-y-4">
-                {photos.map((p) => (
-                  <div key={p.id} className="break-inside-avoid overflow-hidden rounded-sm">
-                    <img
-                      src={p.photo_url}
-                      alt={p.caption || wedding.couple_names}
-                      loading="lazy"
-                      className="w-full object-cover"
-                    />
+                {secVideos.length > 0 && (
+                  <div className="grid sm:grid-cols-2 gap-3 md:gap-4 mb-8">
+                    {secVideos.map((v: any) => {
+                      const id = extractYoutubeId(v.youtube_url);
+                      return (
+                        <div
+                          key={v.id}
+                          className="group cursor-pointer relative aspect-video overflow-hidden rounded-sm"
+                          onClick={() => setActiveVideo(id)}
+                        >
+                          <img
+                            src={`https://img.youtube.com/vi/${id}/maxresdefault.jpg`}
+                            alt={v.title || ""}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-hero/40 group-hover:bg-hero/20 transition-colors flex items-center justify-center">
+                            <div className="w-14 h-14 rounded-full border-2 border-primary-foreground/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Play size={20} className="text-primary-foreground ml-1" fill="currentColor" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            </AnimatedSection>
-          )}
+                )}
+
+                {secPhotos.length > 0 && (
+                  <div className="columns-2 md:columns-3 gap-2 md:gap-4 space-y-2 md:space-y-4">
+                    {secPhotos.map((p: any) => (
+                      <div key={p.id} className="break-inside-avoid overflow-hidden rounded-sm">
+                        <img
+                          src={p.photo_url}
+                          alt={p.caption || `${wedding.couple_names} — ${sec.label}`}
+                          loading="lazy"
+                          decoding="async"
+                          sizes="(max-width: 768px) 50vw, 33vw"
+                          className="w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </AnimatedSection>
+            );
+          })}
 
           {(!videos || videos.length === 0) && (!photos || photos.length === 0) && (
             <p className="text-center font-body text-muted-foreground">Conteúdo em breve.</p>
           )}
+
         </div>
       </main>
 
