@@ -23,8 +23,11 @@ import AdminCalendar from "./pages/admin/AdminCalendar";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminStories from "./pages/admin/AdminStories";
 import AdminSiteEditor from "./pages/admin/AdminSiteEditor";
+import AdminHome from "./pages/admin/AdminHome";
 import GalleryView from "./pages/GalleryView";
 import NotFound from "./pages/NotFound";
+import ScrollToTop from "./components/ScrollToTop";
+
 
 const queryClient = new QueryClient();
 
