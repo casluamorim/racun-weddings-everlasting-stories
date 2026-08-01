@@ -245,11 +245,13 @@ const AdminWeddings = () => {
   });
 
   const addYoutubeVideo = useMutation({
-    mutationFn: async ({ weddingId, url }: { weddingId: string; url: string }) => {
+    mutationFn: async ({ weddingId, url, category }: { weddingId: string; url: string; category: "wedding" | "pre_wedding" }) => {
       const { error } = await supabase.from("portfolio_videos").insert({
         wedding_id: weddingId,
         youtube_url: url,
-      });
+        category,
+      } as any);
+
       if (error) throw error;
     },
     onSuccess: () => {
