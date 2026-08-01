@@ -24,6 +24,35 @@ const Portfolio = () => {
     },
   });
 
+  // Curadoria da página inicial (painel > Página Inicial)
+  const { data: homePhotos } = useQuery({
+    queryKey: ["home-feed", "photos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("portfolio_photos")
+        .select("id, photo_url, caption, home_sort_order, sort_order")
+        .eq("show_in_home" as any, true)
+        .order("home_sort_order" as any, { ascending: true })
+        .limit(18);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: homeVideos } = useQuery({
+    queryKey: ["home-feed", "videos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("portfolio_videos")
+        .select("id, title, youtube_url, home_sort_order")
+        .eq("show_in_home" as any, true)
+        .order("home_sort_order" as any, { ascending: true })
+        .limit(6);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: standalonePhotos } = useQuery({
     queryKey: ["public-standalone-photos"],
     queryFn: async () => {
@@ -59,8 +88,11 @@ const Portfolio = () => {
   };
 
   const displayWeddings = featuredWeddings && featuredWeddings.length > 0 ? featuredWeddings : null;
-  const displayPhotos = standalonePhotos && standalonePhotos.length > 0 ? standalonePhotos : null;
-  const displayVideos = videos && videos.length > 0 ? videos : null;
+  const curatedPhotos = homePhotos && homePhotos.length > 0 ? homePhotos : null;
+  const curatedVideos = homeVideos && homeVideos.length > 0 ? homeVideos : null;
+  const displayPhotos = curatedPhotos ?? (standalonePhotos && standalonePhotos.length > 0 ? standalonePhotos : null);
+  const displayVideos = curatedVideos ?? (videos && videos.length > 0 ? videos : null);
+
 
   const videoJsonLd = displayVideos
     ? {
