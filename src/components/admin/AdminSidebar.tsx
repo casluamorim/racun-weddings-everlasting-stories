@@ -9,6 +9,8 @@ import {
   LogOut,
   PenTool,
   Images,
+  Home,
+
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
