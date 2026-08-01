@@ -41,7 +41,7 @@ const WeddingDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("portfolio_photos")
-        .select("id, photo_url, caption")
+        .select("id, photo_url, caption, category")
         .eq("wedding_id", wedding!.id)
         .order("sort_order");
       if (error) throw error;
@@ -55,13 +55,14 @@ const WeddingDetail = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("portfolio_videos")
-        .select("id, title, youtube_url")
+        .select("id, title, youtube_url, category")
         .eq("wedding_id", wedding!.id)
         .order("sort_order");
       if (error) throw error;
       return data;
     },
   });
+
 
   if (isLoading) {
     return (
