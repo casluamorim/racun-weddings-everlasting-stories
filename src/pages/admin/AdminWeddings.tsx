@@ -307,6 +307,71 @@ const AdminWeddings = () => {
     }
   };
 
+  /** Reordena apenas dentro de uma seção (casamento / pré-wedding), preservando a outra. */
+  const reorderPhotosIn = async (
+    category: "wedding" | "pre_wedding",
+    reordered: NonNullable<typeof photos>
+  ) => {
+    const others = (photos || []).filter((p: any) => (p.category ?? "wedding") !== category);
+    queryClient.setQueryData(["admin-photos", expandedId], [...reordered, ...others]);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_photos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
+  const togglePhotoHome = useMutation({
+    mutationFn: async ({ id, current }: { id: string; current: boolean }) => {
+      const { error } = await supabase
+        .from("portfolio_photos")
+        .update({ show_in_home: !current } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-photos", expandedId] });
+      queryClient.invalidateQueries({ queryKey: ["home-feed"] });
+      toast.success("Destaque da página inicial atualizado!");
+    },
+  });
+
+  const toggleVideoHome = useMutation({
+    mutationFn: async ({ id, current }: { id: string; current: boolean }) => {
+      const { error } = await supabase
+        .from("portfolio_videos")
+        .update({ show_in_home: !current } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-wedding-videos", expandedId] });
+      queryClient.invalidateQueries({ queryKey: ["home-feed"] });
+      toast.success("Destaque da página inicial atualizado!");
+    },
+  });
+
+  const movePhotoCategory = useMutation({
+    mutationFn: async ({ id, category }: { id: string; category: "wedding" | "pre_wedding" }) => {
+      const { error } = await supabase.from("portfolio_photos").update({ category } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-photos", expandedId] });
+      toast.success("Foto movida de seção!");
+    },
+  });
+
+  const moveVideoCategory = useMutation({
+    mutationFn: async ({ id, category }: { id: string; category: "wedding" | "pre_wedding" }) => {
+      const { error } = await supabase.from("portfolio_videos").update({ category } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-wedding-videos", expandedId] });
+      toast.success("Vídeo movido de seção!");
+    },
+  });
+
+
   const reorderVideos = async (reordered: NonNullable<typeof weddingVideos>) => {
     queryClient.setQueryData(["admin-wedding-videos", expandedId], reordered);
     for (let i = 0; i < reordered.length; i++) {
