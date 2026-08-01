@@ -47,8 +47,9 @@ const App = () => (
         <AuthProvider>
           <ScrollToTop />
           <Routes>
-
+            <Route path="/" element={<Index />} />
             <Route path="/historias" element={<Stories />} />
+
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/casamentos/:slug" element={<WeddingDetail />} />
             <Route path="/portfolio/:slug" element={<WeddingRedirect />} />
