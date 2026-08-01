@@ -23,8 +23,11 @@ import AdminCalendar from "./pages/admin/AdminCalendar";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminStories from "./pages/admin/AdminStories";
 import AdminSiteEditor from "./pages/admin/AdminSiteEditor";
+import AdminHome from "./pages/admin/AdminHome";
 import GalleryView from "./pages/GalleryView";
 import NotFound from "./pages/NotFound";
+import ScrollToTop from "./components/ScrollToTop";
+
 
 const queryClient = new QueryClient();
 
@@ -42,9 +45,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/historias" element={<Stories />} />
+
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/casamentos/:slug" element={<WeddingDetail />} />
             <Route path="/portfolio/:slug" element={<WeddingRedirect />} />
@@ -64,6 +69,8 @@ const App = () => (
               <Route path="blog" element={<AdminBlog />} />
               <Route path="stories" element={<AdminStories />} />
               <Route path="site-editor" element={<AdminSiteEditor />} />
+              <Route path="home" element={<AdminHome />} />
+
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

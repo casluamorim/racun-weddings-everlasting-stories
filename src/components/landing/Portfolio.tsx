@@ -24,6 +24,34 @@ const Portfolio = () => {
     },
   });
 
+  // Curadoria da página inicial (painel > Página Inicial)
+  const { data: homePhotos } = useQuery({
+    queryKey: ["home-feed", "photos"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("portfolio_photos") as any)
+        .select("id, photo_url, caption, home_sort_order, sort_order")
+        .eq("show_in_home", true)
+        .order("home_sort_order", { ascending: true })
+        .limit(18);
+      if (error) throw error;
+      return (data ?? []) as { id: string; photo_url: string; caption: string | null }[];
+    },
+  });
+
+  const { data: homeVideos } = useQuery({
+    queryKey: ["home-feed", "videos"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("portfolio_videos") as any)
+        .select("id, title, youtube_url, home_sort_order")
+        .eq("show_in_home", true)
+        .order("home_sort_order", { ascending: true })
+        .limit(6);
+      if (error) throw error;
+      return (data ?? []) as { id: string; title: string | null; youtube_url: string }[];
+    },
+  });
+
+
   const { data: standalonePhotos } = useQuery({
     queryKey: ["public-standalone-photos"],
     queryFn: async () => {
@@ -59,8 +87,11 @@ const Portfolio = () => {
   };
 
   const displayWeddings = featuredWeddings && featuredWeddings.length > 0 ? featuredWeddings : null;
-  const displayPhotos = standalonePhotos && standalonePhotos.length > 0 ? standalonePhotos : null;
-  const displayVideos = videos && videos.length > 0 ? videos : null;
+  const curatedPhotos = homePhotos && homePhotos.length > 0 ? homePhotos : null;
+  const curatedVideos = homeVideos && homeVideos.length > 0 ? homeVideos : null;
+  const displayPhotos = curatedPhotos ?? (standalonePhotos && standalonePhotos.length > 0 ? standalonePhotos : null);
+  const displayVideos = curatedVideos ?? (videos && videos.length > 0 ? videos : null);
+
 
   const videoJsonLd = displayVideos
     ? {
@@ -187,24 +218,27 @@ const Portfolio = () => {
           </AnimatedSection>
         )}
 
-        {/* Photos */}
+        {/* Feed de fotos — mobile first, estilo rede social */}
         {displayPhotos && (
           <AnimatedSection>
-            <h3 className="font-heading text-xl text-section-dark-foreground/80 mb-8 text-center">Fotografias</h3>
-            <div className="columns-2 md:columns-3 gap-4 space-y-4">
+            <h3 className="font-heading text-xl text-section-dark-foreground/80 mb-6 md:mb-8 text-center">Fotografias</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 md:gap-3 -mx-6 sm:mx-0">
               {displayPhotos.map((p) => (
-                <div key={p.id} className="break-inside-avoid overflow-hidden rounded-sm">
+                <div key={p.id} className="relative aspect-square overflow-hidden bg-section-dark-foreground/5">
                   <img
                     src={p.photo_url}
                     alt={p.caption || "Fotografia de casamento"}
-                    className="w-full object-cover hover:scale-105 transition-transform duration-700"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                     loading="lazy"
+                    decoding="async"
+                    sizes="(max-width: 640px) 50vw, 33vw"
                   />
                 </div>
               ))}
             </div>
           </AnimatedSection>
         )}
+
 
         {!displayWeddings && !displayVideos && !displayPhotos && (
           <p className="font-body text-sm text-section-dark-foreground/50 text-center">

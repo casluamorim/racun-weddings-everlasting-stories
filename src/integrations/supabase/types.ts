@@ -196,27 +196,36 @@ export type Database = {
       portfolio_photos: {
         Row: {
           caption: string | null
+          category: string
           created_at: string
+          home_sort_order: number
           id: string
           photo_url: string
+          show_in_home: boolean
           show_in_portfolio: boolean
           sort_order: number
           wedding_id: string | null
         }
         Insert: {
           caption?: string | null
+          category?: string
           created_at?: string
+          home_sort_order?: number
           id?: string
           photo_url: string
+          show_in_home?: boolean
           show_in_portfolio?: boolean
           sort_order?: number
           wedding_id?: string | null
         }
         Update: {
           caption?: string | null
+          category?: string
           created_at?: string
+          home_sort_order?: number
           id?: string
           photo_url?: string
+          show_in_home?: boolean
           show_in_portfolio?: boolean
           sort_order?: number
           wedding_id?: string | null
@@ -233,9 +242,12 @@ export type Database = {
       }
       portfolio_videos: {
         Row: {
+          category: string
           created_at: string
+          home_sort_order: number
           id: string
           is_featured: boolean
+          show_in_home: boolean
           show_in_portfolio: boolean
           sort_order: number
           title: string | null
@@ -243,9 +255,12 @@ export type Database = {
           youtube_url: string
         }
         Insert: {
+          category?: string
           created_at?: string
+          home_sort_order?: number
           id?: string
           is_featured?: boolean
+          show_in_home?: boolean
           show_in_portfolio?: boolean
           sort_order?: number
           title?: string | null
@@ -253,9 +268,12 @@ export type Database = {
           youtube_url: string
         }
         Update: {
+          category?: string
           created_at?: string
+          home_sort_order?: number
           id?: string
           is_featured?: boolean
+          show_in_home?: boolean
           show_in_portfolio?: boolean
           sort_order?: number
           title?: string | null

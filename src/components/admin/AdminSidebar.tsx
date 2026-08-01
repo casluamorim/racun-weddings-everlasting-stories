@@ -9,6 +9,8 @@ import {
   LogOut,
   PenTool,
   Images,
+  Home,
+
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,9 +30,11 @@ import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "Página Inicial", url: "/admin/home", icon: Home },
   { title: "Casamentos", url: "/admin/weddings", icon: Camera },
   { title: "Galerias", url: "/admin/galleries", icon: Images },
   { title: "Valores", url: "/admin/pricing", icon: DollarSign },
+
   { title: "Orçamentos", url: "/admin/quotes", icon: MessageSquare },
   { title: "Agenda", url: "/admin/calendar", icon: CalendarDays },
   { title: "Blog", url: "/admin/blog", icon: FileText },

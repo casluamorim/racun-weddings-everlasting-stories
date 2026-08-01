@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check, Star, Link as LinkIcon } from "lucide-react";
+import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check, Star, Link as LinkIcon, ArrowLeftRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
-import { compressImage } from "@/lib/imageCompression";
+import { compressImage, MAX_UPLOAD_BYTES, runWithConcurrency } from "@/lib/imageCompression";
 import { slugify } from "@/lib/slug";
 import { TestimonialEditor } from "@/components/admin/TestimonialEditor";
 
@@ -18,6 +18,9 @@ const AdminWeddings = () => {
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [videoCategory, setVideoCategory] = useState<"wedding" | "pre_wedding">("wedding");
+
   const [uploadingStandalone, setUploadingStandalone] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [standaloneYoutubeUrl, setStandaloneYoutubeUrl] = useState("");
@@ -168,50 +171,52 @@ const AdminWeddings = () => {
     },
   });
 
-  const handleUploadPhotos = async (weddingId: string, files: FileList) => {
+  const handleUploadPhotos = async (weddingId: string, files: FileList, category: "wedding" | "pre_wedding") => {
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    const tooBig = list.filter((f) => f.size > MAX_UPLOAD_BYTES);
+    tooBig.forEach((f) => toast.error(`${f.name} é muito grande (máx 60MB)`));
+    const valid = list.filter((f) => f.size <= MAX_UPLOAD_BYTES);
+    if (valid.length === 0) return;
+
     setUploading(true);
-    const currentCount = photos?.length ?? 0;
+    setUploadProgress({ done: 0, total: valid.length });
+    const baseOrder = photos?.filter((p: any) => (p.category ?? "wedding") === category).length ?? 0;
     let uploaded = 0;
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith("image/")) continue;
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} é muito grande (máx 10MB)`);
-        continue;
-      }
+    await runWithConcurrency(valid, 4, async (file, i) => {
+      try {
+        const compressed = await compressImage(file);
+        const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
+        const path = `weddings/${weddingId}/${category}/${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-      const compressed = await compressImage(file);
-      const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
-      const path = `weddings/${weddingId}/${Date.now()}-${i}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, compressed);
+        if (uploadError) throw uploadError;
 
-      const { error: uploadError } = await supabase.storage.from("portfolio").upload(path, compressed);
-      if (uploadError) {
+        const { data: urlData } = supabase.storage.from("portfolio").getPublicUrl(path);
+
+        const { error: dbError } = await supabase.from("portfolio_photos").insert({
+          wedding_id: weddingId,
+          photo_url: urlData.publicUrl,
+          sort_order: baseOrder + i,
+          category,
+        } as any);
+        if (dbError) throw dbError;
+        uploaded++;
+      } catch {
         toast.error(`Erro ao enviar ${file.name}`);
-        continue;
+      } finally {
+        setUploadProgress((p) => ({ ...p, done: p.done + 1 }));
       }
-
-      const { data: urlData } = supabase.storage.from("portfolio").getPublicUrl(path);
-
-      const { error: dbError } = await supabase.from("portfolio_photos").insert({
-        wedding_id: weddingId,
-        photo_url: urlData.publicUrl,
-        sort_order: currentCount + uploaded,
-      });
-
-      if (dbError) {
-        toast.error(`Erro ao salvar ${file.name}`);
-        continue;
-      }
-      uploaded++;
-    }
+    });
 
     if (uploaded > 0) {
-      toast.success(`${uploaded} foto(s) enviada(s)!`);
+      toast.success(`${uploaded} foto(s) enviada(s) em WebP!`);
       queryClient.invalidateQueries({ queryKey: ["admin-photos", weddingId] });
     }
     setUploading(false);
+    setUploadProgress({ done: 0, total: 0 });
   };
+
 
   const deletePhoto = useMutation({
     mutationFn: async ({ id, photo_url }: { id: string; photo_url: string }) => {
@@ -240,11 +245,13 @@ const AdminWeddings = () => {
   });
 
   const addYoutubeVideo = useMutation({
-    mutationFn: async ({ weddingId, url }: { weddingId: string; url: string }) => {
+    mutationFn: async ({ weddingId, url, category }: { weddingId: string; url: string; category: "wedding" | "pre_wedding" }) => {
       const { error } = await supabase.from("portfolio_videos").insert({
         wedding_id: weddingId,
         youtube_url: url,
-      });
+        category,
+      } as any);
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -301,6 +308,71 @@ const AdminWeddings = () => {
       await supabase.from("portfolio_photos").update({ sort_order: i }).eq("id", reordered[i].id);
     }
   };
+
+  /** Reordena apenas dentro de uma seção (casamento / pré-wedding), preservando a outra. */
+  const reorderPhotosIn = async (
+    category: "wedding" | "pre_wedding",
+    reordered: NonNullable<typeof photos>
+  ) => {
+    const others = (photos || []).filter((p: any) => (p.category ?? "wedding") !== category);
+    queryClient.setQueryData(["admin-photos", expandedId], [...reordered, ...others]);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_photos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
+  const togglePhotoHome = useMutation({
+    mutationFn: async ({ id, current }: { id: string; current: boolean }) => {
+      const { error } = await supabase
+        .from("portfolio_photos")
+        .update({ show_in_home: !current } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-photos", expandedId] });
+      queryClient.invalidateQueries({ queryKey: ["home-feed"] });
+      toast.success("Destaque da página inicial atualizado!");
+    },
+  });
+
+  const toggleVideoHome = useMutation({
+    mutationFn: async ({ id, current }: { id: string; current: boolean }) => {
+      const { error } = await supabase
+        .from("portfolio_videos")
+        .update({ show_in_home: !current } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-wedding-videos", expandedId] });
+      queryClient.invalidateQueries({ queryKey: ["home-feed"] });
+      toast.success("Destaque da página inicial atualizado!");
+    },
+  });
+
+  const movePhotoCategory = useMutation({
+    mutationFn: async ({ id, category }: { id: string; category: "wedding" | "pre_wedding" }) => {
+      const { error } = await supabase.from("portfolio_photos").update({ category } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-photos", expandedId] });
+      toast.success("Foto movida de seção!");
+    },
+  });
+
+  const moveVideoCategory = useMutation({
+    mutationFn: async ({ id, category }: { id: string; category: "wedding" | "pre_wedding" }) => {
+      const { error } = await supabase.from("portfolio_videos").update({ category } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-wedding-videos", expandedId] });
+      toast.success("Vídeo movido de seção!");
+    },
+  });
+
 
   const reorderVideos = async (reordered: NonNullable<typeof weddingVideos>) => {
     queryClient.setQueryData(["admin-wedding-videos", expandedId], reordered);
@@ -437,7 +509,7 @@ const AdminWeddings = () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (!file.type.startsWith("image/")) continue;
-      if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} é muito grande`); continue; }
+      if (file.size > MAX_UPLOAD_BYTES) { toast.error(`${file.name} é muito grande (máx 60MB)`); continue; }
       const compressed = await compressImage(file);
       const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
       const path = `standalone/${Date.now()}-${i}.${ext}`;
@@ -652,157 +724,218 @@ const AdminWeddings = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <label className="flex items-center gap-2 px-4 py-2 border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 transition-colors">
-                        <Upload size={16} className="text-primary" />
-                        <span className="font-body text-sm text-primary">
-                          {uploading ? "Enviando..." : "Subir Fotos"}
-                        </span>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploading}
-                          onChange={(e) => {
-                            if (e.target.files?.length) {
-                              handleUploadPhotos(w.id, e.target.files);
-                              e.target.value = "";
-                            }
-                          }}
-                        />
-                      </label>
-                      <span className="font-body text-xs text-muted-foreground">
-                        {photos?.length ?? 0} foto(s) • Máx 10MB cada • Arraste para reordenar
-                      </span>
-                    </div>
-
-                    {/* Photo grid with drag and drop */}
-                    <div>
-                      <h4 className="font-heading text-sm text-foreground mb-2 flex items-center gap-2">
-                        <ImageIcon size={14} /> Fotos
-                      </h4>
-                      {photos && photos.length > 0 ? (
-                        <SortableGrid
-                          items={photos}
-                          onReorder={reorderPhotos}
-                          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
-                          renderItem={(p) => {
-                            const isEditingThis = editingId === `photo-${p.id}`;
-                            return (
-                              <div className={`relative group rounded-lg overflow-hidden bg-muted ${!p.show_in_portfolio ? "opacity-50" : ""}`}>
-                                <div className="aspect-square">
-                                  <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
-                                </div>
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Definir como capa"
-                                    onClick={() => setCoverPhoto.mutate({ weddingId: w.id, url: p.photo_url })}>
-                                    <ImageIcon size={14} />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Editar legenda"
-                                    onClick={() => { setEditingId(`photo-${p.id}`); setEditValue(p.caption || ""); }}>
-                                    <Pencil size={14} />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
-                                    title={p.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
-                                    onClick={() => togglePhotoPortfolio.mutate({ id: p.id, current: p.show_in_portfolio, scope: "wedding" })}>
-                                    {p.show_in_portfolio ? <Eye size={14} /> : <EyeOff size={14} />}
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Remover"
-                                    onClick={() => deletePhoto.mutate({ id: p.id, photo_url: p.photo_url })}>
-                                    <X size={14} />
-                                  </Button>
-                                </div>
-                                {w.cover_photo_url === p.photo_url && (
-                                  <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Capa</span>
-                                )}
-                                {!p.show_in_portfolio && (
-                                  <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
-                                )}
-                                {isEditingThis && (
-                                  <div className="absolute bottom-0 left-0 right-0 bg-card/95 p-1.5 flex gap-1">
-                                    <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-6 text-xs" placeholder="Legenda" autoFocus />
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updatePhotoCaption.mutate({ id: p.id, caption: editValue })}><Check size={12} /></Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
+                    {/* Fotos separadas por seção: Casamento / Pré-Wedding */}
+                    {([
+                      { key: "wedding" as const, label: "Casamento" },
+                      { key: "pre_wedding" as const, label: "Pré-Wedding" },
+                    ]).map((sec) => {
+                      const secPhotos = (photos || []).filter(
+                        (p: any) => (p.category ?? "wedding") === sec.key
+                      );
+                      return (
+                        <div key={sec.key}>
+                          <div className="flex flex-wrap items-center gap-3 mb-3">
+                            <h4 className="font-heading text-sm text-foreground flex items-center gap-2">
+                              <ImageIcon size={14} /> Fotos • {sec.label}
+                            </h4>
+                            <label className="flex items-center gap-2 px-3 py-1.5 border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 transition-colors">
+                              <Upload size={14} className="text-primary" />
+                              <span className="font-body text-xs text-primary">
+                                {uploading
+                                  ? `Enviando ${uploadProgress.done}/${uploadProgress.total}...`
+                                  : `Subir fotos (${sec.label})`}
+                              </span>
+                              <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                className="hidden"
+                                disabled={uploading}
+                                onChange={(e) => {
+                                  if (e.target.files?.length) {
+                                    handleUploadPhotos(w.id, e.target.files, sec.key);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
+                            <span className="font-body text-xs text-muted-foreground">
+                              {secPhotos.length} foto(s) • várias de uma vez • máx 60MB cada • convertidas em WebP
+                            </span>
+                          </div>
+                          {secPhotos.length > 0 ? (
+                            <SortableGrid
+                              items={secPhotos}
+                              onReorder={(reordered) => reorderPhotosIn(sec.key, reordered)}
+                              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
+                              renderItem={(p) => {
+                                const isEditingThis = editingId === `photo-${p.id}`;
+                                return (
+                                  <div className={`relative group rounded-lg overflow-hidden bg-muted ${!p.show_in_portfolio ? "opacity-50" : ""}`}>
+                                    <div className="aspect-square">
+                                      <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1">
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Definir como capa"
+                                        onClick={() => setCoverPhoto.mutate({ weddingId: w.id, url: p.photo_url })}>
+                                        <ImageIcon size={14} />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Editar legenda"
+                                        onClick={() => { setEditingId(`photo-${p.id}`); setEditValue(p.caption || ""); }}>
+                                        <Pencil size={14} />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                                        title={p.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                                        onClick={() => togglePhotoPortfolio.mutate({ id: p.id, current: p.show_in_portfolio, scope: "wedding" })}>
+                                        {p.show_in_portfolio ? <Eye size={14} /> : <EyeOff size={14} />}
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                                        title={(p as any).show_in_home ? "Remover da página inicial" : "Exibir na página inicial"}
+                                        onClick={() => togglePhotoHome.mutate({ id: p.id, current: !!(p as any).show_in_home })}>
+                                        <Star size={14} fill={(p as any).show_in_home ? "currentColor" : "none"} />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                                        title={sec.key === "wedding" ? "Mover para Pré-Wedding" : "Mover para Casamento"}
+                                        onClick={() => movePhotoCategory.mutate({ id: p.id, category: sec.key === "wedding" ? "pre_wedding" : "wedding" })}>
+                                        <ArrowLeftRight size={14} />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Remover"
+                                        onClick={() => deletePhoto.mutate({ id: p.id, photo_url: p.photo_url })}>
+                                        <X size={14} />
+                                      </Button>
+                                    </div>
+                                    {w.cover_photo_url === p.photo_url && (
+                                      <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Capa</span>
+                                    )}
+                                    {(p as any).show_in_home && (
+                                      <span className="absolute bottom-1 left-1 bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Home</span>
+                                    )}
+                                    {!p.show_in_portfolio && (
+                                      <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
+                                    )}
+                                    {isEditingThis && (
+                                      <div className="absolute bottom-0 left-0 right-0 bg-card/95 p-1.5 flex gap-1">
+                                        <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-6 text-xs" placeholder="Legenda" autoFocus />
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updatePhotoCaption.mutate({ id: p.id, caption: editValue })}><Check size={12} /></Button>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            );
-                          }}
-                        />
-                      ) : (
-                        <p className="font-body text-xs text-muted-foreground">Nenhuma foto ainda.</p>
-                      )}
-                    </div>
+                                );
+                              }}
+                            />
+                          ) : (
+                            <p className="font-body text-xs text-muted-foreground">Nenhuma foto de {sec.label.toLowerCase()} ainda.</p>
+                          )}
+                        </div>
+                      );
+                    })}
 
-                    {/* Videos section with drag and drop */}
+
+                    {/* Vídeos separados por seção */}
                     <div>
                       <h4 className="font-heading text-sm text-foreground mb-2 flex items-center gap-2">
                         <Film size={14} /> Vídeos
                       </h4>
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex flex-wrap items-center gap-2 mb-3">
+                        <select
+                          value={videoCategory}
+                          onChange={(e) => setVideoCategory(e.target.value as "wedding" | "pre_wedding")}
+                          className="h-9 rounded-md border border-input bg-background px-2 font-body text-sm"
+                        >
+                          <option value="wedding">Casamento</option>
+                          <option value="pre_wedding">Pré-Wedding</option>
+                        </select>
                         <Input
                           value={youtubeUrl}
                           onChange={(e) => setYoutubeUrl(e.target.value)}
                           placeholder="Cole a URL do YouTube aqui..."
-                          className="text-sm h-9"
+                          className="text-sm h-9 flex-1 min-w-[180px]"
                         />
                         <Button
                           size="sm"
                           disabled={!youtubeUrl.trim() || addYoutubeVideo.isPending}
-                          onClick={() => addYoutubeVideo.mutate({ weddingId: w.id, url: youtubeUrl.trim() })}
+                          onClick={() => addYoutubeVideo.mutate({ weddingId: w.id, url: youtubeUrl.trim(), category: videoCategory })}
                         >
                           <Plus size={14} className="mr-1" /> Adicionar
                         </Button>
                       </div>
-                      {weddingVideos && weddingVideos.length > 0 ? (
-                        <SortableGrid
-                          items={weddingVideos}
-                          onReorder={reorderVideos}
-                          className="grid grid-cols-2 sm:grid-cols-3 gap-3"
-                          renderItem={(v) => {
-                            const ytId = getYouTubeId(v.youtube_url);
-                            const isEditingThis = editingId === `video-${v.id}`;
-                            return (
-                              <div className={`bg-muted rounded-lg overflow-hidden ${!v.show_in_portfolio ? "opacity-50" : ""}`}>
-                                {ytId && (
-                                  <div className="relative">
-                                    <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
-                                    {!v.show_in_portfolio && (
-                                      <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
-                                    )}
-                                  </div>
-                                )}
-                                <div className="p-2">
-                                  {isEditingThis ? (
-                                    <div className="flex items-center gap-1">
-                                      <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-7 text-xs" placeholder="Título" autoFocus />
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateVideoTitle.mutate({ id: v.id, title: editValue })}><Check size={12} /></Button>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center justify-between">
-                                      <p className="font-body text-xs text-foreground truncate">{v.title || "Sem título"}</p>
-                                      <div className="flex gap-0.5">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`video-${v.id}`); setEditValue(v.title || ""); }} title="Editar título"><Pencil size={11} /></Button>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6"
-                                          title={v.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
-                                          onClick={() => toggleVideoPortfolio.mutate({ id: v.id, current: v.show_in_portfolio, scope: "wedding" })}>
-                                          {v.show_in_portfolio ? <Eye size={11} /> : <EyeOff size={11} className="text-muted-foreground" />}
-                                        </Button>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteVideo.mutate(v.id)} title="Remover"><Trash2 size={11} className="text-destructive" /></Button>
+
+                      {([
+                        { key: "wedding" as const, label: "Casamento" },
+                        { key: "pre_wedding" as const, label: "Pré-Wedding" },
+                      ]).map((sec) => {
+                        const secVideos = (weddingVideos || []).filter(
+                          (v: any) => (v.category ?? "wedding") === sec.key
+                        );
+                        if (secVideos.length === 0) return null;
+                        return (
+                          <div key={sec.key} className="mb-4">
+                            <p className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2">{sec.label}</p>
+                            <SortableGrid
+                              items={secVideos}
+                              onReorder={reorderVideos}
+                              className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+                              renderItem={(v) => {
+                                const ytId = getYouTubeId(v.youtube_url);
+                                const isEditingThis = editingId === `video-${v.id}`;
+                                return (
+                                  <div className={`bg-muted rounded-lg overflow-hidden ${!v.show_in_portfolio ? "opacity-50" : ""}`}>
+                                    {ytId && (
+                                      <div className="relative">
+                                        <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={v.title ?? ""} className="w-full aspect-video object-cover" />
+                                        {!v.show_in_portfolio && (
+                                          <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
+                                        )}
+                                        {(v as any).show_in_home && (
+                                          <span className="absolute top-1 left-1 bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Home</span>
+                                        )}
                                       </div>
+                                    )}
+                                    <div className="p-2">
+                                      {isEditingThis ? (
+                                        <div className="flex items-center gap-1">
+                                          <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-7 text-xs" placeholder="Título" autoFocus />
+                                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateVideoTitle.mutate({ id: v.id, title: editValue })}><Check size={12} /></Button>
+                                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex items-center justify-between">
+                                          <p className="font-body text-xs text-foreground truncate">{v.title || "Sem título"}</p>
+                                          <div className="flex gap-0.5">
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditingId(`video-${v.id}`); setEditValue(v.title || ""); }} title="Editar título"><Pencil size={11} /></Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6"
+                                              title={v.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                                              onClick={() => toggleVideoPortfolio.mutate({ id: v.id, current: v.show_in_portfolio, scope: "wedding" })}>
+                                              {v.show_in_portfolio ? <Eye size={11} /> : <EyeOff size={11} className="text-muted-foreground" />}
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6"
+                                              title={(v as any).show_in_home ? "Remover da página inicial" : "Exibir na página inicial"}
+                                              onClick={() => toggleVideoHome.mutate({ id: v.id, current: !!(v as any).show_in_home })}>
+                                              <Star size={11} fill={(v as any).show_in_home ? "currentColor" : "none"} />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6"
+                                              title={sec.key === "wedding" ? "Mover para Pré-Wedding" : "Mover para Casamento"}
+                                              onClick={() => moveVideoCategory.mutate({ id: v.id, category: sec.key === "wedding" ? "pre_wedding" : "wedding" })}>
+                                              <ArrowLeftRight size={11} />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => deleteVideo.mutate(v.id)} title="Remover"><Trash2 size={11} className="text-destructive" /></Button>
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          }}
-                        />
-                      ) : (
+                                  </div>
+                                );
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                      {(!weddingVideos || weddingVideos.length === 0) && (
                         <p className="font-body text-xs text-muted-foreground">Nenhum vídeo. Cole uma URL do YouTube acima.</p>
                       )}
                     </div>
+
 
                     {/* Testimonial editor */}
                     <TestimonialEditor
