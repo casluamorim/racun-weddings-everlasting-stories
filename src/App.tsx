@@ -45,8 +45,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ScrollToTop />
           <Routes>
-            <Route path="/" element={<Index />} />
+
             <Route path="/historias" element={<Stories />} />
             <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/casamentos/:slug" element={<WeddingDetail />} />
