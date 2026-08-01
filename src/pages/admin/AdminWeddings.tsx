@@ -509,7 +509,7 @@ const AdminWeddings = () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (!file.type.startsWith("image/")) continue;
-      if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} é muito grande`); continue; }
+      if (file.size > MAX_UPLOAD_BYTES) { toast.error(`${file.name} é muito grande (máx 60MB)`); continue; }
       const compressed = await compressImage(file);
       const ext = compressed.type === "image/webp" ? "webp" : file.name.split(".").pop();
       const path = `standalone/${Date.now()}-${i}.${ext}`;
