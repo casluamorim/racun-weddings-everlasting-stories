@@ -657,88 +657,113 @@ const AdminWeddings = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <label className="flex items-center gap-2 px-4 py-2 border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 transition-colors">
-                        <Upload size={16} className="text-primary" />
-                        <span className="font-body text-sm text-primary">
-                          {uploading ? "Enviando..." : "Subir Fotos"}
-                        </span>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          className="hidden"
-                          disabled={uploading}
-                          onChange={(e) => {
-                            if (e.target.files?.length) {
-                              handleUploadPhotos(w.id, e.target.files);
-                              e.target.value = "";
-                            }
-                          }}
-                        />
-                      </label>
-                      <span className="font-body text-xs text-muted-foreground">
-                        {photos?.length ?? 0} foto(s) • Máx 10MB cada • Arraste para reordenar
-                      </span>
-                    </div>
-
-                    {/* Photo grid with drag and drop */}
-                    <div>
-                      <h4 className="font-heading text-sm text-foreground mb-2 flex items-center gap-2">
-                        <ImageIcon size={14} /> Fotos
-                      </h4>
-                      {photos && photos.length > 0 ? (
-                        <SortableGrid
-                          items={photos}
-                          onReorder={reorderPhotos}
-                          className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
-                          renderItem={(p) => {
-                            const isEditingThis = editingId === `photo-${p.id}`;
-                            return (
-                              <div className={`relative group rounded-lg overflow-hidden bg-muted ${!p.show_in_portfolio ? "opacity-50" : ""}`}>
-                                <div className="aspect-square">
-                                  <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
-                                </div>
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Definir como capa"
-                                    onClick={() => setCoverPhoto.mutate({ weddingId: w.id, url: p.photo_url })}>
-                                    <ImageIcon size={14} />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Editar legenda"
-                                    onClick={() => { setEditingId(`photo-${p.id}`); setEditValue(p.caption || ""); }}>
-                                    <Pencil size={14} />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
-                                    title={p.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
-                                    onClick={() => togglePhotoPortfolio.mutate({ id: p.id, current: p.show_in_portfolio, scope: "wedding" })}>
-                                    {p.show_in_portfolio ? <Eye size={14} /> : <EyeOff size={14} />}
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Remover"
-                                    onClick={() => deletePhoto.mutate({ id: p.id, photo_url: p.photo_url })}>
-                                    <X size={14} />
-                                  </Button>
-                                </div>
-                                {w.cover_photo_url === p.photo_url && (
-                                  <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Capa</span>
-                                )}
-                                {!p.show_in_portfolio && (
-                                  <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
-                                )}
-                                {isEditingThis && (
-                                  <div className="absolute bottom-0 left-0 right-0 bg-card/95 p-1.5 flex gap-1">
-                                    <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-6 text-xs" placeholder="Legenda" autoFocus />
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updatePhotoCaption.mutate({ id: p.id, caption: editValue })}><Check size={12} /></Button>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
+                    {/* Fotos separadas por seção: Casamento / Pré-Wedding */}
+                    {([
+                      { key: "wedding" as const, label: "Casamento" },
+                      { key: "pre_wedding" as const, label: "Pré-Wedding" },
+                    ]).map((sec) => {
+                      const secPhotos = (photos || []).filter(
+                        (p: any) => (p.category ?? "wedding") === sec.key
+                      );
+                      return (
+                        <div key={sec.key}>
+                          <div className="flex flex-wrap items-center gap-3 mb-3">
+                            <h4 className="font-heading text-sm text-foreground flex items-center gap-2">
+                              <ImageIcon size={14} /> Fotos • {sec.label}
+                            </h4>
+                            <label className="flex items-center gap-2 px-3 py-1.5 border border-dashed border-primary/40 rounded-lg cursor-pointer hover:bg-primary/5 transition-colors">
+                              <Upload size={14} className="text-primary" />
+                              <span className="font-body text-xs text-primary">
+                                {uploading
+                                  ? `Enviando ${uploadProgress.done}/${uploadProgress.total}...`
+                                  : `Subir fotos (${sec.label})`}
+                              </span>
+                              <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                className="hidden"
+                                disabled={uploading}
+                                onChange={(e) => {
+                                  if (e.target.files?.length) {
+                                    handleUploadPhotos(w.id, e.target.files, sec.key);
+                                    e.target.value = "";
+                                  }
+                                }}
+                              />
+                            </label>
+                            <span className="font-body text-xs text-muted-foreground">
+                              {secPhotos.length} foto(s) • várias de uma vez • máx 60MB cada • convertidas em WebP
+                            </span>
+                          </div>
+                          {secPhotos.length > 0 ? (
+                            <SortableGrid
+                              items={secPhotos}
+                              onReorder={(reordered) => reorderPhotosIn(sec.key, reordered)}
+                              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
+                              renderItem={(p) => {
+                                const isEditingThis = editingId === `photo-${p.id}`;
+                                return (
+                                  <div className={`relative group rounded-lg overflow-hidden bg-muted ${!p.show_in_portfolio ? "opacity-50" : ""}`}>
+                                    <div className="aspect-square">
+                                      <img src={p.photo_url} alt={p.caption || ""} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1">
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Definir como capa"
+                                        onClick={() => setCoverPhoto.mutate({ weddingId: w.id, url: p.photo_url })}>
+                                        <ImageIcon size={14} />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Editar legenda"
+                                        onClick={() => { setEditingId(`photo-${p.id}`); setEditValue(p.caption || ""); }}>
+                                        <Pencil size={14} />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                                        title={p.show_in_portfolio ? "Ocultar do portfólio" : "Mostrar no portfólio"}
+                                        onClick={() => togglePhotoPortfolio.mutate({ id: p.id, current: p.show_in_portfolio, scope: "wedding" })}>
+                                        {p.show_in_portfolio ? <Eye size={14} /> : <EyeOff size={14} />}
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                                        title={(p as any).show_in_home ? "Remover da página inicial" : "Exibir na página inicial"}
+                                        onClick={() => togglePhotoHome.mutate({ id: p.id, current: !!(p as any).show_in_home })}>
+                                        <Star size={14} fill={(p as any).show_in_home ? "currentColor" : "none"} />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8"
+                                        title={sec.key === "wedding" ? "Mover para Pré-Wedding" : "Mover para Casamento"}
+                                        onClick={() => movePhotoCategory.mutate({ id: p.id, category: sec.key === "wedding" ? "pre_wedding" : "wedding" })}>
+                                        <ArrowLeftRight size={14} />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20 h-8 w-8" title="Remover"
+                                        onClick={() => deletePhoto.mutate({ id: p.id, photo_url: p.photo_url })}>
+                                        <X size={14} />
+                                      </Button>
+                                    </div>
+                                    {w.cover_photo_url === p.photo_url && (
+                                      <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Capa</span>
+                                    )}
+                                    {(p as any).show_in_home && (
+                                      <span className="absolute bottom-1 left-1 bg-primary/90 text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Home</span>
+                                    )}
+                                    {!p.show_in_portfolio && (
+                                      <span className="absolute top-1 right-1 bg-background/80 text-foreground text-[10px] px-1.5 py-0.5 rounded font-body">Oculto</span>
+                                    )}
+                                    {isEditingThis && (
+                                      <div className="absolute bottom-0 left-0 right-0 bg-card/95 p-1.5 flex gap-1">
+                                        <Input value={editValue} onChange={(e) => setEditValue(e.target.value)} className="h-6 text-xs" placeholder="Legenda" autoFocus />
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updatePhotoCaption.mutate({ id: p.id, caption: editValue })}><Check size={12} /></Button>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditingId(null)}><X size={12} /></Button>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            );
-                          }}
-                        />
-                      ) : (
-                        <p className="font-body text-xs text-muted-foreground">Nenhuma foto ainda.</p>
-                      )}
-                    </div>
+                                );
+                              }}
+                            />
+                          ) : (
+                            <p className="font-body text-xs text-muted-foreground">Nenhuma foto de {sec.label.toLowerCase()} ainda.</p>
+                          )}
+                        </div>
+                      );
+                    })}
+
 
                     {/* Videos section with drag and drop */}
                     <div>
