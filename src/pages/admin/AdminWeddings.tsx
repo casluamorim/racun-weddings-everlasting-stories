@@ -18,6 +18,9 @@ const AdminWeddings = () => {
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [videoCategory, setVideoCategory] = useState<"wedding" | "pre_wedding">("wedding");
+
   const [uploadingStandalone, setUploadingStandalone] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [standaloneYoutubeUrl, setStandaloneYoutubeUrl] = useState("");
