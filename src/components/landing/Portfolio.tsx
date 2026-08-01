@@ -28,30 +28,29 @@ const Portfolio = () => {
   const { data: homePhotos } = useQuery({
     queryKey: ["home-feed", "photos"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("portfolio_photos")
+      const { data, error } = await (supabase.from("portfolio_photos") as any)
         .select("id, photo_url, caption, home_sort_order, sort_order")
-        .eq("show_in_home" as any, true)
-        .order("home_sort_order" as any, { ascending: true })
+        .eq("show_in_home", true)
+        .order("home_sort_order", { ascending: true })
         .limit(18);
       if (error) throw error;
-      return data;
+      return (data ?? []) as { id: string; photo_url: string; caption: string | null }[];
     },
   });
 
   const { data: homeVideos } = useQuery({
     queryKey: ["home-feed", "videos"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("portfolio_videos")
+      const { data, error } = await (supabase.from("portfolio_videos") as any)
         .select("id, title, youtube_url, home_sort_order")
-        .eq("show_in_home" as any, true)
-        .order("home_sort_order" as any, { ascending: true })
+        .eq("show_in_home", true)
+        .order("home_sort_order", { ascending: true })
         .limit(6);
       if (error) throw error;
-      return data;
+      return (data ?? []) as { id: string; title: string | null; youtube_url: string }[];
     },
   });
+
 
   const { data: standalonePhotos } = useQuery({
     queryKey: ["public-standalone-photos"],
