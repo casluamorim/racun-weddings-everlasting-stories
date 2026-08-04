@@ -245,22 +245,31 @@ const AdminWeddings = () => {
   });
 
   const addYoutubeVideo = useMutation({
-    mutationFn: async ({ weddingId, url, category }: { weddingId: string; url: string; category: "wedding" | "pre_wedding" }) => {
-      const { error } = await supabase.from("portfolio_videos").insert({
-        wedding_id: weddingId,
-        youtube_url: url,
-        category,
-      } as any);
+    mutationFn: async ({ weddingId, urls, category }: { weddingId: string; urls: string; category: "wedding" | "pre_wedding" }) => {
+      const list = urls
+        .split(/[\n,\s]+/)
+        .map((u) => u.trim())
+        .filter((u) => /^https?:\/\//.test(u));
+      if (list.length === 0) throw new Error("Nenhum link válido do YouTube encontrado");
+      const { error } = await supabase.from("portfolio_videos").insert(
+        list.map((url) => ({
+          wedding_id: weddingId,
+          youtube_url: url,
+          category,
+        })) as any
+      );
 
       if (error) throw error;
+      return list.length;
     },
-    onSuccess: () => {
+    onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ["admin-wedding-videos", expandedId] });
       setYoutubeUrl("");
-      toast.success("Vídeo adicionado!");
+      toast.success(count === 1 ? "Vídeo adicionado!" : `${count} vídeos adicionados!`);
     },
-    onError: () => toast.error("Erro ao adicionar vídeo"),
+    onError: (e: any) => toast.error(e?.message || "Erro ao adicionar vídeo"),
   });
+
 
   const deleteVideo = useMutation({
     mutationFn: async (id: string) => {
