@@ -381,6 +381,19 @@ const AdminWeddings = () => {
     }
   };
 
+  /** Reordena vídeos apenas dentro de uma seção (casamento / pré-wedding). */
+  const reorderVideosIn = async (
+    category: "wedding" | "pre_wedding",
+    reordered: NonNullable<typeof weddingVideos>
+  ) => {
+    const others = (weddingVideos || []).filter((v: any) => (v.category ?? "wedding") !== category);
+    queryClient.setQueryData(["admin-wedding-videos", expandedId], [...reordered, ...others]);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_videos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
+
   const togglePhotoPortfolio = useMutation({
     mutationFn: async ({ id, current, scope }: { id: string; current: boolean; scope: "wedding" | "standalone" }) => {
       const { error } = await supabase.from("portfolio_photos").update({ show_in_portfolio: !current }).eq("id", id);
