@@ -837,27 +837,35 @@ const AdminWeddings = () => {
                       <h4 className="font-heading text-sm text-foreground mb-2 flex items-center gap-2">
                         <Film size={14} /> Vídeos
                       </h4>
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <select
-                          value={videoCategory}
-                          onChange={(e) => setVideoCategory(e.target.value as "wedding" | "pre_wedding")}
-                          className="h-9 rounded-md border border-input bg-background px-2 font-body text-sm"
-                        >
-                          <option value="wedding">Casamento</option>
-                          <option value="pre_wedding">Pré-Wedding</option>
-                        </select>
-                        <Input
+                      <div className="flex flex-col gap-2 mb-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <select
+                            value={videoCategory}
+                            onChange={(e) => setVideoCategory(e.target.value as "wedding" | "pre_wedding")}
+                            className="h-9 rounded-md border border-input bg-background px-2 font-body text-sm"
+                          >
+                            <option value="wedding">Casamento</option>
+                            <option value="pre_wedding">Pré-Wedding</option>
+                          </select>
+                          <span className="font-body text-xs text-muted-foreground">
+                            Cole um ou mais links do YouTube (um por linha)
+                          </span>
+                        </div>
+                        <Textarea
                           value={youtubeUrl}
                           onChange={(e) => setYoutubeUrl(e.target.value)}
-                          placeholder="Cole a URL do YouTube aqui..."
-                          className="text-sm h-9 flex-1 min-w-[180px]"
+                          placeholder={"https://youtube.com/watch?v=...\nhttps://youtu.be/..."}
+                          className="text-sm min-h-[80px]"
                         />
                         <Button
                           size="sm"
+                          className="self-start"
                           disabled={!youtubeUrl.trim() || addYoutubeVideo.isPending}
-                          onClick={() => addYoutubeVideo.mutate({ weddingId: w.id, url: youtubeUrl.trim(), category: videoCategory })}
+                          onClick={() =>
+                            addYoutubeVideo.mutate({ weddingId: w.id, urls: youtubeUrl, category: videoCategory })
+                          }
                         >
-                          <Plus size={14} className="mr-1" /> Adicionar
+                          <Plus size={14} className="mr-1" /> Adicionar vídeos
                         </Button>
                       </div>
 
@@ -874,8 +882,9 @@ const AdminWeddings = () => {
                             <p className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2">{sec.label}</p>
                             <SortableGrid
                               items={secVideos}
-                              onReorder={reorderVideos}
+                              onReorder={(reordered) => reorderVideosIn(sec.key, reordered)}
                               className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+
                               renderItem={(v) => {
                                 const ytId = getYouTubeId(v.youtube_url);
                                 const isEditingThis = editingId === `video-${v.id}`;
