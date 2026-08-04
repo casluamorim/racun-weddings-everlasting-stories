@@ -55,6 +55,66 @@ const AdminSiteEditor = () => {
   /* testimonial editing */
   const [editingTestimonials, setEditingTestimonials] = useState<any[]>([]);
 
+  /* preview + aba ativa */
+  const [tab, setTab] = useState("hero");
+  const [previewKey, setPreviewKey] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const SECTION_TO_TAB: Record<string, string> = {
+    hero: "hero",
+    servicos: "services",
+    depoimentos: "testimonials",
+    processo: "process",
+    contato: "contact",
+    faq: "faq",
+    "cta-final": "cta",
+    rodape: "footer",
+  };
+  const TAB_TO_SECTION: Record<string, string> = Object.fromEntries(
+    Object.entries(SECTION_TO_TAB).map(([sec, t]) => [t, sec])
+  );
+
+  // Clique no preview seleciona a aba correspondente (mesma origem)
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const attach = () => {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+      const onClick = (e: Event) => {
+        e.preventDefault();
+        const el = e.target as HTMLElement | null;
+        const host = el?.closest?.("[id]") as HTMLElement | null;
+        const id = host?.id;
+        if (id && SECTION_TO_TAB[id]) setTab(SECTION_TO_TAB[id]);
+      };
+      doc.addEventListener("click", onClick, true);
+      return () => doc.removeEventListener("click", onClick, true);
+    };
+
+    let cleanup: (() => void) | undefined;
+    const onLoad = () => {
+      cleanup = attach();
+    };
+    iframe.addEventListener("load", onLoad);
+    if (iframe.contentDocument?.readyState === "complete") cleanup = attach();
+    return () => {
+      iframe.removeEventListener("load", onLoad);
+      cleanup?.();
+    };
+  }, [previewKey]);
+
+  // Ao trocar de aba, rola o preview até a seção
+  useEffect(() => {
+    const doc = iframeRef.current?.contentDocument;
+    const section = TAB_TO_SECTION[tab];
+    if (!doc || !section) return;
+    doc.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [tab]);
+
+
+
   // Load from DB into local state when data arrives
   useEffect(() => {
     if (!content) return;
