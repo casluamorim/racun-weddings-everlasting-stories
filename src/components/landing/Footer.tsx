@@ -18,9 +18,9 @@ const Footer = () => {
   const email = getValue("footer", "email", "racunagencia@gmail.com");
 
   return (
-    <footer>
+    <footer id="rodape">
       {/* Final CTA */}
-      <section className="py-24 md:py-32 bg-hero text-center">
+      <section id="cta-final" className="py-24 md:py-32 bg-hero text-center">
         <div className="container mx-auto px-6 max-w-3xl">
           <AnimatedSection>
             <h2 className="font-heading text-3xl md:text-5xl lg:text-6xl font-light text-hero-foreground leading-tight mb-6">

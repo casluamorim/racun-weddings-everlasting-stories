@@ -20,7 +20,7 @@ const Process = () => {
   const steps = getValue("process", "steps", defaultSteps);
 
   return (
-    <section className="py-20 md:py-28 bg-accent">
+    <section id="processo" className="py-20 md:py-28 bg-accent">
       <div className="container mx-auto px-4 md:px-6 max-w-3xl">
         <AnimatedSection className="text-center mb-12 md:mb-16">
           <h2 className="font-heading text-3xl md:text-5xl font-light text-foreground">{title}</h2>
