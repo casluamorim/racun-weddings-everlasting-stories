@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSiteContent, useTestimonials } from "@/hooks/useSiteContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, RefreshCw } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/imageCompression";
 
@@ -53,6 +54,66 @@ const AdminSiteEditor = () => {
 
   /* testimonial editing */
   const [editingTestimonials, setEditingTestimonials] = useState<any[]>([]);
+
+  /* preview + aba ativa */
+  const [tab, setTab] = useState("hero");
+  const [previewKey, setPreviewKey] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  const SECTION_TO_TAB: Record<string, string> = {
+    hero: "hero",
+    servicos: "services",
+    depoimentos: "testimonials",
+    processo: "process",
+    contato: "contact",
+    faq: "faq",
+    "cta-final": "cta",
+    rodape: "footer",
+  };
+  const TAB_TO_SECTION: Record<string, string> = Object.fromEntries(
+    Object.entries(SECTION_TO_TAB).map(([sec, t]) => [t, sec])
+  );
+
+  // Clique no preview seleciona a aba correspondente (mesma origem)
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    const attach = () => {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+      const onClick = (e: Event) => {
+        e.preventDefault();
+        const el = e.target as HTMLElement | null;
+        const host = el?.closest?.("[id]") as HTMLElement | null;
+        const id = host?.id;
+        if (id && SECTION_TO_TAB[id]) setTab(SECTION_TO_TAB[id]);
+      };
+      doc.addEventListener("click", onClick, true);
+      return () => doc.removeEventListener("click", onClick, true);
+    };
+
+    let cleanup: (() => void) | undefined;
+    const onLoad = () => {
+      cleanup = attach();
+    };
+    iframe.addEventListener("load", onLoad);
+    if (iframe.contentDocument?.readyState === "complete") cleanup = attach();
+    return () => {
+      iframe.removeEventListener("load", onLoad);
+      cleanup?.();
+    };
+  }, [previewKey]);
+
+  // Ao trocar de aba, rola o preview até a seção
+  useEffect(() => {
+    const doc = iframeRef.current?.contentDocument;
+    const section = TAB_TO_SECTION[tab];
+    if (!doc || !section) return;
+    doc.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [tab]);
+
+
 
   // Load from DB into local state when data arrives
   useEffect(() => {
@@ -172,14 +233,17 @@ const AdminSiteEditor = () => {
   if (isLoading) return <p className="p-8 text-muted-foreground">Carregando...</p>;
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl">
-      <h1 className="text-2xl font-heading font-semibold mb-6">Editor do Site</h1>
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl font-heading font-semibold mb-1">Editor do Site</h1>
+      <p className="text-sm text-muted-foreground mb-6">
+        Clique em qualquer seção do preview ao lado para editá-la.
+      </p>
 
-      <Tabs defaultValue="hero">
+      <div className="grid lg:grid-cols-2 gap-6 items-start">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap gap-1 mb-6 h-auto">
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="services">Serviços</TabsTrigger>
-          <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="process">Processo</TabsTrigger>
           <TabsTrigger value="contact">Contato</TabsTrigger>
@@ -187,6 +251,7 @@ const AdminSiteEditor = () => {
           <TabsTrigger value="cta">CTA Final</TabsTrigger>
           <TabsTrigger value="footer">Rodapé</TabsTrigger>
         </TabsList>
+
 
         {/* ─── HERO ─── */}
         <TabsContent value="hero">
@@ -500,7 +565,28 @@ const AdminSiteEditor = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+        {/* ─── PREVIEW AO VIVO ─── */}
+        <div className="lg:sticky lg:top-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Preview — clique para editar</p>
+            <Button variant="outline" size="sm" onClick={() => setPreviewKey((k) => k + 1)}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1" /> Atualizar
+            </Button>
+          </div>
+          <div className="rounded-lg border border-border overflow-hidden bg-muted">
+            <iframe
+              key={previewKey}
+              ref={iframeRef}
+              src="/"
+              title="Preview do site"
+              className="w-full h-[70vh] bg-background"
+            />
+          </div>
+        </div>
+      </div>
     </div>
+
   );
 };
 

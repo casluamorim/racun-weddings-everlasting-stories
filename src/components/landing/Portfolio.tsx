@@ -1,12 +1,34 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Play, X, ArrowRight } from "lucide-react";
 import AnimatedSection from "./AnimatedSection";
 
+type FeedItem = {
+  id: string;
+  kind: "photo" | "video";
+  category: "wedding" | "pre_wedding";
+  city: string | null;
+  label: string | null;
+  src: string;
+  ytId?: string;
+  order: number;
+};
+
+const PAGE_SIZE = 9;
+
+const extractYoutubeId = (url: string) => {
+  const match = url.match(/(?:youtu\.be\/|v=|\/embed\/)([\w-]{11})/);
+  return match?.[1] ?? "";
+};
+
 const Portfolio = () => {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [filterCity, setFilterCity] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const { data: featuredWeddings } = useQuery({
     queryKey: ["featured-home-weddings"],
@@ -29,12 +51,12 @@ const Portfolio = () => {
     queryKey: ["home-feed", "photos"],
     queryFn: async () => {
       const { data, error } = await (supabase.from("portfolio_photos") as any)
-        .select("id, photo_url, caption, home_sort_order, sort_order")
+        .select("id, photo_url, caption, category, home_sort_order, weddings(city)")
         .eq("show_in_home", true)
         .order("home_sort_order", { ascending: true })
-        .limit(18);
+        .limit(120);
       if (error) throw error;
-      return (data ?? []) as { id: string; photo_url: string; caption: string | null }[];
+      return (data ?? []) as any[];
     },
   });
 
@@ -42,15 +64,14 @@ const Portfolio = () => {
     queryKey: ["home-feed", "videos"],
     queryFn: async () => {
       const { data, error } = await (supabase.from("portfolio_videos") as any)
-        .select("id, title, youtube_url, home_sort_order")
+        .select("id, title, youtube_url, category, home_sort_order, weddings(city)")
         .eq("show_in_home", true)
         .order("home_sort_order", { ascending: true })
-        .limit(6);
+        .limit(60);
       if (error) throw error;
-      return (data ?? []) as { id: string; title: string | null; youtube_url: string }[];
+      return (data ?? []) as any[];
     },
   });
-
 
   const { data: standalonePhotos } = useQuery({
     queryKey: ["public-standalone-photos"],
@@ -81,23 +102,80 @@ const Portfolio = () => {
     },
   });
 
-  const extractYoutubeId = (url: string) => {
-    const match = url.match(/(?:youtu\.be\/|v=|\/embed\/)([\w-]{11})/);
-    return match?.[1] ?? "";
-  };
+  const feed = useMemo<FeedItem[]>(() => {
+    const items: FeedItem[] = [
+      ...((homePhotos ?? []) as any[]).map((p) => ({
+        id: `photo-${p.id}`,
+        kind: "photo" as const,
+        category: (p.category ?? "wedding") as FeedItem["category"],
+        city: p.weddings?.city ?? null,
+        label: p.caption ?? null,
+        src: p.photo_url,
+        order: p.home_sort_order ?? 0,
+      })),
+      ...((homeVideos ?? []) as any[]).map((v) => {
+        const ytId = extractYoutubeId(v.youtube_url);
+        return {
+          id: `video-${v.id}`,
+          kind: "video" as const,
+          category: (v.category ?? "wedding") as FeedItem["category"],
+          city: v.weddings?.city ?? null,
+          label: v.title ?? null,
+          src: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+          ytId,
+          order: v.home_sort_order ?? 0,
+        };
+      }),
+    ];
+    return items.sort((a, b) => a.order - b.order);
+  }, [homePhotos, homeVideos]);
+
+  const cities = useMemo(
+    () => Array.from(new Set(feed.map((i) => i.city).filter(Boolean))) as string[],
+    [feed]
+  );
+
+  const filteredFeed = useMemo(
+    () =>
+      feed.filter((i) => {
+        if (filterCity !== "all" && (i.city ?? "") !== filterCity) return false;
+        if (filterCategory !== "all" && i.category !== filterCategory) return false;
+        return true;
+      }),
+    [feed, filterCity, filterCategory]
+  );
+
+  useEffect(() => {
+    setVisible(PAGE_SIZE);
+  }, [filterCity, filterCategory]);
+
+  // Carregamento infinito
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisible((v) => (v < filteredFeed.length ? v + PAGE_SIZE : v));
+        }
+      },
+      { rootMargin: "300px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [filteredFeed.length]);
 
   const displayWeddings = featuredWeddings && featuredWeddings.length > 0 ? featuredWeddings : null;
-  const curatedPhotos = homePhotos && homePhotos.length > 0 ? homePhotos : null;
-  const curatedVideos = homeVideos && homeVideos.length > 0 ? homeVideos : null;
-  const displayPhotos = curatedPhotos ?? (standalonePhotos && standalonePhotos.length > 0 ? standalonePhotos : null);
-  const displayVideos = curatedVideos ?? (videos && videos.length > 0 ? videos : null);
+  const hasFeed = filteredFeed.length > 0;
+  const fallbackVideos = !feed.length && videos && videos.length > 0 ? videos : null;
+  const fallbackPhotos =
+    !feed.length && standalonePhotos && standalonePhotos.length > 0 ? standalonePhotos : null;
 
-
-  const videoJsonLd = displayVideos
+  const videoJsonLd = homeVideos?.length
     ? {
         "@context": "https://schema.org",
         "@type": "ItemList",
-        itemListElement: displayVideos.map((v, i) => {
+        itemListElement: (homeVideos as any[]).map((v, i) => {
           const ytId = extractYoutubeId(v.youtube_url);
           return {
             "@type": "ListItem",
@@ -120,6 +198,13 @@ const Portfolio = () => {
         }),
       }
     : null;
+
+  const chip = (active: boolean) =>
+    `px-4 py-1.5 rounded-full font-body text-[11px] uppercase tracking-[0.15em] transition-colors border ${
+      active
+        ? "bg-primary text-primary-foreground border-primary"
+        : "border-section-dark-foreground/20 text-section-dark-foreground/70 hover:border-primary/50"
+    }`;
 
   return (
     <section id="portfolio" className="py-24 md:py-32 bg-section-dark">
@@ -184,12 +269,96 @@ const Portfolio = () => {
           </AnimatedSection>
         )}
 
-        {/* Videos */}
-        {displayVideos && (
+        {/* Feed curado — mobile first, estilo rede social */}
+        {feed.length > 0 && (
+          <AnimatedSection>
+            <h3 className="font-heading text-xl text-section-dark-foreground/80 mb-5 text-center">Destaques</h3>
+
+            {/* Filtros */}
+            <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+              <button className={chip(filterCategory === "all")} onClick={() => setFilterCategory("all")}>
+                Tudo
+              </button>
+              <button className={chip(filterCategory === "wedding")} onClick={() => setFilterCategory("wedding")}>
+                Casamento
+              </button>
+              <button
+                className={chip(filterCategory === "pre_wedding")}
+                onClick={() => setFilterCategory("pre_wedding")}
+              >
+                Pré-Wedding
+              </button>
+              {cities.length > 1 && (
+                <select
+                  value={filterCity}
+                  onChange={(e) => setFilterCity(e.target.value)}
+                  className="px-3 py-1.5 rounded-full bg-transparent border border-section-dark-foreground/20 font-body text-[11px] uppercase tracking-[0.15em] text-section-dark-foreground/70"
+                >
+                  <option value="all">Todas as cidades</option>
+                  {cities.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {hasFeed ? (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 md:gap-3 -mx-6 sm:mx-0">
+                  {filteredFeed.slice(0, visible).map((item) => (
+                    <div
+                      key={item.id}
+                      className={`relative aspect-square overflow-hidden bg-section-dark-foreground/5 ${
+                        item.kind === "video" ? "cursor-pointer group" : ""
+                      }`}
+                      onClick={() => item.kind === "video" && item.ytId && setActiveVideo(item.ytId)}
+                    >
+                      <img
+                        src={item.src}
+                        alt={item.label || (item.kind === "video" ? "Filme de casamento" : "Fotografia de casamento")}
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
+                        sizes="(max-width: 640px) 50vw, 33vw"
+                      />
+                      {item.kind === "video" && (
+                        <div className="absolute inset-0 bg-hero/40 group-hover:bg-hero/20 transition-colors flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-full border-2 border-primary-foreground/80 flex items-center justify-center">
+                            <Play size={16} className="text-primary-foreground ml-0.5" fill="currentColor" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div ref={sentinelRef} className="h-10" />
+                {visible < filteredFeed.length && (
+                  <div className="text-center">
+                    <button
+                      onClick={() => setVisible((v) => v + PAGE_SIZE)}
+                      className="font-body text-xs uppercase tracking-[0.3em] text-primary hover:text-primary/80"
+                    >
+                      Carregar mais
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="font-body text-sm text-section-dark-foreground/50 text-center">
+                Nada por aqui com esse filtro.
+              </p>
+            )}
+          </AnimatedSection>
+        )}
+
+        {/* Fallback: sem curadoria definida no painel */}
+        {fallbackVideos && (
           <AnimatedSection className="mb-20">
             <h3 className="font-heading text-xl text-section-dark-foreground/80 mb-8 text-center">Filmes</h3>
             <div className="grid md:grid-cols-3 gap-6">
-              {displayVideos.map((v) => {
+              {fallbackVideos.map((v) => {
                 const ytId = extractYoutubeId(v.youtube_url);
                 return (
                   <div
@@ -218,12 +387,11 @@ const Portfolio = () => {
           </AnimatedSection>
         )}
 
-        {/* Feed de fotos — mobile first, estilo rede social */}
-        {displayPhotos && (
+        {fallbackPhotos && (
           <AnimatedSection>
             <h3 className="font-heading text-xl text-section-dark-foreground/80 mb-6 md:mb-8 text-center">Fotografias</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-2 md:gap-3 -mx-6 sm:mx-0">
-              {displayPhotos.map((p) => (
+              {fallbackPhotos.map((p) => (
                 <div key={p.id} className="relative aspect-square overflow-hidden bg-section-dark-foreground/5">
                   <img
                     src={p.photo_url}
@@ -239,8 +407,7 @@ const Portfolio = () => {
           </AnimatedSection>
         )}
 
-
-        {!displayWeddings && !displayVideos && !displayPhotos && (
+        {!displayWeddings && !feed.length && !fallbackVideos && !fallbackPhotos && (
           <p className="font-body text-sm text-section-dark-foreground/50 text-center">
             Em breve, novas histórias aqui.
           </p>

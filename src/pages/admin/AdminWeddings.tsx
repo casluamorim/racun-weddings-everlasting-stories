@@ -245,22 +245,31 @@ const AdminWeddings = () => {
   });
 
   const addYoutubeVideo = useMutation({
-    mutationFn: async ({ weddingId, url, category }: { weddingId: string; url: string; category: "wedding" | "pre_wedding" }) => {
-      const { error } = await supabase.from("portfolio_videos").insert({
-        wedding_id: weddingId,
-        youtube_url: url,
-        category,
-      } as any);
+    mutationFn: async ({ weddingId, urls, category }: { weddingId: string; urls: string; category: "wedding" | "pre_wedding" }) => {
+      const list = urls
+        .split(/[\n,\s]+/)
+        .map((u) => u.trim())
+        .filter((u) => /^https?:\/\//.test(u));
+      if (list.length === 0) throw new Error("Nenhum link válido do YouTube encontrado");
+      const { error } = await supabase.from("portfolio_videos").insert(
+        list.map((url) => ({
+          wedding_id: weddingId,
+          youtube_url: url,
+          category,
+        })) as any
+      );
 
       if (error) throw error;
+      return list.length;
     },
-    onSuccess: () => {
+    onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ["admin-wedding-videos", expandedId] });
       setYoutubeUrl("");
-      toast.success("Vídeo adicionado!");
+      toast.success(count === 1 ? "Vídeo adicionado!" : `${count} vídeos adicionados!`);
     },
-    onError: () => toast.error("Erro ao adicionar vídeo"),
+    onError: (e: any) => toast.error(e?.message || "Erro ao adicionar vídeo"),
   });
+
 
   const deleteVideo = useMutation({
     mutationFn: async (id: string) => {
@@ -380,6 +389,19 @@ const AdminWeddings = () => {
       await supabase.from("portfolio_videos").update({ sort_order: i }).eq("id", reordered[i].id);
     }
   };
+
+  /** Reordena vídeos apenas dentro de uma seção (casamento / pré-wedding). */
+  const reorderVideosIn = async (
+    category: "wedding" | "pre_wedding",
+    reordered: NonNullable<typeof weddingVideos>
+  ) => {
+    const others = (weddingVideos || []).filter((v: any) => (v.category ?? "wedding") !== category);
+    queryClient.setQueryData(["admin-wedding-videos", expandedId], [...reordered, ...others]);
+    for (let i = 0; i < reordered.length; i++) {
+      await supabase.from("portfolio_videos").update({ sort_order: i }).eq("id", reordered[i].id);
+    }
+  };
+
 
   const togglePhotoPortfolio = useMutation({
     mutationFn: async ({ id, current, scope }: { id: string; current: boolean; scope: "wedding" | "standalone" }) => {
@@ -837,27 +859,35 @@ const AdminWeddings = () => {
                       <h4 className="font-heading text-sm text-foreground mb-2 flex items-center gap-2">
                         <Film size={14} /> Vídeos
                       </h4>
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <select
-                          value={videoCategory}
-                          onChange={(e) => setVideoCategory(e.target.value as "wedding" | "pre_wedding")}
-                          className="h-9 rounded-md border border-input bg-background px-2 font-body text-sm"
-                        >
-                          <option value="wedding">Casamento</option>
-                          <option value="pre_wedding">Pré-Wedding</option>
-                        </select>
-                        <Input
+                      <div className="flex flex-col gap-2 mb-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <select
+                            value={videoCategory}
+                            onChange={(e) => setVideoCategory(e.target.value as "wedding" | "pre_wedding")}
+                            className="h-9 rounded-md border border-input bg-background px-2 font-body text-sm"
+                          >
+                            <option value="wedding">Casamento</option>
+                            <option value="pre_wedding">Pré-Wedding</option>
+                          </select>
+                          <span className="font-body text-xs text-muted-foreground">
+                            Cole um ou mais links do YouTube (um por linha)
+                          </span>
+                        </div>
+                        <Textarea
                           value={youtubeUrl}
                           onChange={(e) => setYoutubeUrl(e.target.value)}
-                          placeholder="Cole a URL do YouTube aqui..."
-                          className="text-sm h-9 flex-1 min-w-[180px]"
+                          placeholder={"https://youtube.com/watch?v=...\nhttps://youtu.be/..."}
+                          className="text-sm min-h-[80px]"
                         />
                         <Button
                           size="sm"
+                          className="self-start"
                           disabled={!youtubeUrl.trim() || addYoutubeVideo.isPending}
-                          onClick={() => addYoutubeVideo.mutate({ weddingId: w.id, url: youtubeUrl.trim(), category: videoCategory })}
+                          onClick={() =>
+                            addYoutubeVideo.mutate({ weddingId: w.id, urls: youtubeUrl, category: videoCategory })
+                          }
                         >
-                          <Plus size={14} className="mr-1" /> Adicionar
+                          <Plus size={14} className="mr-1" /> Adicionar vídeos
                         </Button>
                       </div>
 
@@ -874,8 +904,9 @@ const AdminWeddings = () => {
                             <p className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2">{sec.label}</p>
                             <SortableGrid
                               items={secVideos}
-                              onReorder={reorderVideos}
+                              onReorder={(reordered) => reorderVideosIn(sec.key, reordered)}
                               className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+
                               renderItem={(v) => {
                                 const ytId = getYouTubeId(v.youtube_url);
                                 const isEditingThis = editingId === `video-${v.id}`;

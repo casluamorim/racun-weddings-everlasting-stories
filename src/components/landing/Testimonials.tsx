@@ -16,7 +16,7 @@ const Testimonials = () => {
     : defaultTestimonials;
 
   return (
-    <section className="py-24 md:py-32 bg-background">
+    <section id="depoimentos" className="py-24 md:py-32 bg-background">
       <div className="container mx-auto px-6 max-w-5xl">
         <AnimatedSection className="text-center mb-16">
           <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4">Depoimentos</p>
