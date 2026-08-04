@@ -504,7 +504,28 @@ const AdminSiteEditor = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+        {/* ─── PREVIEW AO VIVO ─── */}
+        <div className="lg:sticky lg:top-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Preview — clique para editar</p>
+            <Button variant="outline" size="sm" onClick={() => setPreviewKey((k) => k + 1)}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1" /> Atualizar
+            </Button>
+          </div>
+          <div className="rounded-lg border border-border overflow-hidden bg-muted">
+            <iframe
+              key={previewKey}
+              ref={iframeRef}
+              src="/"
+              title="Preview do site"
+              className="w-full h-[70vh] bg-background"
+            />
+          </div>
+        </div>
+      </div>
     </div>
+
   );
 };
 
