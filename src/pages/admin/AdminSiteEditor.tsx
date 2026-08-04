@@ -172,14 +172,17 @@ const AdminSiteEditor = () => {
   if (isLoading) return <p className="p-8 text-muted-foreground">Carregando...</p>;
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl">
-      <h1 className="text-2xl font-heading font-semibold mb-6">Editor do Site</h1>
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl font-heading font-semibold mb-1">Editor do Site</h1>
+      <p className="text-sm text-muted-foreground mb-6">
+        Clique em qualquer seção do preview ao lado para editá-la.
+      </p>
 
-      <Tabs defaultValue="hero">
+      <div className="grid lg:grid-cols-2 gap-6 items-start">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap gap-1 mb-6 h-auto">
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="services">Serviços</TabsTrigger>
-          <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           <TabsTrigger value="process">Processo</TabsTrigger>
           <TabsTrigger value="contact">Contato</TabsTrigger>
@@ -187,6 +190,7 @@ const AdminSiteEditor = () => {
           <TabsTrigger value="cta">CTA Final</TabsTrigger>
           <TabsTrigger value="footer">Rodapé</TabsTrigger>
         </TabsList>
+
 
         {/* ─── HERO ─── */}
         <TabsContent value="hero">
