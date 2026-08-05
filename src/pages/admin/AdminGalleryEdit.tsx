@@ -68,6 +68,23 @@ const AdminGalleryEdit = () => {
     onError: (e: any) => toast.error(e?.message || "Erro"),
   });
 
+  const [newPassword, setNewPassword] = useState("");
+  const setPasswordMutation = useMutation({
+    mutationFn: async (pwd: string) => {
+      const { error } = await supabase.rpc("set_gallery_password", { _gallery_id: id!, _password: pwd });
+      if (error) throw error;
+    },
+    onSuccess: (_d, pwd) => {
+      setNewPassword("");
+      qc.invalidateQueries({ queryKey: ["admin-gallery", id] });
+      qc.invalidateQueries({ queryKey: ["admin-galleries"] });
+      toast.success(pwd ? "Senha definida!" : "Senha removida!");
+    },
+    onError: (e: any) => toast.error(e?.message || "Erro ao salvar senha"),
+  });
+
+
+
   const handleUpload = async (filesList: FileList) => {
     if (!id) return;
     setUploading(true);
