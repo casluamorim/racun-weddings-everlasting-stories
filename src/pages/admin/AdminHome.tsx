@@ -165,11 +165,17 @@ const AdminHome = () => {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl text-foreground mb-1 flex items-center gap-2">
-        <Home size={20} /> Página Inicial
-      </h1>
+      {confirmReorderDialog}
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+        <h1 className="font-heading text-2xl text-foreground flex items-center gap-2">
+          <Home size={20} /> Página Inicial
+        </h1>
+        <Button variant="outline" size="sm" onClick={sharePreview}>
+          <Share2 size={14} className="mr-1" /> Compartilhar prévia do home
+        </Button>
+      </div>
       <p className="font-body text-sm text-muted-foreground mb-6">
-        Escolha quais fotos e vídeos aparecem no feed da home. Arraste para reordenar — a ordem salva automaticamente.
+        Escolha quais fotos e vídeos aparecem no feed da home. Arraste para reordenar — pedimos confirmação antes de salvar e você pode desfazer.
       </p>
 
       {isLoading ? (
@@ -187,7 +193,14 @@ const AdminHome = () => {
             ) : (
               <SortableGrid
                 items={selected}
-                onReorder={(reordered) => persistOrder(reordered as MediaRow[])}
+                onReorder={(reordered) =>
+                  requestReorder(
+                    selected as MediaRow[],
+                    reordered as MediaRow[],
+                    (items) => persistOrder(items as MediaRow[]),
+                    "Feed da home"
+                  )
+                }
                 className="space-y-2"
                 renderItem={(r) => (
                   <div className="flex items-center gap-3 bg-card border border-border rounded-lg p-2 pr-10">
