@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check, Star, Link as LinkIcon, ArrowLeftRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { useConfirmReorder } from "@/hooks/useConfirmReorder";
 import { compressImage, MAX_UPLOAD_BYTES, runWithConcurrency } from "@/lib/imageCompression";
 import { slugify } from "@/lib/slug";
 import { TestimonialEditor } from "@/components/admin/TestimonialEditor";
