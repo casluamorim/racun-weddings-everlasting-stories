@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -33,10 +33,27 @@ const CATEGORY_LABEL: Record<string, string> = {
 const AdminHome = () => {
   const queryClient = useQueryClient();
   const { requestReorder, confirmReorderDialog } = useConfirmReorder();
-  const [filterCity, setFilterCity] = useState("all");
-  const [filterCategory, setFilterCategory] = useState("all");
-  const [filterKind, setFilterKind] = useState("all");
-  const [search, setSearch] = useState("");
+  const FILTERS_KEY = "admin-home-filters";
+  const savedFilters = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(FILTERS_KEY) || "{}");
+    } catch {
+      return {} as any;
+    }
+  })();
+  const [filterCity, setFilterCity] = useState<string>(savedFilters.filterCity ?? "all");
+  const [filterCategory, setFilterCategory] = useState<string>(savedFilters.filterCategory ?? "all");
+  const [filterKind, setFilterKind] = useState<string>(savedFilters.filterKind ?? "all");
+  const [search, setSearch] = useState<string>(savedFilters.search ?? "");
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        FILTERS_KEY,
+        JSON.stringify({ filterCity, filterCategory, filterKind, search })
+      );
+    } catch { /* ignore */ }
+  }, [filterCity, filterCategory, filterKind, search]);
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin-home-media"],
