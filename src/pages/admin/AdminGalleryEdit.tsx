@@ -258,7 +258,35 @@ const AdminGalleryEdit = () => {
             })}>Salvar informações</Button>
           </div>
 
+          {/* Password protection */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <h2 className="font-heading text-lg">Senha de acesso</h2>
+            <p className="text-sm text-muted-foreground">
+              Com senha ativa, ninguém vê as fotos pelo link sem digitá-la. A senha é guardada criptografada e não pode ser recuperada — apenas substituída.
+            </p>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <Label>Nova senha (mín. 4 caracteres)</Label>
+                <Input type="text" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="ex: kathyn2026" maxLength={128} />
+              </div>
+              <Button onClick={() => setPasswordMutation.mutate(newPassword)} disabled={newPassword.length < 4 || setPasswordMutation.isPending}>
+                Definir senha
+              </Button>
+              {gallery.is_password_protected && (
+                <Button variant="outline" onClick={() => setPasswordMutation.mutate("")} disabled={setPasswordMutation.isPending}>
+                  Remover senha
+                </Button>
+              )}
+            </div>
+            <p className="text-xs">
+              {gallery.is_password_protected
+                ? <Badge>Protegida por senha</Badge>
+                : <Badge variant="outline">Aberta a quem tem o link</Badge>}
+            </p>
+          </div>
+
           {/* Retention */}
+
           <div className="border rounded-lg p-4 space-y-3">
             <h2 className="font-heading text-lg">Retenção dos arquivos originais</h2>
             <p className="text-sm text-muted-foreground">Após o prazo, apenas os originais são removidos. As versões web do portfólio permanecem para sempre.</p>
