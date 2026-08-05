@@ -4,8 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Eye, EyeOff, Film, ImageIcon, Home, GripVertical } from "lucide-react";
+import { Eye, EyeOff, Film, ImageIcon, Home, GripVertical, Share2 } from "lucide-react";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { useConfirmReorder } from "@/hooks/useConfirmReorder";
+
+const SITE_URL = "https://weddings.agenciaracun.com";
 
 type MediaRow = {
   id: string;
