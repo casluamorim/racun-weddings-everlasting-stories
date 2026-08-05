@@ -15,6 +15,7 @@ import { TestimonialEditor } from "@/components/admin/TestimonialEditor";
 
 const AdminWeddings = () => {
   const queryClient = useQueryClient();
+  const { requestReorder, confirmReorderDialog } = useConfirmReorder();
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
