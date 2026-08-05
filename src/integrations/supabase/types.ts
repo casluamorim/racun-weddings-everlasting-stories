@@ -765,6 +765,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_gallery_favorite: {
+        Args: { _file_id: string; _session_id: string; _token?: string }
+        Returns: undefined
+      }
       gallery_access_ok: {
         Args: { _gallery_id: string; _token: string }
         Returns: boolean
@@ -838,10 +842,21 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
-      remove_gallery_favorite: {
-        Args: { _file_id: string; _session_id: string }
-        Returns: undefined
+      list_gallery_favorites: {
+        Args: { _session_id: string; _slug: string; _token?: string }
+        Returns: {
+          file_id: string
+        }[]
       }
+      remove_gallery_favorite:
+        | {
+            Args: { _file_id: string; _session_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: { _file_id: string; _session_id: string; _token?: string }
+            Returns: undefined
+          }
       set_gallery_password: {
         Args: { _gallery_id: string; _password: string }
         Returns: undefined
