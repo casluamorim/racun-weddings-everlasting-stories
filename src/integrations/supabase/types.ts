@@ -59,6 +59,35 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_access_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          gallery_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          gallery_id: string
+          token: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          gallery_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_access_sessions_gallery_id_fkey"
+            columns: ["gallery_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_galleries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gallery_design_presets: {
         Row: {
           created_at: string
@@ -736,6 +765,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_gallery_favorite: {
+        Args: { _file_id: string; _session_id: string; _token?: string }
+        Returns: undefined
+      }
+      gallery_access_ok: {
+        Args: { _gallery_id: string; _token: string }
+        Returns: boolean
+      }
+      gallery_requires_password: { Args: { _slug: string }; Returns: boolean }
       get_gallery_by_token: {
         Args: { _slug: string; _token?: string }
         Returns: {
@@ -765,6 +803,33 @@ export type Database = {
           wedding_id: string
         }[]
       }
+      get_gallery_files_by_token: {
+        Args: { _slug: string; _token?: string }
+        Returns: {
+          created_at: string
+          file_name: string
+          gallery_id: string
+          height: number | null
+          id: string
+          is_cover: boolean
+          is_hero: boolean
+          is_pinned: boolean
+          kind: string
+          mime_type: string | null
+          original_path: string | null
+          size_bytes: number | null
+          sort_order: number
+          thumb_path: string | null
+          web_path: string
+          width: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "gallery_files"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -777,9 +842,28 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
-      remove_gallery_favorite: {
-        Args: { _file_id: string; _session_id: string }
+      list_gallery_favorites: {
+        Args: { _session_id: string; _slug: string; _token?: string }
+        Returns: {
+          file_id: string
+        }[]
+      }
+      remove_gallery_favorite:
+        | {
+            Args: { _file_id: string; _session_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: { _file_id: string; _session_id: string; _token?: string }
+            Returns: undefined
+          }
+      set_gallery_password: {
+        Args: { _gallery_id: string; _password: string }
         Returns: undefined
+      }
+      verify_gallery_password: {
+        Args: { _password: string; _slug: string }
+        Returns: string
       }
     }
     Enums: {
