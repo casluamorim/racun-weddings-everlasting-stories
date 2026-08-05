@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const slug = url.searchParams.get("slug");
+    const accessToken = url.searchParams.get("access") ?? "";
     if (!slug || !/^[a-z0-9-]{1,120}$/i.test(slug)) {
       return new Response("invalid slug", { status: 400, headers: corsHeaders });
     }
@@ -80,11 +81,21 @@ Deno.serve(async (req) => {
 
     const { data: gallery, error: gErr } = await supabase
       .from("wedding_galleries")
-      .select("id, slug, is_published, originals_removed_at")
+      .select("id, slug, is_published, is_password_protected, originals_removed_at")
       .eq("slug", slug)
       .eq("is_published", true)
       .maybeSingle();
     if (gErr || !gallery) return new Response("not_found", { status: 404, headers: corsHeaders });
+
+    // Password-protected galleries require a valid access token from verify_gallery_password
+    const { data: allowed } = await supabase.rpc("gallery_access_ok", {
+      _gallery_id: gallery.id,
+      _token: accessToken,
+    });
+    if (allowed !== true) {
+      return new Response("password_required", { status: 401, headers: corsHeaders });
+    }
+
 
     const { data: files } = await supabase
       .from("gallery_files")
