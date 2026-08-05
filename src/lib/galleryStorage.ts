@@ -60,6 +60,30 @@ export async function signedUrls(pathsList: string[], expiresIn = 3600): Promise
   return out;
 }
 
+/**
+ * Signed URLs for password-protected galleries: storage RLS blocks direct access,
+ * so the edge function mints them only after validating the access token.
+ */
+export async function protectedSignedUrls(
+  slug: string,
+  accessToken: string,
+  pathsList: string[],
+  expiresIn = 3600,
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  const chunkSize = 100;
+  for (let i = 0; i < pathsList.length; i += chunkSize) {
+    const chunk = pathsList.slice(i, i + chunkSize);
+    const { data, error } = await supabase.functions.invoke("gallery-media", {
+      body: { slug, token: accessToken, paths: chunk, expiresIn },
+    });
+    if (error) throw error;
+    Object.assign(out, (data as { urls?: Record<string, string> })?.urls ?? {});
+  }
+  return out;
+}
+
+
 export function randomFilename(originalName: string, forcedExt?: string): string {
   const ext = forcedExt ?? originalName.split(".").pop() ?? "bin";
   const id = crypto.randomUUID().replace(/-/g, "");
