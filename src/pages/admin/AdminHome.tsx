@@ -1,11 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Eye, EyeOff, Film, ImageIcon, Home, GripVertical } from "lucide-react";
+import { Eye, EyeOff, Film, ImageIcon, Home, GripVertical, Share2 } from "lucide-react";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { useConfirmReorder } from "@/hooks/useConfirmReorder";
+
+const SITE_URL = "https://weddings.agenciaracun.com";
 
 type MediaRow = {
   id: string;
@@ -29,10 +32,28 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 const AdminHome = () => {
   const queryClient = useQueryClient();
-  const [filterCity, setFilterCity] = useState("all");
-  const [filterCategory, setFilterCategory] = useState("all");
-  const [filterKind, setFilterKind] = useState("all");
-  const [search, setSearch] = useState("");
+  const { requestReorder, confirmReorderDialog } = useConfirmReorder();
+  const FILTERS_KEY = "admin-home-filters";
+  const savedFilters = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(FILTERS_KEY) || "{}");
+    } catch {
+      return {} as any;
+    }
+  })();
+  const [filterCity, setFilterCity] = useState<string>(savedFilters.filterCity ?? "all");
+  const [filterCategory, setFilterCategory] = useState<string>(savedFilters.filterCategory ?? "all");
+  const [filterKind, setFilterKind] = useState<string>(savedFilters.filterKind ?? "all");
+  const [search, setSearch] = useState<string>(savedFilters.search ?? "");
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        FILTERS_KEY,
+        JSON.stringify({ filterCity, filterCategory, filterKind, search })
+      );
+    } catch { /* ignore */ }
+  }, [filterCity, filterCategory, filterKind, search]);
 
   const { data: rows, isLoading } = useQuery({
     queryKey: ["admin-home-media"],
@@ -140,7 +161,21 @@ const AdminHome = () => {
       )
     );
     invalidate();
-    toast.success("Ordem salva!");
+  };
+
+  const sharePreview = async () => {
+    const url = `${SITE_URL}/?preview=home&t=${Date.now()}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Prévia da Página Inicial", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link de prévia copiado!");
+      }
+    } catch {
+      await navigator.clipboard.writeText(url).catch(() => {});
+      toast.success("Link de prévia copiado!");
+    }
   };
 
   const selectClass =
@@ -148,11 +183,17 @@ const AdminHome = () => {
 
   return (
     <div>
-      <h1 className="font-heading text-2xl text-foreground mb-1 flex items-center gap-2">
-        <Home size={20} /> Página Inicial
-      </h1>
+      {confirmReorderDialog}
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+        <h1 className="font-heading text-2xl text-foreground flex items-center gap-2">
+          <Home size={20} /> Página Inicial
+        </h1>
+        <Button variant="outline" size="sm" onClick={sharePreview}>
+          <Share2 size={14} className="mr-1" /> Compartilhar prévia do home
+        </Button>
+      </div>
       <p className="font-body text-sm text-muted-foreground mb-6">
-        Escolha quais fotos e vídeos aparecem no feed da home. Arraste para reordenar — a ordem salva automaticamente.
+        Escolha quais fotos e vídeos aparecem no feed da home. Arraste para reordenar — pedimos confirmação antes de salvar e você pode desfazer.
       </p>
 
       {isLoading ? (
@@ -170,7 +211,14 @@ const AdminHome = () => {
             ) : (
               <SortableGrid
                 items={selected}
-                onReorder={(reordered) => persistOrder(reordered as MediaRow[])}
+                onReorder={(reordered) =>
+                  requestReorder(
+                    selected as MediaRow[],
+                    reordered as MediaRow[],
+                    (items) => persistOrder(items as MediaRow[]),
+                    "Feed da home"
+                  )
+                }
                 className="space-y-2"
                 renderItem={(r) => (
                   <div className="flex items-center gap-3 bg-card border border-border rounded-lg p-2 pr-10">

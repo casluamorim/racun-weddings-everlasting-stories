@@ -9,12 +9,14 @@ import { toast } from "sonner";
 import { Plus, Trash2, Eye, EyeOff, Upload, ImageIcon, ChevronDown, ChevronUp, X, Film, Pencil, Check, Star, Link as LinkIcon, ArrowLeftRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SortableGrid } from "@/components/admin/SortablePhotoGrid";
+import { useConfirmReorder } from "@/hooks/useConfirmReorder";
 import { compressImage, MAX_UPLOAD_BYTES, runWithConcurrency } from "@/lib/imageCompression";
 import { slugify } from "@/lib/slug";
 import { TestimonialEditor } from "@/components/admin/TestimonialEditor";
 
 const AdminWeddings = () => {
   const queryClient = useQueryClient();
+  const { requestReorder, confirmReorderDialog } = useConfirmReorder();
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -565,6 +567,7 @@ const AdminWeddings = () => {
 
   return (
     <div>
+      {confirmReorderDialog}
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl text-foreground">Casamentos</h1>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -788,7 +791,7 @@ const AdminWeddings = () => {
                           {secPhotos.length > 0 ? (
                             <SortableGrid
                               items={secPhotos}
-                              onReorder={(reordered) => reorderPhotosIn(sec.key, reordered)}
+                              onReorder={(reordered) => requestReorder(secPhotos, reordered, (items) => reorderPhotosIn(sec.key, items as any), `Fotos — ${sec.label}`)}
                               className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
                               renderItem={(p) => {
                                 const isEditingThis = editingId === `photo-${p.id}`;
@@ -904,7 +907,7 @@ const AdminWeddings = () => {
                             <p className="font-body text-xs uppercase tracking-wider text-muted-foreground mb-2">{sec.label}</p>
                             <SortableGrid
                               items={secVideos}
-                              onReorder={(reordered) => reorderVideosIn(sec.key, reordered)}
+                              onReorder={(reordered) => requestReorder(secVideos, reordered, (items) => reorderVideosIn(sec.key, items as any), `Vídeos — ${sec.label}`)}
                               className="grid grid-cols-2 sm:grid-cols-3 gap-3"
 
                               renderItem={(v) => {
@@ -1013,7 +1016,7 @@ const AdminWeddings = () => {
         {standaloneVideos && standaloneVideos.length > 0 && (
           <div className="mb-6">
             <h3 className="font-heading text-sm text-foreground mb-3 flex items-center gap-2"><Film size={14} /> Vídeos ({standaloneVideos.length})</h3>
-            <SortableGrid items={standaloneVideos} onReorder={reorderStandaloneVideos}
+            <SortableGrid items={standaloneVideos} onReorder={(reordered) => requestReorder(standaloneVideos, reordered, (items) => reorderStandaloneVideos(items as any), "Vídeos avulsos")}
               className="grid grid-cols-2 md:grid-cols-3 gap-3"
               renderItem={(v) => {
                 const ytId = getYouTubeId(v.youtube_url);
@@ -1066,7 +1069,7 @@ const AdminWeddings = () => {
         {standalonePhotos && standalonePhotos.length > 0 && (
           <div>
             <h3 className="font-heading text-sm text-foreground mb-3 flex items-center gap-2"><ImageIcon size={14} /> Fotos ({standalonePhotos.length})</h3>
-            <SortableGrid items={standalonePhotos} onReorder={reorderStandalonePhotos}
+            <SortableGrid items={standalonePhotos} onReorder={(reordered) => requestReorder(standalonePhotos, reordered, (items) => reorderStandalonePhotos(items as any), "Fotos avulsas")}
               className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2"
               renderItem={(p) => (
                 <div className={`relative group rounded-lg overflow-hidden bg-muted ${!p.show_in_portfolio ? "opacity-50" : ""}`}>

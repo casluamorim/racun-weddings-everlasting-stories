@@ -56,7 +56,17 @@ const AdminSiteEditor = () => {
   const [editingTestimonials, setEditingTestimonials] = useState<any[]>([]);
 
   /* preview + aba ativa */
-  const [tab, setTab] = useState("hero");
+  const STORE_KEY = "admin-site-editor-state";
+  const stored = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+    } catch {
+      return {} as any;
+    }
+  })();
+
+  const [tab, setTab] = useState<string>(stored.tab ?? "hero");
+  const [previewScroll, setPreviewScroll] = useState<number>(stored.previewScroll ?? 0);
   const [previewKey, setPreviewKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
@@ -103,6 +113,38 @@ const AdminSiteEditor = () => {
       iframe.removeEventListener("load", onLoad);
       cleanup?.();
     };
+  }, [previewKey]);
+
+  // Persiste aba + rolagem do preview
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ tab, previewScroll }));
+    } catch { /* ignore */ }
+  }, [tab, previewScroll]);
+
+  // Acompanha a rolagem do preview e restaura a posição salva
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    let win: Window | null = null;
+    const onScroll = () => {
+      if (win) setPreviewScroll(win.scrollY);
+    };
+    const attach = () => {
+      win = iframe.contentWindow;
+      if (!win) return;
+      const saved = previewScroll;
+      if (saved > 0) win.scrollTo({ top: saved });
+      win.addEventListener("scroll", onScroll, { passive: true });
+    };
+    const onLoad = () => attach();
+    iframe.addEventListener("load", onLoad);
+    if (iframe.contentDocument?.readyState === "complete") attach();
+    return () => {
+      iframe.removeEventListener("load", onLoad);
+      win?.removeEventListener("scroll", onScroll);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [previewKey]);
 
   // Ao trocar de aba, rola o preview até a seção
