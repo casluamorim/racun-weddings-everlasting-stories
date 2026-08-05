@@ -140,7 +140,21 @@ const AdminHome = () => {
       )
     );
     invalidate();
-    toast.success("Ordem salva!");
+  };
+
+  const sharePreview = async () => {
+    const url = `${SITE_URL}/?preview=home&t=${Date.now()}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Prévia da Página Inicial", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link de prévia copiado!");
+      }
+    } catch {
+      await navigator.clipboard.writeText(url).catch(() => {});
+      toast.success("Link de prévia copiado!");
+    }
   };
 
   const selectClass =
