@@ -32,6 +32,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 const AdminHome = () => {
   const queryClient = useQueryClient();
+  const { requestReorder, confirmReorderDialog } = useConfirmReorder();
   const [filterCity, setFilterCity] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterKind, setFilterKind] = useState("all");
