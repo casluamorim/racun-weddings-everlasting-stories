@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import AdminLogin from "@/pages/AdminLogin";
 import GalleryView from "@/pages/GalleryView";
@@ -44,13 +45,15 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 const withProviders = (ui: React.ReactNode, path: string, routes: React.ReactNode) =>
   render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <MemoryRouter initialEntries={[path]}>
-        <AuthProvider>
-          <Routes>{routes}</Routes>
-        </AuthProvider>
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <HelmetProvider>
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter initialEntries={[path]}>
+          <AuthProvider>
+            <Routes>{routes}</Routes>
+          </AuthProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
+    </HelmetProvider>,
   );
 
 beforeEach(() => {
