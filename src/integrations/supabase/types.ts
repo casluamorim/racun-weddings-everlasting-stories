@@ -35,6 +35,30 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_unlock_log: {
+        Row: {
+          created_at: string
+          id: string
+          identifier: string
+          scope: string
+          unlocked_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identifier: string
+          scope: string
+          unlocked_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identifier?: string
+          scope?: string
+          unlocked_by?: string | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           content: string | null
@@ -789,6 +813,31 @@ export type Database = {
       add_gallery_favorite: {
         Args: { _file_id: string; _session_id: string; _token?: string }
         Returns: undefined
+      }
+      admin_clear_lockout: {
+        Args: { _identifier: string; _scope: string }
+        Returns: undefined
+      }
+      admin_list_auth_attempts: {
+        Args: { _limit?: number }
+        Returns: {
+          attempts: number
+          identifier: string
+          last_attempt: string
+          locked_seconds: number
+          recent_attempts: number
+          scope: string
+        }[]
+      }
+      admin_list_unlock_log: {
+        Args: { _limit?: number }
+        Returns: {
+          created_at: string
+          id: string
+          identifier: string
+          scope: string
+          unlocked_by: string
+        }[]
       }
       gallery_access_ok: {
         Args: { _gallery_id: string; _token: string }

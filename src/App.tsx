@@ -24,6 +24,7 @@ import AdminBlog from "./pages/admin/AdminBlog";
 import AdminStories from "./pages/admin/AdminStories";
 import AdminSiteEditor from "./pages/admin/AdminSiteEditor";
 import AdminHome from "./pages/admin/AdminHome";
+import AdminSecurity from "./pages/admin/AdminSecurity";
 import GalleryView from "./pages/GalleryView";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="stories" element={<AdminStories />} />
               <Route path="site-editor" element={<AdminSiteEditor />} />
               <Route path="home" element={<AdminHome />} />
+              <Route path="security" element={<AdminSecurity />} />
 
             </Route>
             <Route path="*" element={<NotFound />} />

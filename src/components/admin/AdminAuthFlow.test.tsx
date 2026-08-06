@@ -11,6 +11,7 @@ const authMocks = vi.hoisted(() => ({
   signInWithPassword: vi.fn(),
   signOut: vi.fn(),
   maybeSingle: vi.fn(),
+  rpc: vi.fn(),
 }));
 
 vi.mock("sonner", () => ({
@@ -20,6 +21,7 @@ vi.mock("sonner", () => ({
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
+    rpc: authMocks.rpc,
     auth: {
       getSession: authMocks.getSession,
       onAuthStateChange: authMocks.onAuthStateChange,
@@ -71,6 +73,7 @@ describe("Admin auth flow", () => {
     authMocks.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
     authMocks.signOut.mockResolvedValue({ error: null });
     authMocks.maybeSingle.mockResolvedValue({ data: null, error: null });
+    authMocks.rpc.mockResolvedValue({ data: 0, error: null });
   });
 
   it("redireciona /admin para /admin/login quando não há sessão", async () => {
@@ -97,6 +100,7 @@ describe("Admin auth flow", () => {
   it("bloqueia sessão autenticada sem papel admin e volta ao login", async () => {
     authMocks.getSession.mockResolvedValue({ data: { session: sessionFor("regular-user") } });
     authMocks.maybeSingle.mockResolvedValue({ data: null, error: null });
+    authMocks.rpc.mockResolvedValue({ data: 0, error: null });
 
     renderAdminFlow("/admin");
 
