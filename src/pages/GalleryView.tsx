@@ -30,6 +30,13 @@ const GalleryView = () => {
   );
   const [password, setPassword] = useState("");
   const [checking, setChecking] = useState(false);
+  const [lockSeconds, setLockSeconds] = useState(0);
+
+  useEffect(() => {
+    if (lockSeconds <= 0) return;
+    const t = setInterval(() => setLockSeconds((s) => (s > 1 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [lockSeconds > 0]);
 
   const { data: gallery, isLoading, error, refetch: refetchGallery } = useQuery({
     queryKey: ["gallery", slug, accessToken],
