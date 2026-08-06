@@ -88,11 +88,21 @@ const GalleryView = () => {
 
   const submitPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!slug || !password) return;
+    if (!slug || !password || lockSeconds > 0) return;
     setChecking(true);
     try {
       const { data, error } = await supabase.rpc("verify_gallery_password", { _slug: slug, _password: password });
-      if (error || !data) {
+      if (error) {
+        const m = /locked_out:(\d+)/.exec(error.message ?? "");
+        if (m) {
+          setLockSeconds(parseInt(m[1], 10));
+          toast.error("Muitas tentativas. Aguarde alguns minutos.");
+        } else {
+          toast.error("Não foi possível verificar a senha.");
+        }
+        return;
+      }
+      if (!data) {
         toast.error("Senha incorreta.");
         return;
       }
