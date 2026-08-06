@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      auth_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          identifier: string
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identifier: string
+          scope: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identifier?: string
+          scope?: string
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
           content: string | null
@@ -848,6 +869,9 @@ export type Database = {
           file_id: string
         }[]
       }
+      login_throttle_fail: { Args: { _email: string }; Returns: number }
+      login_throttle_reset: { Args: { _email: string }; Returns: undefined }
+      login_throttle_status: { Args: { _email: string }; Returns: number }
       remove_gallery_favorite:
         | {
             Args: { _file_id: string; _session_id: string }
@@ -860,6 +884,18 @@ export type Database = {
       set_gallery_password: {
         Args: { _gallery_id: string; _password: string }
         Returns: undefined
+      }
+      throttle_check: {
+        Args: { _identifier: string; _scope: string }
+        Returns: number
+      }
+      throttle_clear: {
+        Args: { _identifier: string; _scope: string }
+        Returns: undefined
+      }
+      throttle_record_failure: {
+        Args: { _identifier: string; _scope: string }
+        Returns: number
       }
       verify_gallery_password: {
         Args: { _password: string; _slug: string }

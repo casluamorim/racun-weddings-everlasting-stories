@@ -30,6 +30,13 @@ const GalleryView = () => {
   );
   const [password, setPassword] = useState("");
   const [checking, setChecking] = useState(false);
+  const [lockSeconds, setLockSeconds] = useState(0);
+
+  useEffect(() => {
+    if (lockSeconds <= 0) return;
+    const t = setInterval(() => setLockSeconds((s) => (s > 1 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [lockSeconds > 0]);
 
   const { data: gallery, isLoading, error, refetch: refetchGallery } = useQuery({
     queryKey: ["gallery", slug, accessToken],
@@ -88,11 +95,21 @@ const GalleryView = () => {
 
   const submitPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!slug || !password) return;
+    if (!slug || !password || lockSeconds > 0) return;
     setChecking(true);
     try {
       const { data, error } = await supabase.rpc("verify_gallery_password", { _slug: slug, _password: password });
-      if (error || !data) {
+      if (error) {
+        const m = /locked_out:(\d+)/.exec(error.message ?? "");
+        if (m) {
+          setLockSeconds(parseInt(m[1], 10));
+          toast.error("Muitas tentativas. Aguarde alguns minutos.");
+        } else {
+          toast.error("Não foi possível verificar a senha.");
+        }
+        return;
+      }
+      if (!data) {
         toast.error("Senha incorreta.");
         return;
       }
@@ -170,9 +187,16 @@ const GalleryView = () => {
           placeholder="Senha"
           autoComplete="current-password"
           maxLength={128}
+          disabled={lockSeconds > 0}
         />
-        <Button type="submit" className="w-full" disabled={checking || password.length === 0}>
-          {checking ? "Verificando..." : "Entrar"}
+        {lockSeconds > 0 && (
+          <p className="text-sm text-destructive">
+            Muitas tentativas incorretas. Tente novamente em{" "}
+            {Math.floor(lockSeconds / 60)}:{String(lockSeconds % 60).padStart(2, "0")}.
+          </p>
+        )}
+        <Button type="submit" className="w-full" disabled={checking || password.length === 0 || lockSeconds > 0}>
+          {checking ? "Verificando..." : lockSeconds > 0 ? "Bloqueado temporariamente" : "Entrar"}
         </Button>
       </form>
     </div>

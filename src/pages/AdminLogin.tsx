@@ -13,6 +13,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignup, setIsSignup] = useState(false);
+  const [lockSeconds, setLockSeconds] = useState(0);
   const { signIn, signOut, isAdmin, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
 
@@ -22,8 +23,15 @@ const AdminLogin = () => {
     }
   }, [authLoading, isAdmin, navigate, user]);
 
+  useEffect(() => {
+    if (lockSeconds <= 0) return;
+    const t = setInterval(() => setLockSeconds((s) => (s > 1 ? s - 1 : 0)), 1000);
+    return () => clearInterval(t);
+  }, [lockSeconds > 0]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockSeconds > 0) return;
     setLoading(true);
 
     if (isSignup) {
@@ -34,16 +42,32 @@ const AdminLogin = () => {
         toast.success("Conta criada! Agora peça ao administrador para conceder acesso.");
         setIsSignup(false);
       }
+      setLoading(false);
+      return;
+    }
+
+    // Bloqueio temporário após tentativas falhas repetidas
+    const { data: locked } = await supabase.rpc("login_throttle_status", { _email: email });
+    if (typeof locked === "number" && locked > 0) {
+      setLockSeconds(locked);
+      toast.error("Muitas tentativas falhas. Aguarde antes de tentar novamente.");
+      setLoading(false);
+      return;
+    }
+
+    const { error, isAdmin: hasAdminAccess } = await signIn(email, password);
+    if (error) {
+      const { data: wait } = await supabase.rpc("login_throttle_fail", { _email: email });
+      if (typeof wait === "number" && wait > 0) setLockSeconds(wait);
+      toast.error("Credenciais inválidas");
+    } else if (!hasAdminAccess) {
+      const { data: wait } = await supabase.rpc("login_throttle_fail", { _email: email });
+      if (typeof wait === "number" && wait > 0) setLockSeconds(wait);
+      toast.error("Esta conta não possui acesso ao painel administrativo");
+      await signOut();
     } else {
-      const { error, isAdmin: hasAdminAccess } = await signIn(email, password);
-      if (error) {
-        toast.error("Credenciais inválidas");
-      } else if (!hasAdminAccess) {
-        toast.error("Esta conta não possui acesso ao painel administrativo");
-        await signOut();
-      } else {
-        navigate("/admin", { replace: true });
-      }
+      await supabase.rpc("login_throttle_reset", { _email: email });
+      navigate("/admin", { replace: true });
     }
     setLoading(false);
   };
@@ -68,8 +92,14 @@ const AdminLogin = () => {
             <Label htmlFor="password" className="font-body text-sm">Senha</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Aguarde..." : isSignup ? "Criar Conta" : "Entrar"}
+          {lockSeconds > 0 && (
+            <p className="font-body text-sm text-destructive">
+              Muitas tentativas falhas. Tente novamente em {Math.floor(lockSeconds / 60)}:
+              {String(lockSeconds % 60).padStart(2, "0")}.
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={loading || lockSeconds > 0}>
+            {loading ? "Aguarde..." : lockSeconds > 0 ? "Bloqueado temporariamente" : isSignup ? "Criar Conta" : "Entrar"}
           </Button>
         </form>
 
