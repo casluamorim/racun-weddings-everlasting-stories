@@ -92,8 +92,14 @@ const AdminLogin = () => {
             <Label htmlFor="password" className="font-body text-sm">Senha</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Aguarde..." : isSignup ? "Criar Conta" : "Entrar"}
+          {lockSeconds > 0 && (
+            <p className="font-body text-sm text-destructive">
+              Muitas tentativas falhas. Tente novamente em {Math.floor(lockSeconds / 60)}:
+              {String(lockSeconds % 60).padStart(2, "0")}.
+            </p>
+          )}
+          <Button type="submit" className="w-full" disabled={loading || lockSeconds > 0}>
+            {loading ? "Aguarde..." : lockSeconds > 0 ? "Bloqueado temporariamente" : isSignup ? "Criar Conta" : "Entrar"}
           </Button>
         </form>
 
