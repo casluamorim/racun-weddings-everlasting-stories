@@ -187,9 +187,16 @@ const GalleryView = () => {
           placeholder="Senha"
           autoComplete="current-password"
           maxLength={128}
+          disabled={lockSeconds > 0}
         />
-        <Button type="submit" className="w-full" disabled={checking || password.length === 0}>
-          {checking ? "Verificando..." : "Entrar"}
+        {lockSeconds > 0 && (
+          <p className="text-sm text-destructive">
+            Muitas tentativas incorretas. Tente novamente em{" "}
+            {Math.floor(lockSeconds / 60)}:{String(lockSeconds % 60).padStart(2, "0")}.
+          </p>
+        )}
+        <Button type="submit" className="w-full" disabled={checking || password.length === 0 || lockSeconds > 0}>
+          {checking ? "Verificando..." : lockSeconds > 0 ? "Bloqueado temporariamente" : "Entrar"}
         </Button>
       </form>
     </div>
