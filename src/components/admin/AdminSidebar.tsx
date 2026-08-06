@@ -10,6 +10,7 @@ import {
   PenTool,
   Images,
   Home,
+  ShieldCheck,
 
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -40,6 +41,7 @@ const menuItems = [
   { title: "Blog", url: "/admin/blog", icon: FileText },
   { title: "Histórias", url: "/admin/stories", icon: BookOpen },
   { title: "Editor do Site", url: "/admin/site-editor", icon: PenTool },
+  { title: "Segurança", url: "/admin/security", icon: ShieldCheck },
 ];
 
 const AdminSidebar = () => {
