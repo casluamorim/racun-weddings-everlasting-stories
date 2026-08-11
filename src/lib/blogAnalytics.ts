@@ -53,8 +53,9 @@ export function trackScrollDepth(postSlug?: string | null): () => void {
   const onScroll = () => {
     const doc = document.documentElement;
     const scrollable = doc.scrollHeight - window.innerHeight;
-    if (scrollable <= 0) return;
-    const pct = Math.min(100, Math.round((window.scrollY / scrollable) * 100));
+    // Short articles that fit the viewport count as fully read.
+    const pct = scrollable <= 0 ? 100 : Math.min(100, Math.round((window.scrollY / scrollable) * 100));
+
     for (const m of milestones) {
       if (pct >= m && !fired.has(m)) {
         fired.add(m);
