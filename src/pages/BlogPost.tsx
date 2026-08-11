@@ -80,8 +80,36 @@ const BlogPost = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!slug,
   });
+
+  const { data: related } = useQuery({
+    queryKey: ["blog-related", post?.id, post?.category],
+    queryFn: async () => {
+      const tags = post?.tags ?? [];
+      const filters = [`category.eq.${post!.category}`];
+      if (tags.length) filters.push(`tags.ov.{${tags.map((t) => `"${t}"`).join(",")}}`);
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .select("id,title,slug,excerpt,cover_image_url,content,category")
+        .eq("is_published", true)
+        .neq("id", post!.id)
+        .or(filters.join(","))
+        .limit(3);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!post?.id,
+  });
+
+  const readingMinutes = getReadingMinutes(post?.content);
+
+  useEffect(() => {
+    if (!post?.slug) return;
+    void trackBlogEvent("pageview", { postSlug: post.slug });
+    return trackScrollDepth(post.slug);
+  }, [post?.slug]);
+
+
 
   if (isLoading) {
     return (
