@@ -1,19 +1,46 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AnimatedSection from "@/components/landing/AnimatedSection";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Search, X } from "lucide-react";
+import { getReadingMinutes, trackBlogEvent } from "@/lib/blogAnalytics";
 
 const SITE_URL = "https://weddings.agenciaracun.com";
 
+const CATEGORY_LABELS: Record<string, string> = {
+  geral: "Geral",
+  fotografia: "Fotografia",
+  video: "Vídeo",
+  locais: "Locais",
+  planejamento: "Planejamento",
+  entrega: "Entrega",
+  tendencias: "Tendências",
+};
+
+const normalize = (value: string) =>
+  value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
 const Blog = () => {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<string>("all");
+  const [tag, setTag] = useState<string | null>(null);
+
+  useEffect(() => {
+    void trackBlogEvent("pageview");
+  }, []);
+
   const { data: posts, isLoading } = useQuery({
     queryKey: ["blog-posts"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blog_posts")
-        .select("id,title,slug,excerpt,cover_image_url,published_at,created_at")
+        .select("id,title,slug,excerpt,cover_image_url,published_at,created_at,category,tags,content")
         .eq("is_published", true)
         .order("published_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
@@ -21,6 +48,30 @@ const Blog = () => {
       return data;
     },
   });
+
+  const categories = useMemo(() => {
+    const set = new Set((posts ?? []).map((p) => p.category).filter(Boolean));
+    return Array.from(set).sort();
+  }, [posts]);
+
+  const tags = useMemo(() => {
+    const set = new Set((posts ?? []).flatMap((p) => p.tags ?? []));
+    return Array.from(set).sort();
+  }, [posts]);
+
+  const filtered = useMemo(() => {
+    const q = normalize(search.trim());
+    return (posts ?? []).filter((p) => {
+      if (category !== "all" && p.category !== category) return false;
+      if (tag && !(p.tags ?? []).includes(tag)) return false;
+      if (!q) return true;
+      const haystack = normalize(`${p.title} ${p.excerpt ?? ""} ${(p.tags ?? []).join(" ")}`);
+      return haystack.includes(q);
+    });
+  }, [posts, search, category, tag]);
+
+  const hasFilters = search.trim() !== "" || category !== "all" || tag !== null;
+
 
   return (
     <div className="min-h-screen bg-background">
