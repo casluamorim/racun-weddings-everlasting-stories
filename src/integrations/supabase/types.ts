@@ -59,8 +59,42 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          path: string | null
+          post_slug: string | null
+          referrer: string | null
+          session_id: string | null
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          path?: string | null
+          post_slug?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          path?: string | null
+          post_slug?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       blog_posts: {
         Row: {
+          category: string
           content: string | null
           cover_image_url: string | null
           created_at: string
@@ -71,10 +105,12 @@ export type Database = {
           seo_description: string | null
           seo_title: string | null
           slug: string
+          tags: string[]
           title: string
           updated_at: string
         }
         Insert: {
+          category?: string
           content?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -85,10 +121,12 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           slug: string
+          tags?: string[]
           title: string
           updated_at?: string
         }
         Update: {
+          category?: string
           content?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -99,6 +137,7 @@ export type Database = {
           seo_description?: string | null
           seo_title?: string | null
           slug?: string
+          tags?: string[]
           title?: string
           updated_at?: string
         }
