@@ -10,6 +10,7 @@ import Stories from "./pages/Stories";
 import PortfolioPage from "./pages/Portfolio";
 import WeddingDetail from "./pages/WeddingDetail";
 import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import About from "./pages/About";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -57,6 +58,7 @@ const App = () => (
 
             <Route path="/galeria/:slug" element={<GalleryView />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/sobre" element={<About />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminLayout />}>
