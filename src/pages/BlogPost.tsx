@@ -1,12 +1,26 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
+import { getReadingMinutes, trackBlogEvent, trackScrollDepth } from "@/lib/blogAnalytics";
+import { getGeneralWhatsAppUrl } from "@/lib/whatsapp";
 
 const SITE_URL = "https://weddings.agenciaracun.com";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  geral: "Geral",
+  fotografia: "Fotografia",
+  video: "Vídeo",
+  locais: "Locais",
+  planejamento: "Planejamento",
+  entrega: "Entrega",
+  tendencias: "Tendências",
+};
+
 
 const renderContent = (content: string) => {
   const blocks: JSX.Element[] = [];
