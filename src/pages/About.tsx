@@ -33,7 +33,7 @@ const About = () => (
         <AnimatedSection>
           <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4 text-center">Sobre nós</p>
           <h1 className="font-heading text-4xl md:text-6xl font-light text-foreground mb-8 text-center">
-            Racun Weddings
+            Racun Weddings — Filme e Fotografia de Casamento
           </h1>
           <div className="font-body text-muted-foreground space-y-4 leading-relaxed text-center">
             <p>
