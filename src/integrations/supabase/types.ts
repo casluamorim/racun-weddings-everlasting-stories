@@ -480,6 +480,7 @@ export type Database = {
           ceremony_location: string | null
           city: string | null
           created_at: string
+          email: string | null
           guest_count: number | null
           id: string
           message: string | null
@@ -496,6 +497,7 @@ export type Database = {
           ceremony_location?: string | null
           city?: string | null
           created_at?: string
+          email?: string | null
           guest_count?: number | null
           id?: string
           message?: string | null
@@ -512,6 +514,7 @@ export type Database = {
           ceremony_location?: string | null
           city?: string | null
           created_at?: string
+          email?: string | null
           guest_count?: number | null
           id?: string
           message?: string | null
