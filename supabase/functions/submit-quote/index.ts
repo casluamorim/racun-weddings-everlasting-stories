@@ -12,6 +12,7 @@ const E164_RE = /^\+[1-9]\d{7,14}$/;
 const BodySchema = z.object({
   name: z.string().trim().min(2).max(100),
   phone: z.string().regex(E164_RE, "phone must be E.164"),
+  email: z.string().trim().email().max(150).nullable().optional(),
   wedding_date: z.string().trim().max(20).nullable().optional(),
   city: z.string().trim().max(150).nullable().optional(),
   ceremony_location: z.string().trim().max(150).nullable().optional(),
