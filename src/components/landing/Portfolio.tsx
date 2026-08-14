@@ -414,7 +414,7 @@ const Portfolio = () => {
                 <div key={p.id} className="relative aspect-square overflow-hidden bg-section-dark-foreground/5">
                   <img
                     src={p.photo_url}
-                    alt={p.caption || "Fotografia de casamento"}
+                    alt={p.caption ? `Fotografia de casamento: ${p.caption}` : "Fotografia de casamento em Santa Catarina pela Racun Weddings"}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                     loading="lazy"
                     decoding="async"
