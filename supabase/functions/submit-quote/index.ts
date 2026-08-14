@@ -122,6 +122,7 @@ async function notifyByEmail(row: Record<string, unknown>) {
 
   const rows: [string, unknown][] = [
     ["Nome", row.name],
+    ["E-mail", row.email],
     ["WhatsApp", row.phone],
     ["Data do casamento", row.wedding_date],
     ["Cidade", row.city],
