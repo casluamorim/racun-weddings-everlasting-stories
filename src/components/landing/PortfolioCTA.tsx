@@ -126,7 +126,7 @@ const PortfolioCTA = () => {
       window.open(getWhatsAppUrl(buildWaMessage(phoneE164)), "_blank");
     } catch { /* ignore */ }
 
-    setForm({ name: "", phone: "", date: "", city: "", venue: "", referral: "", message: "" });
+    setForm({ name: "", phone: "", email: "", date: "", city: "", venue: "", referral: "", message: "" });
     setCaptchaToken(null);
     if (typeof window !== "undefined" && (window as any).turnstile) {
       try { (window as any).turnstile.reset(); } catch { /* ignore */ }
