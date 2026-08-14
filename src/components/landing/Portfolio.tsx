@@ -387,7 +387,7 @@ const Portfolio = () => {
                   >
                     <img
                       src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
-                      alt={v.title || "Vídeo de casamento"}
+                      alt={v.title ? `Filme de casamento: ${v.title}` : "Filme de casamento em Santa Catarina pela Racun Weddings"}
                       loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
