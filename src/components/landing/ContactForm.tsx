@@ -154,6 +154,7 @@ const ContactForm = () => {
       body: {
         name: form.name.trim(),
         phone: phoneE164,
+        email: form.email.trim(),
         wedding_date: form.date.trim() || null,
         city: form.ceremonyLocation.trim(),
         ceremony_location: form.ceremonyLocation.trim(),
@@ -186,7 +187,7 @@ const ContactForm = () => {
     } catch {
       // unreachable: phoneE164 is validated, but keep guard
     }
-    setForm({ name: "", phone: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
+    setForm({ name: "", phone: "", email: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
     setCaptchaToken(null);
     if (typeof window !== "undefined" && window.turnstile) {
       try { window.turnstile.reset(); } catch { /* ignore */ }
