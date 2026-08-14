@@ -48,6 +48,7 @@ Object.defineProperty(window, "open", { writable: true, value: openSpy });
 function fillForm() {
   fireEvent.change(screen.getByPlaceholderText("Seu nome"), { target: { value: "Ana" } });
   fireEvent.change(screen.getByPlaceholderText("(00) 00000-0000"), { target: { value: "(47) 99999-9999" } });
+  fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "ana@exemplo.com" } });
   fireEvent.change(screen.getByPlaceholderText("dd/mm/aaaa"), { target: { value: "10/10/2026" } });
   fireEvent.change(screen.getByPlaceholderText("Ex: 150"), { target: { value: "120" } });
   fireEvent.change(screen.getByPlaceholderText("Cidade / igreja / local"), { target: { value: "Igreja X" } });

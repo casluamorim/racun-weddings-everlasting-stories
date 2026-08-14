@@ -33,6 +33,7 @@ const ContactForm = () => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    email: "",
     date: "",
     ceremonyLocation: "",
     receptionLocation: "",
@@ -58,6 +59,7 @@ const ContactForm = () => {
   const formSchema = z.object({
     name: z.string().trim().min(2, "Informe seu nome").max(100),
     phone: phoneSchema,
+    email: z.string().trim().email("Informe um e-mail válido").max(150),
     date: z.string().trim().min(1, "Informe a data").max(20),
     ceremonyLocation: z.string().trim().min(2, "Informe o local da cerimônia").max(150),
     receptionLocation: z.string().trim().min(2, "Informe o local da festa").max(150),
@@ -152,6 +154,7 @@ const ContactForm = () => {
       body: {
         name: form.name.trim(),
         phone: phoneE164,
+        email: form.email.trim(),
         wedding_date: form.date.trim() || null,
         city: form.ceremonyLocation.trim(),
         ceremony_location: form.ceremonyLocation.trim(),
@@ -184,7 +187,7 @@ const ContactForm = () => {
     } catch {
       // unreachable: phoneE164 is validated, but keep guard
     }
-    setForm({ name: "", phone: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
+    setForm({ name: "", phone: "", email: "", date: "", ceremonyLocation: "", receptionLocation: "", guestCount: "", message: "" });
     setCaptchaToken(null);
     if (typeof window !== "undefined" && window.turnstile) {
       try { window.turnstile.reset(); } catch { /* ignore */ }
@@ -226,6 +229,10 @@ const ContactForm = () => {
                 <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">WhatsApp *</label>
                 <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(00) 00000-0000" maxLength={20} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
               </div>
+            </div>
+            <div>
+              <label className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-2 block">E-mail *</label>
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="seu@email.com" maxLength={150} className="bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary" />
             </div>
             <div className="grid sm:grid-cols-2 gap-5">
               <div>

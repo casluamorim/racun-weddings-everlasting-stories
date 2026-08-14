@@ -18,6 +18,7 @@ const PortfolioCTA = () => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    email: "",
     date: "",
     city: "",
     venue: "",
@@ -41,6 +42,7 @@ const PortfolioCTA = () => {
         const d = v.replace(/\D/g, "").length;
         return d >= 10 && d <= 13;
       }, { message: "Informe DDD + número (ex: (47) 99999-9999)" }),
+    email: z.string().trim().email("Informe um e-mail válido").max(150),
     date: z.string().trim().min(1, "Informe a data").max(20),
     city: z.string().trim().min(2, "Informe a cidade").max(150),
     venue: z.string().trim().min(2, "Informe o local").max(150),
@@ -96,6 +98,7 @@ const PortfolioCTA = () => {
       body: {
         name: form.name.trim(),
         phone: phoneE164,
+        email: form.email.trim(),
         wedding_date: form.date.trim() || null,
         city: form.city.trim(),
         ceremony_location: form.venue.trim(),
@@ -123,7 +126,7 @@ const PortfolioCTA = () => {
       window.open(getWhatsAppUrl(buildWaMessage(phoneE164)), "_blank");
     } catch { /* ignore */ }
 
-    setForm({ name: "", phone: "", date: "", city: "", venue: "", referral: "", message: "" });
+    setForm({ name: "", phone: "", email: "", date: "", city: "", venue: "", referral: "", message: "" });
     setCaptchaToken(null);
     if (typeof window !== "undefined" && (window as any).turnstile) {
       try { (window as any).turnstile.reset(); } catch { /* ignore */ }
@@ -162,6 +165,10 @@ const PortfolioCTA = () => {
                 <label className="font-body text-xs text-section-dark-foreground/60 uppercase tracking-wider mb-2 block">WhatsApp *</label>
                 <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(00) 00000-0000" maxLength={20} />
               </div>
+            </div>
+            <div>
+              <label className="font-body text-xs text-section-dark-foreground/60 uppercase tracking-wider mb-2 block">E-mail *</label>
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="seu@email.com" maxLength={150} />
             </div>
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
