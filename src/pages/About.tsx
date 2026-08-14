@@ -10,7 +10,7 @@ const About = () => (
       <title>Sobre a Racun Weddings — Filme e Fotografia de Casamento</title>
       <meta
         name="description"
-        content="Conheça a Racun Weddings: equipe cinematográfica especializada em filmes e fotografias de casamento em Santa Catarina, com agenda limitada para entregar cuidado artesanal."
+        content="Equipe cinematográfica de filme e fotografia de casamento em Santa Catarina, com agenda limitada e cuidado artesanal em cada projeto."
       />
       <link rel="canonical" href={`${SITE_URL}/sobre`} />
       <meta property="og:type" content="website" />
@@ -33,7 +33,7 @@ const About = () => (
         <AnimatedSection>
           <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4 text-center">Sobre nós</p>
           <h1 className="font-heading text-4xl md:text-6xl font-light text-foreground mb-8 text-center">
-            Racun Weddings
+            Racun Weddings — Filme e Fotografia de Casamento
           </h1>
           <div className="font-body text-muted-foreground space-y-4 leading-relaxed text-center">
             <p>

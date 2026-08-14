@@ -57,7 +57,7 @@ const localBusinessJsonLd = {
 const Index = () => (
   <>
     <Helmet>
-      <title>Racun Weddings — Fotografia e Filme de Casamento Cinematográfico em SC</title>
+      <title>Racun Weddings — Filme e Fotografia de Casamento</title>
       <meta name="description" content="Filmes e fotografias de casamento cinematográficos em Blumenau, Florianópolis, Joinville e Balneário Camboriú. Atendimento limitado e exclusivo." />
       <link rel="canonical" href={`${SITE_URL}/`} />
       <meta property="og:url" content={`${SITE_URL}/`} />

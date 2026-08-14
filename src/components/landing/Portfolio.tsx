@@ -10,11 +10,28 @@ type FeedItem = {
   kind: "photo" | "video";
   category: "wedding" | "pre_wedding";
   city: string | null;
+  couple: string | null;
   label: string | null;
   src: string;
   ytId?: string;
   order: number;
 };
+
+const feedAlt = (item: FeedItem) => {
+  if (item.label) return item.label;
+  const tipo =
+    item.kind === "video"
+      ? item.category === "pre_wedding"
+        ? "Filme de ensaio pré-wedding"
+        : "Filme de casamento"
+      : item.category === "pre_wedding"
+        ? "Ensaio pré-wedding"
+        : "Fotografia de casamento";
+  const quem = item.couple ? ` de ${item.couple}` : "";
+  const onde = item.city ? ` em ${item.city}` : "";
+  return `${tipo}${quem}${onde}`;
+};
+
 
 const PAGE_SIZE = 9;
 
@@ -51,7 +68,7 @@ const Portfolio = () => {
     queryKey: ["home-feed", "photos"],
     queryFn: async () => {
       const { data, error } = await (supabase.from("portfolio_photos") as any)
-        .select("id, photo_url, caption, category, home_sort_order, weddings(city)")
+        .select("id, photo_url, caption, category, home_sort_order, weddings(city, couple_names)")
         .eq("show_in_home", true)
         .order("home_sort_order", { ascending: true })
         .limit(120);
@@ -64,7 +81,7 @@ const Portfolio = () => {
     queryKey: ["home-feed", "videos"],
     queryFn: async () => {
       const { data, error } = await (supabase.from("portfolio_videos") as any)
-        .select("id, title, youtube_url, category, home_sort_order, weddings(city)")
+        .select("id, title, youtube_url, category, home_sort_order, weddings(city, couple_names)")
         .eq("show_in_home", true)
         .order("home_sort_order", { ascending: true })
         .limit(60);
@@ -109,6 +126,7 @@ const Portfolio = () => {
         kind: "photo" as const,
         category: (p.category ?? "wedding") as FeedItem["category"],
         city: p.weddings?.city ?? null,
+        couple: p.weddings?.couple_names ?? null,
         label: p.caption ?? null,
         src: p.photo_url,
         order: p.home_sort_order ?? 0,
@@ -120,6 +138,7 @@ const Portfolio = () => {
           kind: "video" as const,
           category: (v.category ?? "wedding") as FeedItem["category"],
           city: v.weddings?.city ?? null,
+          couple: v.weddings?.couple_names ?? null,
           label: v.title ?? null,
           src: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
           ytId,
@@ -317,7 +336,7 @@ const Portfolio = () => {
                     >
                       <img
                         src={item.src}
-                        alt={item.label || (item.kind === "video" ? "Filme de casamento" : "Fotografia de casamento")}
+                        alt={feedAlt(item)}
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                         loading="lazy"
                         decoding="async"
@@ -368,7 +387,7 @@ const Portfolio = () => {
                   >
                     <img
                       src={`https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`}
-                      alt={v.title || "Vídeo de casamento"}
+                      alt={v.title ? `Filme de casamento: ${v.title}` : "Filme de casamento em Santa Catarina pela Racun Weddings"}
                       loading="lazy"
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
@@ -395,7 +414,7 @@ const Portfolio = () => {
                 <div key={p.id} className="relative aspect-square overflow-hidden bg-section-dark-foreground/5">
                   <img
                     src={p.photo_url}
-                    alt={p.caption || "Fotografia de casamento"}
+                    alt={p.caption ? `Fotografia de casamento: ${p.caption}` : "Fotografia de casamento em Santa Catarina pela Racun Weddings"}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                     loading="lazy"
                     decoding="async"
