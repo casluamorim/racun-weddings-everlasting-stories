@@ -33,6 +33,7 @@ const ContactForm = () => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    email: "",
     date: "",
     ceremonyLocation: "",
     receptionLocation: "",
@@ -58,6 +59,7 @@ const ContactForm = () => {
   const formSchema = z.object({
     name: z.string().trim().min(2, "Informe seu nome").max(100),
     phone: phoneSchema,
+    email: z.string().trim().email("Informe um e-mail válido").max(150),
     date: z.string().trim().min(1, "Informe a data").max(20),
     ceremonyLocation: z.string().trim().min(2, "Informe o local da cerimônia").max(150),
     receptionLocation: z.string().trim().min(2, "Informe o local da festa").max(150),
