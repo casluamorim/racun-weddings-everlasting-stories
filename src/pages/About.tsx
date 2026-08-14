@@ -10,7 +10,7 @@ const About = () => (
       <title>Sobre a Racun Weddings — Filme e Fotografia de Casamento</title>
       <meta
         name="description"
-        content="Conheça a Racun Weddings: equipe cinematográfica especializada em filmes e fotografias de casamento em Santa Catarina, com agenda limitada para entregar cuidado artesanal."
+        content="Equipe cinematográfica de filme e fotografia de casamento em Santa Catarina, com agenda limitada e cuidado artesanal em cada projeto."
       />
       <link rel="canonical" href={`${SITE_URL}/sobre`} />
       <meta property="og:type" content="website" />
