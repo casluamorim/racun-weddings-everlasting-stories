@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
     });
   }
 
-  await notifyByEmail(row);
+  await Promise.all([notifyByEmail(row), sendClientConfirmation(row)]);
 
   return new Response(JSON.stringify({ ok: true }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
