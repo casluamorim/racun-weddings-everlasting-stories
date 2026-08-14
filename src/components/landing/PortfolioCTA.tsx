@@ -18,6 +18,7 @@ const PortfolioCTA = () => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    email: "",
     date: "",
     city: "",
     venue: "",
