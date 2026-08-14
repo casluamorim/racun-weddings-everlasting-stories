@@ -166,6 +166,10 @@ const PortfolioCTA = () => {
                 <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(00) 00000-0000" maxLength={20} />
               </div>
             </div>
+            <div>
+              <label className="font-body text-xs text-section-dark-foreground/60 uppercase tracking-wider mb-2 block">E-mail *</label>
+              <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="seu@email.com" maxLength={150} />
+            </div>
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="font-body text-xs text-section-dark-foreground/60 uppercase tracking-wider mb-2 block">Data do casamento *</label>
