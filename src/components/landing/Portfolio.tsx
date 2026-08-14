@@ -336,7 +336,7 @@ const Portfolio = () => {
                     >
                       <img
                         src={item.src}
-                        alt={item.label || (item.kind === "video" ? "Filme de casamento" : "Fotografia de casamento")}
+                        alt={feedAlt(item)}
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                         loading="lazy"
                         decoding="async"
