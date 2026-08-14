@@ -28,6 +28,7 @@ Object.defineProperty(window, "open", { writable: true, value: openSpy });
 function fill() {
   fireEvent.change(screen.getByPlaceholderText("João & Maria"), { target: { value: "Ana & Bia" } });
   fireEvent.change(screen.getByPlaceholderText("(00) 00000-0000"), { target: { value: "(47) 99999-9999" } });
+  fireEvent.change(screen.getByPlaceholderText("seu@email.com"), { target: { value: "ana@exemplo.com" } });
   fireEvent.change(screen.getByPlaceholderText("dd/mm/aaaa"), { target: { value: "10/10/2026" } });
   fireEvent.change(screen.getByPlaceholderText("Florianópolis"), { target: { value: "Floripa" } });
   fireEvent.change(screen.getByPlaceholderText("Espaço / igreja / salão"), { target: { value: "Salão" } });
