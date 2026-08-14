@@ -68,7 +68,7 @@ const Portfolio = () => {
     queryKey: ["home-feed", "photos"],
     queryFn: async () => {
       const { data, error } = await (supabase.from("portfolio_photos") as any)
-        .select("id, photo_url, caption, category, home_sort_order, weddings(city)")
+        .select("id, photo_url, caption, category, home_sort_order, weddings(city, couple_names)")
         .eq("show_in_home", true)
         .order("home_sort_order", { ascending: true })
         .limit(120);
