@@ -102,7 +102,70 @@ Deno.serve(async (req) => {
     });
   }
 
+  await notifyByEmail(row);
+
   return new Response(JSON.stringify({ ok: true }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
+
+async function notifyByEmail(row: Record<string, unknown>) {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.error("RESEND_API_KEY not configured — skipping notification");
+    return;
+  }
+
+  const esc = (v: unknown) =>
+    String(v ?? "—").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const rows: [string, unknown][] = [
+    ["Nome", row.name],
+    ["WhatsApp", row.phone],
+    ["Data do casamento", row.wedding_date],
+    ["Cidade", row.city],
+    ["Local (cerimônia)", row.ceremony_location],
+    ["Local (recepção)", row.reception_location],
+    ["Convidados", row.guest_count],
+    ["Interesse", row.plan_interest],
+    ["Mensagem", row.message],
+  ];
+
+  const html = `
+    <div style="font-family:Arial,Helvetica,sans-serif;color:#111">
+      <h2 style="margin:0 0 16px">Novo contato pelo site — Racun Weddings</h2>
+      <table cellpadding="8" style="border-collapse:collapse;font-size:14px">
+        ${rows
+          .map(
+            ([k, v]) =>
+              `<tr><td style="background:#f6f6f6;font-weight:bold">${k}</td><td>${esc(v)}</td></tr>`,
+          )
+          .join("")}
+      </table>
+      <p style="font-size:12px;color:#666;margin-top:16px">
+        Responda pelo WhatsApp: https://wa.me/${esc(row.phone).replace(/\D/g, "")}
+      </p>
+    </div>`;
+
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Racun Weddings <onboarding@resend.dev>",
+        to: ["racunagencia@gmail.com"],
+        reply_to: "racunagencia@gmail.com",
+        subject: `Novo lead: ${String(row.name ?? "sem nome")} — ${String(row.city ?? "")}`.trim(),
+        html,
+      }),
+    });
+    if (!r.ok) {
+      console.error(`Resend failed [${r.status}]: ${await r.text()}`);
+    }
+  } catch (e) {
+    console.error("Resend request error", e);
+  }
+}
