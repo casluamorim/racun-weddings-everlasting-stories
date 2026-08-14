@@ -10,11 +10,28 @@ type FeedItem = {
   kind: "photo" | "video";
   category: "wedding" | "pre_wedding";
   city: string | null;
+  couple: string | null;
   label: string | null;
   src: string;
   ytId?: string;
   order: number;
 };
+
+const feedAlt = (item: FeedItem) => {
+  if (item.label) return item.label;
+  const tipo =
+    item.kind === "video"
+      ? item.category === "pre_wedding"
+        ? "Filme de ensaio pré-wedding"
+        : "Filme de casamento"
+      : item.category === "pre_wedding"
+        ? "Ensaio pré-wedding"
+        : "Fotografia de casamento";
+  const quem = item.couple ? ` de ${item.couple}` : "";
+  const onde = item.city ? ` em ${item.city}` : "";
+  return `${tipo}${quem}${onde}`;
+};
+
 
 const PAGE_SIZE = 9;
 
