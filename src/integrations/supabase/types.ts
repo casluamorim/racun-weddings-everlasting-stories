@@ -143,6 +143,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          from_email: string | null
+          id: string
+          message_id: string | null
+          occurred_at: string | null
+          payload: Json
+          subject: string | null
+          to_email: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          from_email?: string | null
+          id?: string
+          message_id?: string | null
+          occurred_at?: string | null
+          payload?: Json
+          subject?: string | null
+          to_email?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          from_email?: string | null
+          id?: string
+          message_id?: string | null
+          occurred_at?: string | null
+          payload?: Json
+          subject?: string | null
+          to_email?: string | null
+        }
+        Relationships: []
+      }
       gallery_access_sessions: {
         Row: {
           created_at: string
