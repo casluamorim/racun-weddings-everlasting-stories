@@ -26,6 +26,7 @@ import AdminStories from "./pages/admin/AdminStories";
 import AdminSiteEditor from "./pages/admin/AdminSiteEditor";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminSecurity from "./pages/admin/AdminSecurity";
+import AdminLeads from "./pages/admin/AdminLeads";
 import GalleryView from "./pages/GalleryView";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
@@ -68,6 +69,7 @@ const App = () => (
               <Route path="galleries/:id" element={<AdminGalleryEdit />} />
               <Route path="pricing" element={<AdminPricing />} />
               <Route path="quotes" element={<AdminQuotes />} />
+              <Route path="leads" element={<AdminLeads />} />
               <Route path="calendar" element={<AdminCalendar />} />
               <Route path="blog" element={<AdminBlog />} />
               <Route path="stories" element={<AdminStories />} />
