@@ -69,6 +69,13 @@ Deno.serve(async (req) => {
     });
   }
 
+  try {
+    await handleEngagementEvent(supabase, String(event.type ?? ""), to ?? null);
+  } catch (err) {
+    console.error("WhatsApp trigger failed:", err instanceof Error ? err.message : err);
+  }
+
+
   return new Response(JSON.stringify({ received: true }), {
     status: 200,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
