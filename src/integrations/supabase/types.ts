@@ -883,6 +883,56 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_triggers: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_type: string
+          id: string
+          message: string
+          provider: string | null
+          quote_id: string | null
+          status: string
+          to_email: string | null
+          to_phone: string | null
+          wa_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_type: string
+          id?: string
+          message: string
+          provider?: string | null
+          quote_id?: string | null
+          status?: string
+          to_email?: string | null
+          to_phone?: string | null
+          wa_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_type?: string
+          id?: string
+          message?: string
+          provider?: string | null
+          quote_id?: string | null
+          status?: string
+          to_email?: string | null
+          to_phone?: string | null
+          wa_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_triggers_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
