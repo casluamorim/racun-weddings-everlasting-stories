@@ -11,6 +11,7 @@ import {
   Images,
   Home,
   ShieldCheck,
+  Users,
 
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -37,6 +38,7 @@ const menuItems = [
   { title: "Valores", url: "/admin/pricing", icon: DollarSign },
 
   { title: "Orçamentos", url: "/admin/quotes", icon: MessageSquare },
+  { title: "Clientes", url: "/admin/leads", icon: Users },
   { title: "Agenda", url: "/admin/calendar", icon: CalendarDays },
   { title: "Blog", url: "/admin/blog", icon: FileText },
   { title: "Histórias", url: "/admin/stories", icon: BookOpen },
