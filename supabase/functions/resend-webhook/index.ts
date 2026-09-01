@@ -1,6 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Webhook } from "npm:svix@1.24.0";
+import { handleEngagementEvent } from "./whatsapp.ts";
 
 const SECRET = Deno.env.get("RESEND_WEBHOOK_SECRET");
 
@@ -68,6 +69,13 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
+  try {
+    await handleEngagementEvent(supabase, String(event.type ?? ""), to ?? null);
+  } catch (err) {
+    console.error("WhatsApp trigger failed:", err instanceof Error ? err.message : err);
+  }
+
 
   return new Response(JSON.stringify({ received: true }), {
     status: 200,
