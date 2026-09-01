@@ -1,6 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Webhook } from "npm:svix@1.24.0";
+import { handleEngagementEvent } from "./whatsapp.ts";
 
 const SECRET = Deno.env.get("RESEND_WEBHOOK_SECRET");
 
