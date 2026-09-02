@@ -12,7 +12,6 @@ import {
   Home,
   ShieldCheck,
   Users,
-  ReceiptText,
 
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -40,7 +39,6 @@ const menuItems = [
 
   { title: "Orçamentos", url: "/admin/quotes", icon: MessageSquare },
   { title: "Clientes", url: "/admin/leads", icon: Users },
-  { title: "Orçamento Personalizado", url: "/admin/proposals", icon: ReceiptText },
   { title: "Agenda", url: "/admin/calendar", icon: CalendarDays },
   { title: "Blog", url: "/admin/blog", icon: FileText },
   { title: "Histórias", url: "/admin/stories", icon: BookOpen },
