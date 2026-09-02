@@ -511,6 +511,63 @@ export type Database = {
         }
         Relationships: []
       }
+      proposals: {
+        Row: {
+          city: string | null
+          couple_names: string
+          created_at: string
+          discount: number
+          event_date: string | null
+          id: string
+          intro: string | null
+          is_published: boolean
+          items: Json
+          media: Json
+          notes: string | null
+          slug: string
+          updated_at: string
+          valid_until: string | null
+          venue: string | null
+          view_count: number
+        }
+        Insert: {
+          city?: string | null
+          couple_names: string
+          created_at?: string
+          discount?: number
+          event_date?: string | null
+          id?: string
+          intro?: string | null
+          is_published?: boolean
+          items?: Json
+          media?: Json
+          notes?: string | null
+          slug: string
+          updated_at?: string
+          valid_until?: string | null
+          venue?: string | null
+          view_count?: number
+        }
+        Update: {
+          city?: string | null
+          couple_names?: string
+          created_at?: string
+          discount?: number
+          event_date?: string | null
+          id?: string
+          intro?: string | null
+          is_published?: boolean
+          items?: Json
+          media?: Json
+          notes?: string | null
+          slug?: string
+          updated_at?: string
+          valid_until?: string | null
+          venue?: string | null
+          view_count?: number
+        }
+        Relationships: []
+      }
       quotes: {
         Row: {
           ceremony_location: string | null
@@ -1039,6 +1096,7 @@ export type Database = {
         Args: { _gallery_id: string }
         Returns: undefined
       }
+      increment_proposal_view: { Args: { _slug: string }; Returns: undefined }
       is_admin: { Args: never; Returns: boolean }
       list_gallery_favorites: {
         Args: { _session_id: string; _slug: string; _token?: string }
