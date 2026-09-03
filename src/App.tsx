@@ -60,6 +60,8 @@ const App = () => (
             <Route path="/portfolio/:slug" element={<WeddingRedirect />} />
 
             <Route path="/galeria/:slug" element={<GalleryView />} />
+            <Route path="/orcamento/:slug" element={<Proposal />} />
+
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/sobre" element={<About />} />
