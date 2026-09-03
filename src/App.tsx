@@ -27,7 +27,9 @@ import AdminSiteEditor from "./pages/admin/AdminSiteEditor";
 import AdminHome from "./pages/admin/AdminHome";
 import AdminSecurity from "./pages/admin/AdminSecurity";
 import AdminLeads from "./pages/admin/AdminLeads";
+import AdminProposals from "./pages/admin/AdminProposals";
 import GalleryView from "./pages/GalleryView";
+import Proposal from "./pages/Proposal";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -58,6 +60,8 @@ const App = () => (
             <Route path="/portfolio/:slug" element={<WeddingRedirect />} />
 
             <Route path="/galeria/:slug" element={<GalleryView />} />
+            <Route path="/orcamento/:slug" element={<Proposal />} />
+
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/sobre" element={<About />} />

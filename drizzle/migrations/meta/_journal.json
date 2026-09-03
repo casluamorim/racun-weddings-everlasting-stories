@@ -8,6 +8,13 @@
       "when": 1788230854267,
       "tag": "0000_create_whatsapp_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788401111492,
+      "tag": "0001_extend_proposals_status_and_access",
+      "breakpoints": true
     }
   ]
 }
