@@ -513,6 +513,7 @@ export type Database = {
       }
       proposals: {
         Row: {
+          ativo: boolean
           city: string | null
           couple_names: string
           created_at: string
@@ -525,12 +526,14 @@ export type Database = {
           media: Json
           notes: string | null
           slug: string
+          status: string
           updated_at: string
           valid_until: string | null
           venue: string | null
           view_count: number
         }
         Insert: {
+          ativo?: boolean
           city?: string | null
           couple_names: string
           created_at?: string
@@ -543,12 +546,14 @@ export type Database = {
           media?: Json
           notes?: string | null
           slug: string
+          status?: string
           updated_at?: string
           valid_until?: string | null
           venue?: string | null
           view_count?: number
         }
         Update: {
+          ativo?: boolean
           city?: string | null
           couple_names?: string
           created_at?: string
@@ -561,6 +566,7 @@ export type Database = {
           media?: Json
           notes?: string | null
           slug?: string
+          status?: string
           updated_at?: string
           valid_until?: string | null
           venue?: string | null
