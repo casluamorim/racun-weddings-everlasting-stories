@@ -275,7 +275,7 @@ const AdminProposals = () => {
         </h1>
         <Button
           onClick={() => {
-            setForm(emptyForm());
+            setForm({ ...emptyForm(), items: (plans ?? []).map(planToItem) });
             setOpen(true);
           }}
         >
