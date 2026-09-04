@@ -109,6 +109,33 @@ const AdminProposals = () => {
     },
   });
 
+  const { data: plans } = useQuery({
+    queryKey: ["admin-proposal-plans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pricing_plans")
+        .select("id, category, display_name, name, price, features, is_active, sort_order")
+        .eq("is_active", true)
+        .order("category")
+        .order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const planToItem = (p: any): ProposalItem => ({
+    name: `${p.display_name || p.name}${p.category ? ` (${p.category})` : ""}`,
+    price: p.price ?? "",
+    description: "",
+    features: Array.isArray(p.features) ? p.features : [],
+  });
+
+  const addPlan = (p: any) =>
+    setForm((f) => ({ ...f, items: [...f.items, planToItem(p)] }));
+
+  const addAllPlans = () =>
+    setForm((f) => ({ ...f, items: [...f.items, ...(plans ?? []).map(planToItem)] }));
+
   const slugPreview = useMemo(
     () => (form.slugTouched ? slugify(form.slug) : slugify(form.couple_names)),
     [form.slug, form.couple_names, form.slugTouched]
@@ -248,7 +275,7 @@ const AdminProposals = () => {
         </h1>
         <Button
           onClick={() => {
-            setForm(emptyForm());
+            setForm({ ...emptyForm(), items: (plans ?? []).map(planToItem) });
             setOpen(true);
           }}
         >
@@ -393,22 +420,41 @@ const AdminProposals = () => {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <Label className="font-body text-sm">Pacotes</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      items: [...form.items, { name: "", price: "", description: "", features: [] }],
-                    })
-                  }
-                >
-                  <Plus size={14} className="mr-1" /> Adicionar pacote
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={addAllPlans}>
+                    <Plus size={14} className="mr-1" /> Importar todos os valores
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        items: [...form.items, { name: "", price: "", description: "", features: [] }],
+                      })
+                    }
+                  >
+                    <Plus size={14} className="mr-1" /> Pacote em branco
+                  </Button>
+                </div>
               </div>
+              {!!plans?.length && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {plans.map((p: any) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => addPlan(p)}
+                      className="font-body text-xs border border-border rounded-full px-3 py-1 hover:bg-accent text-muted-foreground"
+                    >
+                      + {p.display_name || p.name} · {p.price}
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="space-y-3">
                 {form.items.map((item, i) => (
                   <div key={i} className="border border-border rounded-lg p-3 space-y-2">
