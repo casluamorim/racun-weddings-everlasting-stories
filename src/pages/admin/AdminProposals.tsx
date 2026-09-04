@@ -112,6 +112,12 @@ const AdminProposals = () => {
     [form.slug, form.couple_names, form.slugTouched]
   );
 
+  const computeStatus = (isPublished: boolean, validUntil?: string | null) => {
+    if (!isPublished) return "rascunho";
+    if (validUntil && new Date(`${validUntil}T23:59:59`) < new Date()) return "expirado";
+    return "enviado";
+  };
+
   const save = useMutation({
     mutationFn: async () => {
       const slug = slugPreview;
@@ -119,6 +125,7 @@ const AdminProposals = () => {
       const dup = (proposals ?? []).find((p: any) => p.slug === slug && p.id !== form.id);
       if (dup) throw new Error("Já existe um orçamento com esse link (slug)");
 
+      const status = computeStatus(form.is_published, form.valid_until);
       const payload = {
         couple_names: form.couple_names,
         slug,
@@ -132,6 +139,8 @@ const AdminProposals = () => {
         items: form.items as any,
         media: { photos: form.photos, videos: form.videos } as any,
         is_published: form.is_published,
+        ativo: form.is_published,
+        status,
       };
 
       if (form.id) {
@@ -153,13 +162,27 @@ const AdminProposals = () => {
 
   const togglePublish = useMutation({
     mutationFn: async (p: any) => {
+      const next = !p.is_published;
+      const status = computeStatus(next, p.valid_until);
       const { error } = await supabase
         .from("proposals")
-        .update({ is_published: !p.is_published })
+        .update({ is_published: next, ativo: next, status })
         .eq("id", p.id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-proposals"] }),
+    onError: (e: any) => toast.error(e?.message || "Erro ao atualizar"),
+  });
+
+  const markApproved = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("proposals").update({ status: "aprovado" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-proposals"] });
+      toast.success("Orçamento marcado como aprovado");
+    },
     onError: (e: any) => toast.error(e?.message || "Erro ao atualizar"),
   });
 
