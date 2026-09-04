@@ -76,6 +76,7 @@ const App = () => (
               <Route path="leads" element={<AdminLeads />} />
               <Route path="calendar" element={<AdminCalendar />} />
               <Route path="blog" element={<AdminBlog />} />
+              <Route path="proposals" element={<AdminProposals />} />
               <Route path="stories" element={<AdminStories />} />
               <Route path="site-editor" element={<AdminSiteEditor />} />
               <Route path="home" element={<AdminHome />} />

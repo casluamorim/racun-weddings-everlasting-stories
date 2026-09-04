@@ -17,6 +17,7 @@ import {
   Film,
   ImageIcon,
   X,
+  Check,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { slugify } from "@/lib/slug";
@@ -65,6 +66,7 @@ const getYouTubeId = (url: string) =>
   url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]+)/)?.[1] ?? "";
 
 const statusOf = (p: any) => {
+  if (p.status === "aprovado") return { label: "Aprovado", cls: "text-green-600" };
   if (!p.is_published) return { label: "Rascunho", cls: "text-muted-foreground" };
   if (p.valid_until && new Date(`${p.valid_until}T23:59:59`) < new Date())
     return { label: "Expirado", cls: "text-destructive" };
@@ -112,6 +114,12 @@ const AdminProposals = () => {
     [form.slug, form.couple_names, form.slugTouched]
   );
 
+  const computeStatus = (isPublished: boolean, validUntil?: string | null) => {
+    if (!isPublished) return "rascunho";
+    if (validUntil && new Date(`${validUntil}T23:59:59`) < new Date()) return "expirado";
+    return "enviado";
+  };
+
   const save = useMutation({
     mutationFn: async () => {
       const slug = slugPreview;
@@ -119,6 +127,7 @@ const AdminProposals = () => {
       const dup = (proposals ?? []).find((p: any) => p.slug === slug && p.id !== form.id);
       if (dup) throw new Error("Já existe um orçamento com esse link (slug)");
 
+      const status = computeStatus(form.is_published, form.valid_until);
       const payload = {
         couple_names: form.couple_names,
         slug,
@@ -132,6 +141,8 @@ const AdminProposals = () => {
         items: form.items as any,
         media: { photos: form.photos, videos: form.videos } as any,
         is_published: form.is_published,
+        ativo: form.is_published,
+        status,
       };
 
       if (form.id) {
@@ -153,13 +164,27 @@ const AdminProposals = () => {
 
   const togglePublish = useMutation({
     mutationFn: async (p: any) => {
+      const next = !p.is_published;
+      const status = computeStatus(next, p.valid_until);
       const { error } = await supabase
         .from("proposals")
-        .update({ is_published: !p.is_published })
+        .update({ is_published: next, ativo: next, status })
         .eq("id", p.id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-proposals"] }),
+    onError: (e: any) => toast.error(e?.message || "Erro ao atualizar"),
+  });
+
+  const markApproved = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("proposals").update({ status: "aprovado" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-proposals"] });
+      toast.success("Orçamento marcado como aprovado");
+    },
     onError: (e: any) => toast.error(e?.message || "Erro ao atualizar"),
   });
 
@@ -275,6 +300,16 @@ const AdminProposals = () => {
                   >
                     {p.is_published ? <Eye size={16} className="text-green-600" /> : <EyeOff size={16} />}
                   </Button>
+                  {p.status !== "aprovado" && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Marcar como aprovado"
+                      onClick={() => markApproved.mutate(p.id)}
+                    >
+                      <Check size={16} className="text-green-600" />
+                    </Button>
+                  )}
                   <Button variant="ghost" size="icon" title="Excluir" onClick={() => remove.mutate(p.id)}>
                     <Trash2 size={16} className="text-destructive" />
                   </Button>
