@@ -12,7 +12,7 @@ import {
   Home,
   ShieldCheck,
   Users,
-
+  FileStack,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,8 +36,8 @@ const menuItems = [
   { title: "Casamentos", url: "/admin/weddings", icon: Camera },
   { title: "Galerias", url: "/admin/galleries", icon: Images },
   { title: "Valores", url: "/admin/pricing", icon: DollarSign },
-
-  { title: "Orçamentos", url: "/admin/quotes", icon: MessageSquare },
+  { title: "Orçamentos", url: "/admin/proposals", icon: FileStack },
+  { title: "Orçamentos (antigo)", url: "/admin/quotes", icon: MessageSquare },
   { title: "Clientes", url: "/admin/leads", icon: Users },
   { title: "Agenda", url: "/admin/calendar", icon: CalendarDays },
   { title: "Blog", url: "/admin/blog", icon: FileText },
