@@ -133,8 +133,6 @@ const AdminProposals = () => {
   const addPlan = (p: any) =>
     setForm((f) => ({ ...f, items: [...f.items, planToItem(p)] }));
 
-  const addAllPlans = () =>
-    setForm((f) => ({ ...f, items: [...f.items, ...(plans ?? []).map(planToItem)] }));
 
   const slugPreview = useMemo(
     () => (form.slugTouched ? slugify(form.slug) : slugify(form.couple_names)),
