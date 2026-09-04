@@ -273,7 +273,7 @@ const AdminProposals = () => {
         </h1>
         <Button
           onClick={() => {
-            setForm({ ...emptyForm(), items: (plans ?? []).map(planToItem) });
+            setForm(emptyForm());
             setOpen(true);
           }}
         >
@@ -420,24 +420,19 @@ const AdminProposals = () => {
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <Label className="font-body text-sm">Pacotes</Label>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={addAllPlans}>
-                    <Plus size={14} className="mr-1" /> Importar todos os valores
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        items: [...form.items, { name: "", price: "", description: "", features: [] }],
-                      })
-                    }
-                  >
-                    <Plus size={14} className="mr-1" /> Pacote em branco
-                  </Button>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      items: [...form.items, { name: "", price: "", description: "", features: [] }],
+                    })
+                  }
+                >
+                  <Plus size={14} className="mr-1" /> Pacote em branco
+                </Button>
               </div>
               {!!plans?.length && (
                 <div className="flex flex-wrap gap-2 mb-3">
