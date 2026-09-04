@@ -17,6 +17,7 @@ import {
   Film,
   ImageIcon,
   X,
+  Check,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { slugify } from "@/lib/slug";
