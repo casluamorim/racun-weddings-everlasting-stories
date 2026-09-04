@@ -65,6 +65,7 @@ const getYouTubeId = (url: string) =>
   url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]+)/)?.[1] ?? "";
 
 const statusOf = (p: any) => {
+  if (p.status === "aprovado") return { label: "Aprovado", cls: "text-green-600" };
   if (!p.is_published) return { label: "Rascunho", cls: "text-muted-foreground" };
   if (p.valid_until && new Date(`${p.valid_until}T23:59:59`) < new Date())
     return { label: "Expirado", cls: "text-destructive" };
@@ -298,6 +299,16 @@ const AdminProposals = () => {
                   >
                     {p.is_published ? <Eye size={16} className="text-green-600" /> : <EyeOff size={16} />}
                   </Button>
+                  {p.status !== "aprovado" && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Marcar como aprovado"
+                      onClick={() => markApproved.mutate(p.id)}
+                    >
+                      <Check size={16} className="text-green-600" />
+                    </Button>
+                  )}
                   <Button variant="ghost" size="icon" title="Excluir" onClick={() => remove.mutate(p.id)}>
                     <Trash2 size={16} className="text-destructive" />
                   </Button>
