@@ -109,6 +109,33 @@ const AdminProposals = () => {
     },
   });
 
+  const { data: plans } = useQuery({
+    queryKey: ["admin-proposal-plans"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pricing_plans")
+        .select("id, category, display_name, name, price, features, is_active, sort_order")
+        .eq("is_active", true)
+        .order("category")
+        .order("sort_order");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const planToItem = (p: any): ProposalItem => ({
+    name: `${p.display_name || p.name}${p.category ? ` (${p.category})` : ""}`,
+    price: p.price ?? "",
+    description: "",
+    features: Array.isArray(p.features) ? p.features : [],
+  });
+
+  const addPlan = (p: any) =>
+    setForm((f) => ({ ...f, items: [...f.items, planToItem(p)] }));
+
+  const addAllPlans = () =>
+    setForm((f) => ({ ...f, items: [...f.items, ...(plans ?? []).map(planToItem)] }));
+
   const slugPreview = useMemo(
     () => (form.slugTouched ? slugify(form.slug) : slugify(form.couple_names)),
     [form.slug, form.couple_names, form.slugTouched]
