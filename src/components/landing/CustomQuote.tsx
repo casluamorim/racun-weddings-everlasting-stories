@@ -1,8 +1,11 @@
-import { FileText, Sparkles } from "lucide-react";
+import { MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AnimatedSection from "./AnimatedSection";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
-const EXAMPLE_URL = "https://weddings.agenciaracun.com/orcamento/ana-e-rafael";
+const WHATSAPP_QUOTE_URL = getWhatsAppUrl(
+  "Olá, vim pelo site da Racun Weddings. Gostaria de receber um orçamento personalizado para o meu casamento."
+);
 
 const CustomQuote = () => {
   const goToForm = () => {
@@ -36,9 +39,9 @@ const CustomQuote = () => {
               className="uppercase tracking-wider text-xs py-5 px-8 border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10"
               asChild
             >
-              <a href={EXAMPLE_URL} target="_blank" rel="noopener noreferrer">
-                <FileText size={16} />
-                Ver exemplo de proposta
+              <a href={WHATSAPP_QUOTE_URL} target="_blank" rel="noopener noreferrer">
+                <MessageCircle size={16} />
+                Pedir orçamento pelo WhatsApp
               </a>
             </Button>
           </div>
