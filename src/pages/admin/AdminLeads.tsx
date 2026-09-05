@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import LeadsCharts from "@/components/admin/LeadsCharts";
 import { Mail, MessageCircle, Search, MousePointerClick, MailOpen, Send, AlertTriangle } from "lucide-react";
 
 type Quote = {
@@ -150,6 +151,14 @@ const AdminLeads = () => {
     );
   }, [quotes, search]);
 
+  const confirmedLeads = useMemo(
+    () =>
+      (quotes ?? []).filter((q) =>
+        emailsFor(q).some((e) => e.event_type === "email.delivered" || e.event_type === "email.sent"),
+      ),
+    [quotes, emailsByAddress],
+  );
+
   const totals = useMemo(() => {
     const list = quotes ?? [];
     const confirmed = list.filter((q) =>
@@ -188,6 +197,8 @@ const AdminLeads = () => {
           </div>
         ))}
       </div>
+
+      <LeadsCharts leads={confirmedLeads.map((q) => ({ city: q.city, created_at: q.created_at }))} />
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

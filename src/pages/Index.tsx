@@ -6,6 +6,7 @@ import Portfolio from "@/components/landing/Portfolio";
 import Testimonials from "@/components/landing/Testimonials";
 import Process from "@/components/landing/Process";
 import Pricing from "@/components/landing/Pricing";
+import CustomQuote from "@/components/landing/CustomQuote";
 import ContactForm from "@/components/landing/ContactForm";
 import FAQ from "@/components/landing/FAQ";
 import Footer from "@/components/landing/Footer";
@@ -70,6 +71,7 @@ const Index = () => (
     <Testimonials />
     <Process />
     <Pricing />
+    <CustomQuote />
     <ContactForm />
     <FAQ />
     <Footer />
