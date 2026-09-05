@@ -42,26 +42,6 @@ const CustomQuote = () => {
               </a>
             </Button>
           </div>
-
-          <div className="mt-10 rounded-lg border border-section-dark-foreground/15 bg-section-dark-foreground/5 p-4 md:p-5">
-            <p className="font-body text-[11px] uppercase tracking-[0.2em] text-primary mb-2">
-              Link de exemplo para o Instagram
-            </p>
-            <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
-              <code className="font-body text-xs md:text-sm break-all text-section-dark-foreground/85">
-                {EXAMPLE_URL}
-              </code>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={copy}
-                className="shrink-0 border-section-dark-foreground/30 text-section-dark-foreground hover:bg-section-dark-foreground/10"
-              >
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-                {copied ? "Copiado" : "Copiar link"}
-              </Button>
-            </div>
-          </div>
         </div>
       </AnimatedSection>
     </section>
