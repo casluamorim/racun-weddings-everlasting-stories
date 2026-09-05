@@ -1,23 +1,10 @@
-import { useState } from "react";
-import { Copy, Check, FileText, Sparkles } from "lucide-react";
+import { FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AnimatedSection from "./AnimatedSection";
 
 const EXAMPLE_URL = "https://weddings.agenciaracun.com/orcamento/ana-e-rafael";
 
 const CustomQuote = () => {
-  const [copied, setCopied] = useState(false);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(EXAMPLE_URL);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* clipboard indisponível */
-    }
-  };
-
   const goToForm = () => {
     const el = document.getElementById("contato");
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
