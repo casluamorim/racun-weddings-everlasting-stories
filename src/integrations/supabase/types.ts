@@ -519,6 +519,7 @@ export type Database = {
           created_at: string
           discount: number
           event_date: string | null
+          event_time: string | null
           id: string
           intro: string | null
           is_published: boolean
@@ -539,6 +540,7 @@ export type Database = {
           created_at?: string
           discount?: number
           event_date?: string | null
+          event_time?: string | null
           id?: string
           intro?: string | null
           is_published?: boolean
@@ -559,6 +561,7 @@ export type Database = {
           created_at?: string
           discount?: number
           event_date?: string | null
+          event_time?: string | null
           id?: string
           intro?: string | null
           is_published?: boolean
