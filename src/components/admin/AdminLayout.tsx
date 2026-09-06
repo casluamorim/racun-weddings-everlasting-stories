@@ -38,7 +38,7 @@ const AdminLayout = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AdminSidebar />
-        <main className="flex-1 overflow-auto">
+        <main id="scroll-container" className="flex-1 overflow-auto">
           <header className="h-14 border-b border-border flex items-center px-4 bg-card sticky top-0 z-10">
             <SidebarTrigger className="mr-4" />
             <span className="font-heading text-lg text-foreground">Racun Weddings</span>
