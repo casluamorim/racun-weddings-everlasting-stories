@@ -3,7 +3,11 @@ import { useLocation, useNavigationType } from "react-router-dom";
 
 const KEY = "scroll-positions";
 
-const readPositions = (): Record<string, number> => {
+type Pos = { w: number; c: number };
+
+const getContainer = () => document.getElementById("scroll-container");
+
+const readPositions = (): Record<string, Pos> => {
   try {
     return JSON.parse(sessionStorage.getItem(KEY) || "{}");
   } catch {
@@ -11,7 +15,7 @@ const readPositions = (): Record<string, number> => {
   }
 };
 
-const writePosition = (key: string, value: number) => {
+const writePosition = (key: string, value: Pos) => {
   try {
     const all = readPositions();
     all[key] = value;
@@ -23,7 +27,8 @@ const writePosition = (key: string, value: number) => {
 
 /**
  * Nova navegação (PUSH) começa no topo.
- * Voltar/avançar (POP) restaura a posição onde o usuário parou.
+ * Voltar/avançar (POP) restaura a posição onde o usuário parou,
+ * tanto na janela quanto no container rolável do painel admin.
  */
 const ScrollToTop = () => {
   const { pathname, search, hash, key } = useLocation();
@@ -32,12 +37,20 @@ const ScrollToTop = () => {
 
   // Salva a posição continuamente para a entrada atual do histórico.
   useEffect(() => {
-    const save = () => writePosition(storageKey, window.scrollY);
+    const save = () =>
+      writePosition(storageKey, {
+        w: window.scrollY,
+        c: getContainer()?.scrollTop ?? 0,
+      });
+
+    const container = getContainer();
     window.addEventListener("scroll", save, { passive: true });
+    container?.addEventListener("scroll", save, { passive: true });
     window.addEventListener("beforeunload", save);
     return () => {
       save();
       window.removeEventListener("scroll", save);
+      container?.removeEventListener("scroll", save);
       window.removeEventListener("beforeunload", save);
     };
   }, [storageKey]);
@@ -57,12 +70,15 @@ const ScrollToTop = () => {
 
     if (navigationType === "POP") {
       const saved = readPositions()[storageKey];
-      if (typeof saved === "number") {
-        // Aguarda o conteúdo renderizar antes de restaurar.
+      if (saved) {
         let tries = 0;
         const restore = () => {
-          window.scrollTo({ top: saved, left: 0, behavior: "auto" });
-          if (Math.abs(window.scrollY - saved) > 4 && tries < 20) {
+          window.scrollTo({ top: saved.w, left: 0, behavior: "auto" });
+          const container = getContainer();
+          if (container) container.scrollTop = saved.c;
+          const offWindow = Math.abs(window.scrollY - saved.w) > 4;
+          const offContainer = container ? Math.abs(container.scrollTop - saved.c) > 4 : false;
+          if ((offWindow || offContainer) && tries < 25) {
             tries += 1;
             requestAnimationFrame(restore);
           }
@@ -73,7 +89,8 @@ const ScrollToTop = () => {
     }
 
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const container = getContainer();
+    if (container) container.scrollTop = 0;
   }, [pathname, search, hash, navigationType, storageKey]);
 
   return null;
