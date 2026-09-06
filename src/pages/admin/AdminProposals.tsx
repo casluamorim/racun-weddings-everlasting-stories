@@ -32,9 +32,11 @@ type FormState = {
   slug: string;
   slugTouched: boolean;
   event_date: string;
+  event_time: string;
   city: string;
   venue: string;
   intro: string;
+  introTouched: boolean;
   notes: string;
   valid_until: string;
   discount: string;
@@ -50,9 +52,11 @@ const emptyForm = (): FormState => ({
   slug: "",
   slugTouched: false,
   event_date: "",
+  event_time: "",
   city: "",
   venue: "",
   intro: "",
+  introTouched: false,
   notes: "",
   valid_until: "",
   discount: "0",
@@ -64,6 +68,42 @@ const emptyForm = (): FormState => ({
 
 const getYouTubeId = (url: string) =>
   url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]+)/)?.[1] ?? "";
+
+const formatLongDate = (d?: string) => {
+  if (!d) return "";
+  return new Date(`${d}T12:00:00`).toLocaleDateString("pt-BR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+};
+
+export const buildIntro = (f: {
+  couple_names: string;
+  event_date: string;
+  event_time: string;
+  city: string;
+  venue: string;
+}) => {
+  const couple = f.couple_names.trim() || "vocês";
+  const parts: string[] = [];
+  parts.push(
+    `Que alegria poder fazer parte do casamento de ${couple}! Preparamos esta proposta pensada especialmente para o dia de vocês.`
+  );
+  const when: string[] = [];
+  if (f.event_date) when.push(`no dia ${formatLongDate(f.event_date)}`);
+  if (f.event_time) when.push(`às ${f.event_time}`);
+  const where: string[] = [];
+  if (f.venue.trim()) where.push(`no ${f.venue.trim()}`);
+  if (f.city.trim()) where.push(`em ${f.city.trim()}`);
+  if (when.length || where.length) {
+    parts.push(`A celebração acontece ${[...when, ...where].join(" ")}.`);
+  }
+  parts.push(
+    "Abaixo estão as formas de registrar esse dia — é só escolher a que mais combina com vocês."
+  );
+  return parts.join(" ");
+};
 
 const statusOf = (p: any) => {
   if (p.status === "aprovado") return { label: "Aprovado", cls: "text-green-600" };
@@ -139,6 +179,20 @@ const AdminProposals = () => {
     [form.slug, form.couple_names, form.slugTouched]
   );
 
+  const autoIntro = useMemo(
+    () =>
+      buildIntro({
+        couple_names: form.couple_names,
+        event_date: form.event_date,
+        event_time: form.event_time,
+        city: form.city,
+        venue: form.venue,
+      }),
+    [form.couple_names, form.event_date, form.event_time, form.city, form.venue]
+  );
+
+  const introValue = form.introTouched ? form.intro : autoIntro;
+
   const computeStatus = (isPublished: boolean, validUntil?: string | null) => {
     if (!isPublished) return "rascunho";
     if (validUntil && new Date(`${validUntil}T23:59:59`) < new Date()) return "expirado";
@@ -157,9 +211,10 @@ const AdminProposals = () => {
         couple_names: form.couple_names,
         slug,
         event_date: form.event_date || null,
+        event_time: form.event_time || null,
         city: form.city || null,
         venue: form.venue || null,
-        intro: form.intro || null,
+        intro: introValue || null,
         notes: form.notes || null,
         valid_until: form.valid_until || null,
         discount: Number(form.discount.replace(",", ".")) || 0,
@@ -232,9 +287,11 @@ const AdminProposals = () => {
       slug: p.slug ?? "",
       slugTouched: true,
       event_date: p.event_date ?? "",
+      event_time: p.event_time ?? "",
       city: p.city ?? "",
       venue: p.venue ?? "",
       intro: p.intro ?? "",
+      introTouched: !!p.intro,
       notes: p.notes ?? "",
       valid_until: p.valid_until ?? "",
       discount: String(p.discount ?? 0),
@@ -390,6 +447,14 @@ const AdminProposals = () => {
                 />
               </div>
               <div>
+                <Label className="font-body text-sm">Horário</Label>
+                <Input
+                  type="time"
+                  value={form.event_time}
+                  onChange={(e) => setForm({ ...form, event_time: e.target.value })}
+                />
+              </div>
+              <div>
                 <Label className="font-body text-sm">Válido até</Label>
                 <Input
                   type="date"
@@ -408,13 +473,30 @@ const AdminProposals = () => {
             </div>
 
             <div>
-              <Label className="font-body text-sm">Texto de abertura</Label>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <Label className="font-body text-sm">Texto de abertura</Label>
+                {form.introTouched && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setForm({ ...form, intro: "", introTouched: false })}
+                  >
+                    Voltar ao texto automático
+                  </Button>
+                )}
+              </div>
               <Textarea
-                rows={3}
-                value={form.intro}
-                onChange={(e) => setForm({ ...form, intro: e.target.value })}
+                rows={4}
+                value={introValue}
+                onChange={(e) => setForm({ ...form, intro: e.target.value, introTouched: true })}
                 placeholder="Mensagem personalizada para o casal..."
               />
+              <p className="font-body text-xs text-muted-foreground mt-1">
+                {form.introTouched
+                  ? "Texto editado manualmente."
+                  : "Gerado automaticamente com o nome, a data, o horário e o local."}
+              </p>
             </div>
 
             <div>

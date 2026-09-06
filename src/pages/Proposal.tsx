@@ -28,6 +28,17 @@ type ProposalMedia = { photos?: string[]; videos?: string[] };
 const formatDate = (d?: string | null) =>
   d ? new Date(`${d}T12:00:00`).toLocaleDateString("pt-BR") : "";
 
+const formatLongDate = (d?: string | null) =>
+  d
+    ? new Date(`${d}T12:00:00`).toLocaleDateString("pt-BR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "";
+
+const formatTime = (t?: string | null) => (t ? t.slice(0, 5) : "");
+
 const Proposal = () => {
   const { slug } = useParams<{ slug: string }>();
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
@@ -147,16 +158,26 @@ const Proposal = () => {
         <section className="pt-32 pb-12 px-4">
           <div className="container mx-auto max-w-4xl text-center">
             <p className="font-body text-xs uppercase tracking-[0.3em] text-primary mb-4">
-              Proposta personalizada
+              Racun Weddings · Proposta personalizada
             </p>
             <h1 className="font-heading text-4xl md:text-6xl text-foreground mb-4">
               {proposal.couple_names}
             </h1>
             <p className="font-body text-sm text-muted-foreground">
-              {[formatDate(proposal.event_date), proposal.venue, proposal.city]
-                .filter(Boolean)
-                .join(" • ")}
+              {[proposal.venue, proposal.city].filter(Boolean).join(" • ")}
             </p>
+            {(proposal.event_date || (proposal as any).event_time) && (
+              <span className="inline-block mt-6 rounded-full border border-border px-6 py-2 font-body text-sm text-foreground">
+                {[
+                  proposal.event_date ? `Cerimônia em ${formatLongDate(proposal.event_date)}` : "",
+                  formatTime((proposal as any).event_time)
+                    ? `às ${formatTime((proposal as any).event_time)}`
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              </span>
+            )}
             {proposal.intro && (
               <p className="font-body text-base text-muted-foreground mt-6 max-w-2xl mx-auto whitespace-pre-line">
                 {proposal.intro}
@@ -178,23 +199,38 @@ const Proposal = () => {
                       key={i}
                       className="bg-card border border-border rounded-xl p-6 flex flex-col"
                     >
-                      <h3 className="font-heading text-xl text-foreground mb-1">{item.name}</h3>
-                      {item.price && (
-                        <p className="font-body text-primary text-lg mb-3">{item.price}</p>
-                      )}
+                      <h3 className="font-heading text-2xl text-foreground mb-1">{item.name}</h3>
                       {item.description && (
                         <p className="font-body text-sm text-muted-foreground mb-4 whitespace-pre-line">
                           {item.description}
                         </p>
                       )}
-                      <ul className="space-y-2 mt-auto">
+                      {item.price && (
+                        <p className="font-heading text-3xl text-primary mb-1">{item.price}</p>
+                      )}
+                      <div className="h-px bg-border my-5" />
+                      <ul className="space-y-0 mb-6">
                         {(item.features ?? []).map((f, fi) => (
-                          <li key={fi} className="flex gap-2 font-body text-sm text-muted-foreground">
+                          <li
+                            key={fi}
+                            className="flex gap-2 font-body text-sm text-muted-foreground py-2.5 border-b border-border last:border-b-0"
+                          >
                             <Check size={15} className="text-primary shrink-0 mt-0.5" />
                             <span>{f}</span>
                           </li>
                         ))}
                       </ul>
+                      <Button variant="outline" className="mt-auto w-full" asChild>
+                        <a
+                          href={getWhatsAppUrl(
+                            `Olá! Sou ${proposal.couple_names} e quero o pacote ${item.name}${
+                              item.price ? ` (${item.price})` : ""
+                            } da proposta ${SITE_URL}/orcamento/${proposal.slug}.`
+                          )}
+                        >
+                          Quero esse pacote
+                        </a>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -281,7 +317,7 @@ const Proposal = () => {
 
         {proposal.notes && (
           <section className="py-12 px-4">
-            <div className="container mx-auto max-w-3xl bg-card border border-border rounded-xl p-6">
+            <div className="container mx-auto max-w-3xl bg-card border border-border border-l-4 border-l-primary rounded-xl p-6">
               <h2 className="font-heading text-xl text-foreground mb-3">Observações</h2>
               <p className="font-body text-sm text-muted-foreground whitespace-pre-line">
                 {proposal.notes}
